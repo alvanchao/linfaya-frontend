@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Linfaya Couture｜綠界付款</title>
+  <meta name="description" content="高CP值練習服｜舒適、耐穿、快速到貨" />
+  <style>
+    :root{ --bg:#0b0c10;--panel:#111319;--muted:#8a94a7;--pri:#5eead4;--pri-2:#2dd4bf;--text:#e6e9ef;--accent:#a78bfa;--danger:#ef4444 }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b0c10,#0e1117);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans","PingFang TC","Hiragino Sans",sans-serif;scroll-behavior:smooth}
+    #how{scroll-margin-top:90px}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    header{position:sticky;top:0;backdrop-filter:saturate(140%) blur(8px);background:rgba(11,12,16,.7);border-bottom:1px solid #1f2430;z-index:20}
+    .nav{display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo-img{height:36px;width:auto;display:block}
+    .actions{display:flex;gap:10px}
+    .btn{border:1px solid #2a2f3a;background:#121521;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+    .btn:hover{transform:translateY(-1px);border-color:#3b4252}
+    .btn.pri{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center;padding:28px 0}
+    .hero h1{font-size:32px;margin:0 0 10px}
+    .hero p{color:var(--muted);margin:0 0 14px}
+    .hero .card{background:radial-gradient(1200px 400px at -10% -120%,rgba(45,212,191,.12),transparent 50%),#0e121b;border:1px solid #1e2430;border-radius:18px;padding:18px}
+
+    .section{margin:26px 0}
+    .section h2{font-size:22px;margin:0 0 12px}
+
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:600px){.grid{grid-template-columns:1fr}}
+
+    .product{background:#0f1320;border:1px solid #1f2430;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+    .product .imgbox{position:relative;background:#0a0d14}
+    .product .main-img{position:relative;width:100%;padding-top:70%;overflow:hidden}
+    .product .main-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .thumbs{display:flex;gap:8px;padding:10px;overflow:auto}
+    .thumbs img{width:64px;height:64px;object-fit:cover;border:1px solid #283040;border-radius:10px;cursor:pointer;opacity:.8}
+    .thumbs img.active{opacity:1;outline:2px solid var(--pri)}
+    .magnifier{position:absolute;border:1px solid #2b3342;border-radius:50%;width:120px;height:120px;pointer-events:none;display:none;box-shadow:0 10px 25px rgba(0,0,0,.35)}
+
+    .product .body{padding:14px;display:flex;flex-direction:column;gap:8px}
+    .price{font-weight:700}
+    .muted{color:var(--muted);font-size:13px}
+
+    .qty{display:flex;align-items:center;gap:8px}
+    .qty input{width:56px;border-radius:10px;border:1px solid #2a2f3a;background:#0e121b;color:var(--text);padding:8px}
+
+    .footer{color:#939db2;font-size:13px;border-top:1px solid #1f2430;padding:16px 0;margin-top:20px}
+
+    /* Cart drawer */
+    .drawer{position:fixed;right:0;top:0;width:380px;max-width:100%;height:100%;background:#0c1018;border-left:1px solid #1e2430;transform:translateX(110%);transition:.2s;z-index:50;display:flex;flex-direction:column}
+    .drawer.open{transform:translateX(0)}
+    .drawer header{position:sticky;top:0;background:transparent}
+    .drawer .list{padding:12px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+    .cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;border:1px solid #212736;border-radius:14px;padding:8px}
+    .cart-item img{width:64px;height:64px;border-radius:10px;object-fit:cover}
+    .cart-item b{display:block}
+
+    .drawer .summary{margin-top:auto;padding:12px;border-top:1px solid #1f2430;background:#0b0f17}
+    .summary .row{display:flex;justify-content:space-between;margin:6px 0}
+    .summary .total{font-size:18px;font-weight:800}
+
+    .form{display:grid;gap:10px;margin-top:10px}
+    .field{display:grid;gap:6px}
+    .input, .select{border:1px solid #2a2f3a;background:#0e121b;color:var(--text);padding:10px;border-radius:12px}
+    .radio{display:flex;gap:10px;align-items:center}
+    .subtle{font-size:12px;color:#a3adc2}
+
+    .pill{font-size:12px;color:#b7c1d6;border:1px solid #2b3342;border-radius:999px;padding:6px 10px}
+
+    .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0f1522;border:1px solid #273044;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s}
+    .toast.show{opacity:1}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <img class="logo-img" src="Linfaya_logo.JPEG" alt="Linfaya Logo">
+        <div>
+          <b>LINFAYA COUTURE</b><br>
+          <small class="muted">舒適好穿｜實穿耐用</small>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="#how">如何購買</a>
+        <button class="btn pri" id="openCart">購物車 <span id="cartCount" class="pill">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="card">
+        <h1>高CP值練習服，直接跟我買就對了</h1>
+        <p>付款方式：<b>綠界 ECPay</b>（信用卡／ATM／超商代碼）。<b>滿 NT$1,000 免運</b>（本島）。</p>
+      </div>
+      <div class="card">
+        <b>本週熱門尺寸</b>
+        <p class="muted">S / M 裙款現貨多，L 需預購 7–10 天。</p>
+        <ul class="muted">
+          <li>上衣：黑、白、膚色</li>
+          <li>下身：高腰緊身褲、魚尾裙</li>
+          <li>材質：尼龍 / 萊卡混紡</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>商品一覽</h2>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <section class="section" id="how">
+      <h2>購買方式</h2>
+      <ol class="muted">
+        <li>把喜歡的商品「加入購物車」，填寫收件資訊與配送方式。</li>
+        <li>點「<b>前往綠界付款</b>」→ 跳轉至綠界安全付款頁完成刷卡/代碼。</li>
+        <li>付款完成後，系統會寄出訂單明細與編號至你的 Email，並同步寄給商家。</li>
+      </ol>
+    </section>
+    <div class="footer">© <span id="year"></span> LINFAYA COUTURE · 客服：linfaya251@gmail.com</div>
+  </main>
+
+  <!-- Cart Drawer -->
+  <aside class="drawer" id="drawer">
+    <header class="container nav" style="padding:12px 16px">
+      <div class="brand">
+        <img class="logo-img" src="Linfaya_logo.JPEG" alt="Linfaya Logo" style="height:28px">
+        <b>購物車</b>
+      </div>
+      <button class="btn" id="closeCart">關閉</button>
+    </header>
+    <div class="list" id="cartList"></div>
+    <div class="summary">
+      <div class="row"><span>小計</span><b id="subtotal">NT$0</b></div>
+      <div class="row"><span>運費（台灣本島）</span><span id="shipping">NT$0</span></div>
+      <div class="row total"><span>合計</span><span id="grand">NT$0</span></div>
+
+      <div class="form">
+        <div class="field">
+          <label>收件姓名</label>
+          <input class="input" id="name" placeholder="王小明" />
+        </div>
+        <div class="field">
+          <label>電子郵件 Email</label>
+          <input class="input" id="email" type="email" placeholder="name@example.com" />
+          <span class="subtle">會寄送訂單與出貨通知</span>
+        </div>
+        <div class="field">
+          <label>手機</label>
+          <input class="input" id="phone" placeholder="09xxxxxxxx（10碼）" />
+        </div>
+
+        <div class="field">
+          <label>配送方式</label>
+          <div class="radio">
+            <label><input type="radio" name="ship" value="home" checked> 自家宅配（+80）</label>
+            <label><input type="radio" name="ship" value="family"> 全家店到店（+60）</label>
+            <label><input type="radio" name="ship" value="seven"> 7-11 店到店（+60）</label>
+          </div>
+        </div>
+
+        <!-- 自家宅配地址 -->
+        <div class="field" id="homeFields">
+          <label>收件地址</label>
+          <input class="input" id="addr" placeholder="台北市信義區⋯⋯" />
+        </div>
+
+        <!-- 全家門市選擇（官方地圖） -->
+        <div class="field" id="familyFields" style="display:none">
+          <label>全家門市</label>
+          <div class="radio" style="flex-wrap:wrap">
+            <button class="btn" id="btnPickFamily">選擇門市（開啟官方地圖）</button>
+            <span class="subtle" id="familyPicked" style="margin-left:8px">尚未選擇</span>
+          </div>
+        </div>
+
+        <!-- 7-11 門市選擇（官方地圖） -->
+        <div class="field" id="sevenFields" style="display:none">
+          <label>7-11 門市</label>
+          <div class="radio" style="flex-wrap:wrap">
+            <button class="btn" id="btnPickSeven">選擇門市（開啟官方地圖）</button>
+            <span class="subtle" id="sevenPicked" style="margin-left:8px">尚未選擇</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>備註</label>
+          <input class="input" id="note" placeholder="尺寸、急件等需求" />
+        </div>
+        <button class="btn pri" id="checkout">前往綠界付款</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast">已加入購物車</div>
+
+  <script>
+    // ========= 重要：把它改成你的 Render 後端網址 =========
+    //const API_BASE = 'https://YOUR-BACKEND.onrender.com';
+    const API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
+
+    const ADMIN_EMAIL = 'linfaya251@gmail.com';
+    const FREE_SHIP_THRESHOLD = 1000; // 滿千免運
+
+    // ======= 商品資料：支援每品 1~5 張圖片（imgs 陣列） =======
+    const PRODUCTS = [
+      {id:'top01',name:'無縫高彈背心',price:399,color:'黑/膚',size:'S/M/L',imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg']},
+      {id:'top02',name:'鏤空美背短袖',price:429,color:'黑/粉',size:'S/M/L',imgs:['Photo/鏤空美背短袖.jpg']},
+      {id:'btm01',name:'高腰緊身褲',price:499,color:'黑/深灰',size:'S/M/L/XL',imgs:['Photo/高腰緊身褲.jpg']},
+      {id:'sk01',name:'魚尾練習裙',price:699,color:'黑',size:'S/M/L',imgs:['Photo/魚尾練習裙.jpg']},
+      {id:'set01',name:'上衣＋緊身褲套組',price:849,color:'多色',size:'S/M/L',imgs:['Photo/上衣＋緊身褲套組.jpg']},
+    ];
+
+    // 改用 sessionStorage（重新打開網頁就清空購物車）
+    const state = { cart: JSON.parse(sessionStorage.getItem('cart')||'[]'), cvs: null };
+    const fmt = n => 'NT$' + n.toLocaleString('zh-Hant-TW');
+
+    // Render products（含相簿與放大鏡）
+    const $grid = document.getElementById('grid');
+    PRODUCTS.forEach(p=>{
+      const el=document.createElement('div');
+      el.className='product';
+      const firstImg = p.imgs[0];
+      el.innerHTML=`
+        <div class="imgbox">
+          <div class="main-img"><img alt="${p.name}" src="${firstImg}"><div class="magnifier"></div></div>
+          <div class="thumbs">${p.imgs.map((src,i)=>`<img src="${src}" data-idx="${i}" class="${i===0?'active':''}">`).join('')}</div>
+        </div>
+        <div class="body">
+          <b>${p.name}</b>
+          <div class="muted">顏色：${p.color}｜尺寸：${p.size}</div>
+          <div class="price">${fmt(p.price)}</div>
+          <div class="qty">
+            <select class="input sel-size">
+              ${p.size.split('/').map(s=>`<option value="${s}">${s}</option>`).join('')}
+            </select>
+            <input class="qty-input" type="number" min="1" value="1" />
+            <button class="btn pri add">加入購物車</button>
+          </div>
+        </div>`;
+
+      // 縮圖切換
+      const mainImg = el.querySelector('.main-img img');
+      el.querySelectorAll('.thumbs img').forEach(img=>{
+        img.addEventListener('click',()=>{
+          el.querySelectorAll('.thumbs img').forEach(i=>i.classList.remove('active'));
+          img.classList.add('active');
+          mainImg.src = img.src;
+        });
+      });
+
+      // 放大鏡效果
+      const box = el.querySelector('.main-img');
+      const lens = el.querySelector('.magnifier');
+      const zoom = 2; // 放大倍率
+      box.addEventListener('mouseenter',()=>{ lens.style.display='block'; lens.style.backgroundImage=`url('${mainImg.src}')`; lens.style.backgroundSize = (box.offsetWidth*zoom)+'px '+(box.offsetHeight*zoom)+'px'; });
+      box.addEventListener('mouseleave',()=>{ lens.style.display='none'; });
+      box.addEventListener('mousemove',e=>{
+        const rect = box.getBoundingClientRect();
+        const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+        const r = lens.offsetWidth/2; // 半徑
+        lens.style.left = (x - r) + 'px';
+        lens.style.top  = (y - r) + 'px';
+        const bx = Math.max(0, Math.min(x/box.offsetWidth * 100, 100));
+        const by = Math.max(0, Math.min(y/box.offsetHeight* 100, 100));
+        lens.style.backgroundPosition = `${bx}% ${by}%`;
+        lens.style.backgroundImage = `url('${mainImg.src}')`;
+      });
+
+      const updateLensBg = ()=>{
+        lens.style.backgroundImage = `url('${mainImg.src}')`;
+        lens.style.backgroundSize = (box.offsetWidth*zoom)+'px '+(box.offsetHeight*zoom)+'px';
+      }
+      el.querySelectorAll('.thumbs img').forEach(img=>img.addEventListener('click',updateLensBg));
+
+      // 加入購物車
+      el.querySelector('.add').onclick=()=>{
+        const size=el.querySelector('.sel-size').value;
+        const qty=parseInt(el.querySelector('.qty-input').value||'1');
+        addToCart({...p,size,qty,img:p.imgs[0]});
+      }
+
+      $grid.appendChild(el);
+    });
+
+    function addToCart(item){
+      const found = state.cart.find(i=>i.id===item.id && i.size===item.size);
+      if(found){ found.qty += item.qty; }
+      else{ state.cart.push(item); }
+      persist();
+      toast('已加入購物車');
+      updateBadge();
+    }
+    function removeItem(idx){ state.cart.splice(idx,1); persist(); renderCart(); updateBadge(); }
+    function changeQty(idx,delta){ state.cart[idx].qty=Math.max(1,(state.cart[idx].qty||1)+delta); persist(); renderCart(); updateBadge(); }
+    function persist(){ sessionStorage.setItem('cart',JSON.stringify(state.cart)); }
+
+    // Cart drawer
+    const drawer = document.getElementById('drawer');
+    document.getElementById('openCart').onclick=()=>{drawer.classList.add('open');renderCart()}
+    document.getElementById('closeCart').onclick=()=>drawer.classList.remove('open')
+
+    function subtotal(){ return state.cart.reduce((s,i)=>s+i.price*(i.qty||1),0); }
+
+    function calcShipping(){
+      const sub = subtotal();
+      if(sub >= FREE_SHIP_THRESHOLD) return 0; // 滿千免運
+      const shipOpt = document.querySelector('input[name="ship"]:checked')?.value || 'home';
+      if(shipOpt==='home') return 80;
+      if(shipOpt==='family' || shipOpt==='seven') return 60;
+      return 80;
+    }
+
+    function renderCart(){
+      const list=document.getElementById('cartList');
+      list.innerHTML='';
+      if(state.cart.length===0){ list.innerHTML='<p class="muted" style="padding:8px 12px">購物車是空的</p>'; }
+      state.cart.forEach((it,idx)=>{
+        const el=document.createElement('div');
+        el.className='cart-item';
+        el.innerHTML=`
+          <img src="${(it.imgs?it.imgs[0]:it.img)||''}" alt="${it.name}">
+          <div>
+            <b>${it.name}</b>
+            <div class="muted">尺寸：${it.size}｜單價：${fmt(it.price)}</div>
+            <div class="qty" style="margin-top:6px">
+              <button class="btn" onclick="changeQty(${idx},-1)">-</button>
+              <span>${it.qty||1}</span>
+              <button class="btn" onclick="changeQty(${idx},1)">+</button>
+              <button class="btn" style="margin-left:auto;border-color:#3a2230;color:#fca5a5" onclick="removeItem(${idx})">移除</button>
+            </div>
+          </div>
+          <div><b>${fmt(it.price*(it.qty||1))}</b></div>`;
+        list.appendChild(el);
+      });
+      const sub = subtotal();
+      const ship = state.cart.length?calcShipping():0;
+      document.getElementById('subtotal').textContent=fmt(sub);
+      document.getElementById('shipping').textContent=fmt(ship);
+      document.getElementById('grand').textContent=fmt(sub+ship);
+    }
+
+    function updateBadge(){
+      const n = state.cart.reduce((s,i)=>s+(i.qty||1),0);
+      document.getElementById('cartCount').textContent = n;
+    }
+
+    // 配送方式切換：顯示對應欄位
+    function onShipChange(){
+      const shipOpt = document.querySelector('input[name="ship"]:checked')?.value || 'home';
+      document.getElementById('homeFields').style.display = shipOpt==='home' ? 'block':'none';
+      document.getElementById('familyFields').style.display = shipOpt==='family' ? 'block':'none';
+      document.getElementById('sevenFields').style.display = shipOpt==='seven' ? 'block':'none';
+      renderCart();
+    }
+    document.querySelectorAll('input[name="ship"]').forEach(r=>r.addEventListener('change',onShipChange));
+
+    // ======= 綠界官方地圖選店（需要後端簽名） =======
+    async function openCvsMap(logisticsSubType){
+      try{
+        const res = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ logisticsSubType })
+        });
+        if(!res.ok) throw new Error('sign failed');
+        const { endpoint, fields } = await res.json();
+        const form = document.createElement('form');
+        form.method='POST'; form.action=endpoint; form.target='_blank';
+        Object.entries(fields).forEach(([k,v])=>{ const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v; form.appendChild(i); });
+        document.body.appendChild(form); form.submit(); form.remove();
+      }catch(err){
+        console.warn(err);
+        alert('尚未設定選店後端，無法開啟官方地圖。');
+      }
+    }
+    document.addEventListener('click', (e)=>{
+      if(e.target && e.target.id==='btnPickFamily'){ e.preventDefault(); openCvsMap('FAMI'); }
+      if(e.target && e.target.id==='btnPickSeven'){ e.preventDefault(); openCvsMap('UNIMART'); }
+    });
+
+    // 後端在選店完成的 callback 頁面，請回傳一段 JS：
+    // window.opener && window.opener.postMessage({type:'CVS_PICKED', store:{cvs:'FAMI', id:'店號', name:'門市名', address:'地址'}}, '*');
+    // window.close();
+    window.addEventListener('message', (ev)=>{
+      const data = ev.data || {};
+      if(data.type==='CVS_PICKED' && data.store){
+        if(data.store.cvs==='FAMI'){
+          document.getElementById('familyPicked').textContent = `${data.store.name}（${data.store.id}）｜${data.store.address}`;
+          state.cvs = { type:'family', ...data.store };
+        }else if(data.store.cvs==='UNIMART'){
+          document.getElementById('sevenPicked').textContent = `${data.store.name}（${data.store.id}）｜${data.store.address}`;
+          state.cvs = { type:'seven', ...data.store };
+        }
+      }
+    });
+
+    // ======= 綠界付款：前往 ECPay 付款頁 =======
+    async function createEcpayLink(order){
+      try{
+        const res = await fetch(`${API_BASE}/api/ecpay/create`,{
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(order)
+        });
+        if(!res.ok) throw new Error('create ecpay link failed');
+        const data = await res.json();
+        return data.paymentUrl; // 後端回傳的收銀台跳轉頁（/pay/:tradeNo）
+      }catch(e){
+        console.warn(e);
+        alert('目前尚未連上綠界後端，請先設定伺服器 API。');
+        return 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5'; // 測試示意頁
+      }
+    }
+
+    // 基本防呆：手機（台灣 09 開頭 10 碼）、Email
+    function validPhone(v){ return /^09\d{8}$/.test(v); }
+    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+    document.getElementById('checkout').onclick=async()=>{
+      if(!state.cart.length) return alert('購物車是空的');
+      const name=document.getElementById('name').value.trim();
+      const email=document.getElementById('email').value.trim();
+      const phone=document.getElementById('phone').value.trim();
+      const shipOpt=document.querySelector('input[name="ship"]:checked')?.value || 'home';
+      const addr=document.getElementById('addr').value.trim();
+      const note=document.getElementById('note').value.trim();
+
+      if(!name) return alert('請填寫收件姓名');
+      if(!validEmail(email)) return alert('請輸入正確 Email');
+      if(!validPhone(phone)) return alert('手機需為 09 開頭 10 碼');
+
+      let shippingInfo='';
+      if(shipOpt==='home'){
+        if(!addr) return alert('請填寫收件地址');
+        shippingInfo = `自家宅配｜${addr}`;
+      }else if(shipOpt==='family'){
+        if(!state.cvs || state.cvs.type!=='family') return alert('請先選擇全家門市');
+        shippingInfo = `全家店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`;
+      }else if(shipOpt==='seven'){
+        if(!state.cvs || state.cvs.type!=='seven') return alert('請先選擇 7-11 門市');
+        shippingInfo = `7-11 店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`;
+      }
+
+      const orderId = 'LF' + Date.now();
+      const items = state.cart.map(i=>({id:i.id,name:i.name,size:i.size,qty:i.qty,price:i.price}));
+      const sub = subtotal();
+      const shipFee = state.cart.length?calcShipping():0;
+      const amount = sub + shipFee;
+      const order = {orderId,name,email,phone,shipOpt,shippingInfo,note,items,amount,subtotal:sub,shipFee,notify:{admin:ADMIN_EMAIL}};
+
+      const link = await createEcpayLink(order);
+      window.open(link,'_blank');
+      toast('正在前往綠界付款…',1600);
+    }
+
+    function toast(msg='已加入購物車',ms=1200){
+      const t=document.getElementById('toast');
+      t.textContent=msg; t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),ms);
+    }
+
+    document.getElementById('year').textContent=new Date().getFullYear();
+    updateBadge();
+    renderCart();
+  </script>
+</body>
+</html>

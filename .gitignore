@@ -1,0 +1,7 @@
+*.key
+*.pem
+*.cer
+*.pfx
+*.env
+*_API_Key.txt
+*_api_key.txt
