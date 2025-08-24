@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Linfaya Couture｜綠界付款</title>
+  <title>Linfaya Couture｜你的最佳選擇</title>
   <meta name="description" content="高CP值練習服｜舒適、耐穿、快速到貨" />
   <style>
     :root{ --bg:#0b0c10;--panel:#111319;--muted:#8a94a7;--pri:#5eead4;--pri-2:#2dd4bf;--text:#e6e9ef;--accent:#a78bfa;--danger:#ef4444 }
@@ -202,7 +202,6 @@
 
   <script>
     // ========= 重要：把它改成你的 Render 後端網址 =========
-    //const API_BASE = 'https://YOUR-BACKEND.onrender.com';
     const API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
 
     const ADMIN_EMAIL = 'linfaya251@gmail.com';
@@ -364,18 +363,38 @@
     // ======= 綠界官方地圖選店（需要後端簽名） =======
     async function openCvsMap(logisticsSubType){
       try{
+        // 1) 先向後端取得 endpoint + fields
         const res = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
-          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ logisticsSubType })
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ logisticsSubType })
         });
         if(!res.ok) throw new Error('sign failed');
         const { endpoint, fields } = await res.json();
+
+        // 2) 存偵錯資訊（必要時可在 Console 輸入 window._lastMapDebug 查看）
+        window._lastMapDebug = { endpoint, fields };
+
+        // 3) 用乾淨的表單方式 POST 到綠界官方地圖
         const form = document.createElement('form');
-        form.method='POST'; form.action=endpoint; form.target='_blank';
-        Object.entries(fields).forEach(([k,v])=>{ const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v; form.appendChild(i); });
-        document.body.appendChild(form); form.submit(); form.remove();
+        form.method = 'POST';
+        form.action = String(endpoint || '');
+        form.target = '_blank';
+
+        Object.entries(fields || {}).forEach(([k,v])=>{
+          const i = document.createElement('input');
+          i.type = 'hidden';
+          i.name = String(k);
+          i.value = (v === null || v === undefined) ? '' : String(v);
+          form.appendChild(i);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
       }catch(err){
         console.warn(err);
-        alert('尚未設定選店後端，無法開啟官方地圖。');
+        alert('無法開啟官方選店地圖，請稍後再試。');
       }
     }
     document.addEventListener('click', (e)=>{
@@ -383,9 +402,7 @@
       if(e.target && e.target.id==='btnPickSeven'){ e.preventDefault(); openCvsMap('UNIMART'); }
     });
 
-    // 後端在選店完成的 callback 頁面，請回傳一段 JS：
-    // window.opener && window.opener.postMessage({type:'CVS_PICKED', store:{cvs:'FAMI', id:'店號', name:'門市名', address:'地址'}}, '*');
-    // window.close();
+    // 後端在選店完成的 callback 頁面，會用 postMessage 把門市資訊帶回來
     window.addEventListener('message', (ev)=>{
       const data = ev.data || {};
       if(data.type==='CVS_PICKED' && data.store){
