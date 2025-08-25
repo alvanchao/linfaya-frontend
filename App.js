@@ -22,13 +22,15 @@ const PRODUCTS = [
    colors:['黑'], sizes:['S','M','L'],
    imgs:['Photo/魚尾練習裙.jpg']},
 
-  // accessories / shoes（先放示例，之後你有圖再補）
+  // accessories（先放示例，之後你有圖再補）
   {id:'acc01',cat:'accessories',name:'運動髮帶（素色）',price:129,
    colors:['黑','白','膚'], sizes:['F'],
-   imgs:['Photo/鏤空美背短袖.jpg']}, // 先借圖
+   imgs:['Photo/鏤空美背短袖.jpg']}, 
+
+  /// shoes（先放示例，之後你有圖再補)
   {id:'sh01',cat:'shoes',name:'軟底舞鞋（初學）',price:890,
    colors:['黑'], sizes:['35','36','37','38','39','40'],
-   imgs:['Photo/上衣＋緊身褲套組.jpg']} // 先借圖
+   imgs:['Photo/上衣＋緊身褲套組.jpg']} 
 ]
 
 /* ========= 狀態 ========= */
