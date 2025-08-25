@@ -8,10 +8,11 @@
   <style>
     :root{ --bg:#0b0c10;--panel:#111319;--muted:#8a94a7;--pri:#5eead4;--pri-2:#2dd4bf;--text:#e6e9ef;--accent:#a78bfa;--danger:#ef4444 }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b0c10,#0e1117);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans","PingFang TC","Hiragino Sans",sans-serif;scroll-behavior:smooth}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b0c10,#0e1117);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans","PingFang TC","Hiragino Sans",sans-serif}
     a{color:inherit;text-decoration:none}
     .container{max-width:1100px;margin:0 auto;padding:20px}
-    header{position:sticky;top:0;backdrop-filter:saturate(140%) blur(8px);background:rgba(11,12,16,.7);border-bottom:1px solid #1f2430;z-index:20}
+
+    header{position:sticky;top:0;z-index:20;backdrop-filter:saturate(140%) blur(8px);background:rgba(11,12,16,.7);border-bottom:1px solid #1f2430}
     .nav{display:flex;align-items:center;justify-content:space-between}
     .brand{display:flex;gap:10px;align-items:center}
     .logo-img{height:36px;width:auto;display:block}
@@ -28,6 +29,12 @@
     .section{margin:26px 0}
     .section h2{font-size:22px;margin:0 0 12px}
 
+    /* 分類 tabs */
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab{padding:8px 12px;border:1px solid #273044;border-radius:999px;background:#0e121b;color:#c8d0e0;font-size:14px;cursor:pointer}
+    .tab.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+
+    /* 商品格 */
     .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
     @media (max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}
     @media (max-width:600px){.grid{grid-template-columns:1fr}}
@@ -44,9 +51,9 @@
     .product .body{padding:14px;display:flex;flex-direction:column;gap:8px}
     .price{font-weight:700}
     .muted{color:var(--muted);font-size:13px}
-
-    .qty{display:flex;align-items:center;gap:8px}
-    .qty input{width:56px;border-radius:10px;border:1px solid #2a2f3a;background:#0e121b;color:var(--text);padding:8px}
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .select,.input{border:1px solid #2a2f3a;background:#0e121b;color:var(--text);padding:10px;border-radius:12px}
+    .qty-input{width:64px}
 
     .footer{color:#939db2;font-size:13px;border-top:1px solid #1f2430;padding:16px 0;margin-top:20px}
 
@@ -58,24 +65,19 @@
     .cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;border:1px solid #212736;border-radius:14px;padding:8px}
     .cart-item img{width:64px;height:64px;border-radius:10px;object-fit:cover}
     .cart-item b{display:block}
-
-    .drawer .summary{margin-top:auto;padding:12px;border-top:1px solid #1f2430;background:#0b0f17}
-    .summary .row{display:flex;justify-content:space-between;margin:6px 0}
-    .summary .total{font-size:18px;font-weight:800}
-
-    .form{display:grid;gap:10px;margin-top:10px}
-    .field{display:grid;gap:6px}
-    .input, .select{border:1px solid #2a2f3a;background:#0e121b;color:var(--text);padding:10px;border-radius:12px}
-    .radio{display:flex;gap:10px;align-items:center}
-    .subtle{font-size:12px;color:#a3adc2}
-
+    .summary{margin-top:auto;padding:12px;border-top:1px solid #1f2430;background:#0b0f17}
+    .summary .rowline{display:flex;justify-content:space-between;margin:6px 0}
     .pill{font-size:12px;color:#b7c1d6;border:1px solid #2b3342;border-radius:999px;padding:6px 10px}
+
+    .radio{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .subtle{font-size:12px;color:#a3adc2}
 
     .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0f1522;border:1px solid #273044;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s}
     .toast.show{opacity:1}
   </style>
 </head>
 <body>
+  <!-- 頂部 -->
   <header>
     <div class="container nav">
       <div class="brand">
@@ -92,6 +94,7 @@
     </div>
   </header>
 
+  <!-- 內容 -->
   <main class="container">
     <section class="hero">
       <div class="card">
@@ -102,50 +105,138 @@
         <b>熱門品項</b>
         <p class="muted">多種尺寸與款式，部分需預購 7–10 天。</p>
         <ul class="muted">
-          <li>上衣 / 運動內衣</li>
-          <li>下身：緊身褲、裙款</li>
-          <li>飾品與舞鞋</li>
+          <li>Tops（上衣 / 運動內衣）</li>
+          <li>Bottoms（褲款 / 裙款）</li>
+          <li>Accessories（飾品配件）</li>
+          <li>Shoes（舞鞋）</li>
         </ul>
       </div>
     </section>
 
+    <!-- 分類 -->
     <section class="section">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-cat="all">All</button>
+        <button class="tab" data-cat="tops">Tops</button>
+        <button class="tab" data-cat="bottoms">Bottoms</button>
+        <button class="tab" data-cat="accessories">Accessories</button>
+        <button class="tab" data-cat="shoes">Shoes</button>
+      </div>
+
       <h2>商品一覽</h2>
       <div id="grid" class="grid"></div>
     </section>
 
+    <!-- 購買方式 -->
     <section class="section" id="how">
       <h2>購買方式</h2>
       <ol class="muted">
         <li>把喜歡的商品「加入購物車」，填寫收件資訊與配送方式。</li>
         <li>點「<b>前往綠界付款</b>」→ 跳轉至綠界安全付款頁完成刷卡/代碼。</li>
-        <li>付款完成後，系統會寄出訂單明細與編號至你的 Email，並同步寄給商家。</li>
+        <li>付款完成後，系統會寄出訂單明細與編號至你的 Email（信件可能延遲，請查垃圾信/促銷）。</li>
       </ol>
     </section>
+
     <div class="footer">© <span id="year"></span> LINFAYA COUTURE · 客服：linfaya251@gmail.com</div>
   </main>
 
-  <!-- 保持原本的購物車 Drawer 與 JS，不刪減 -->
+  <!-- 購物車 Drawer -->
+  <aside class="drawer" id="drawer">
+    <header class="container nav" style="padding:12px 16px">
+      <div class="brand">
+        <img class="logo-img" src="Linfaya_logo.JPEG" alt="Linfaya Logo" style="height:28px">
+        <b>購物車</b>
+      </div>
+      <button class="btn" id="closeCart">關閉</button>
+    </header>
 
-  <!-- TEST MODE 徽章 -->
+    <div class="list" id="cartList"></div>
+
+    <div class="summary">
+      <div class="rowline"><span>小計</span><b id="subtotal">NT$0</b></div>
+      <div class="rowline"><span>運費（台灣本島）</span><span id="shipping">NT$0</span></div>
+      <div class="rowline"><span>合計</span><span id="grand">NT$0</span></div>
+
+      <div class="form" style="margin-top:10px;display:grid;gap:10px">
+        <div class="field">
+          <label>收件姓名</label>
+          <input class="input" id="name" placeholder="王小明" />
+        </div>
+        <div class="field">
+          <label>電子郵件 Email</label>
+          <input class="input" id="email" type="email" placeholder="name@example.com" />
+          <span class="subtle">會寄送訂單與出貨通知</span>
+        </div>
+        <div class="field">
+          <label>手機</label>
+          <input class="input" id="phone" placeholder="09xxxxxxxx（10碼）" />
+        </div>
+
+        <div class="field">
+          <label>配送方式</label>
+          <div class="radio">
+            <label><input type="radio" name="ship" value="home" checked> 自家宅配（+80）</label>
+            <label><input type="radio" name="ship" value="family"> 全家店到店（+60）</label>
+            <label><input type="radio" name="ship" value="seven"> 7-11 店到店（+60）</label>
+          </div>
+        </div>
+
+        <!-- 自家宅配地址 -->
+        <div class="field" id="homeFields">
+          <label>收件地址</label>
+          <input class="input" id="addr" placeholder="台北市信義區⋯⋯" />
+        </div>
+
+        <!-- 全家門市選擇（官方地圖） -->
+        <div class="field" id="familyFields" style="display:none">
+          <label>全家門市</label>
+          <div class="radio" style="flex-wrap:wrap">
+            <button class="btn" id="btnPickFamily">選擇門市（開啟官方地圖）</button>
+            <span class="subtle" id="familyPicked" style="margin-left:8px">尚未選擇</span>
+          </div>
+        </div>
+
+        <!-- 7-11 門市選擇（官方地圖） -->
+        <div class="field" id="sevenFields" style="display:none">
+          <label>7-11 門市</label>
+          <div class="radio" style="flex-wrap:wrap">
+            <button class="btn" id="btnPickSeven">選擇門市（開啟官方地圖）</button>
+            <span class="subtle" id="sevenPicked" style="margin-left:8px">尚未選擇</span>
+          </div>
+        </div>
+
+        <button class="btn pri" id="checkout">前往綠界付款</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">已加入購物車</div>
+
+  <!-- 載入你的主功能腳本（包含商品渲染、分類、購物車、選店、付款） -->
+  <script src="App.js"></script>
+
+  <!-- TEST MODE 徽章（讀取後端 /__env） -->
   <script>
-  (async ()=>{
-    try{
-      const res = await fetch("https://linfaya-ecpay-backend.onrender.com/__env")
-      const data = await res.json()
-      if(data.environment === "stage"){
-        const badge=document.createElement("div")
-        badge.textContent="TEST MODE"
-        Object.assign(badge.style,{
-          position:"fixed",bottom:"12px",right:"12px",
-          background:"#ef4444",color:"#fff",padding:"4px 8px",
-          borderRadius:"6px",fontSize:"12px",fontWeight:"bold",
-          zIndex:9999
-        })
-        document.body.appendChild(badge)
-      }
-    }catch(e){console.warn("env check failed",e)}
-  })()
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    (async ()=>{
+      try{
+        const res = await fetch("https://linfaya-ecpay-backend.onrender.com/__env");
+        const data = await res.json();
+        if(data.environment === "stage"){
+          const badge=document.createElement("div");
+          badge.textContent="TEST MODE";
+          Object.assign(badge.style,{
+            position:"fixed",bottom:"12px",right:"12px",
+            background:"#ef4444",color:"#fff",padding:"4px 8px",
+            borderRadius:"6px",fontSize:"12px",fontWeight:"bold",
+            zIndex:9999
+          });
+          document.body.appendChild(badge);
+        }
+      }catch(e){ console.warn("env check failed", e); }
+    })();
   </script>
 </body>
 </html>
