@@ -18,7 +18,7 @@ const PRODUCTS = [
   {id:'btm01',cat:'bottoms',name:'高腰緊身褲',price:499,
    colors:['黑','深灰'], sizes:['S','M','L','XL'],
    imgs:['Photo/高腰緊身褲.jpg']},
-  {id:'sk01',cat:'bottoms',name:'魚尾練習裙',price:699,
+  {id:'btm02',cat:'bottoms',name:'魚尾練習裙',price:699,
    colors:['黑'], sizes:['S','M','L'],
    imgs:['Photo/魚尾練習裙.jpg']},
 
