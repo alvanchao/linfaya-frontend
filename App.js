@@ -1,8 +1,8 @@
 // App.js － LINFAYA COUTURE
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
-// 重點：固定視窗名稱避免多開；iOS Safari 若擋彈窗就自動改「本頁開啟」避免卡住
-//       門市選完會自動回填；配送方式（宅配/全家/7-11）會記住並還原
-//       付款完成自動清空購物車（postMessage + localStorage 備援）
+// 重點：固定視窗名稱避免多開；iOS Safari 若擋彈窗就自動改「本頁開啟」
+//       門市選完會自動回填；配送方式記住並還原
+//       付款完成自動清空購物車（多重保險）
 
 // ===== 基本設定 =====
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com'; // 後端（Render）
@@ -336,6 +336,32 @@ window.addEventListener('storage', (e)=>{
   if (e.key === 'EC_CLEAR_CART' && e.newValue === '1') {
     clearCart();
     try { localStorage.removeItem('EC_CLEAR_CART'); } catch(e){}
+  }
+});
+
+// === 付款完成清空購物車：旗標檢查（啟動 + 回到頁面 + bfcache 返回） ===
+function checkClearFlag(){
+  try{
+    if (localStorage.getItem('EC_CLEAR_CART') === '1') {
+      localStorage.removeItem('EC_CLEAR_CART'); // 先清旗標，避免重複觸發
+      clearCart();                               // 清空購物車 + 重新渲染
+    }
+  }catch(e){}
+}
+// 1) 進頁面就檢查一次
+checkClearFlag();
+// 2) 切回此分頁時檢查（新視窗付款關閉後回來）
+window.addEventListener('focus', checkClearFlag);
+document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) checkClearFlag(); });
+// 3) 從 bfcache 返回時重檢並同步畫面
+window.addEventListener('pageshow', (e)=>{
+  if (e.persisted) {
+    checkClearFlag();
+    try {
+      state.cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+      renderCart();
+      updateBadge();
+    } catch(_) {}
   }
 });
 
