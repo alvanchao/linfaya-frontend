@@ -1,7 +1,10 @@
 // App.js － LINFAYA COUTURE
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
-// 修正：Safari 彈窗先預開命名視窗、付款完成多重保險清空購物車
-// 保留：配送方式記住與還原、門市回填、iOS 被擋改本頁開啟
+// 修正重點：
+// - postMessage 安全性：加入來源白名單檢查
+// - 付款完成：以 localStorage 旗標同步所有分頁清空購物車
+// - Safari/iOS 彈窗：預開命名視窗，若被擋改用本頁開啟
+// - 邊界防呆：缺欄位檢查、ECPay 參數長度限制、門市欄位多別名支援
 
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
 const ADMIN_EMAIL = 'linfaya251@gmail.com';
@@ -12,13 +15,22 @@ const CASHIER_WIN_NAME = 'ECPAY_CASHIER';
 const FREE_SHIP_THRESHOLD = 1000;
 const PAGE_SIZE = 6;
 
+// 允許的 postMessage 來源（正式/測試）
+const TRUSTED_ORIGINS = [
+  new URL(API_BASE).origin,
+  'https://logistics.ecpay.com.tw',
+  'https://logistics-stage.ecpay.com.tw',
+  'https://payment.ecpay.com.tw',
+  'https://payment-stage.ecpay.com.tw'
+];
+
 const PRODUCTS = [
   {id:'top01',cat:'tops',name:'無縫高彈背心',price:399,colors:['黑','膚'],sizes:['S','M','L'],imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg']},
   {id:'top02',cat:'tops',name:'鏤空美背短袖',price:429,colors:['黑','粉'],sizes:['S','M','L'],imgs:['Photo/鏤空美背短袖.jpg']},
   {id:'btm01',cat:'bottoms',name:'高腰緊身褲',price:499,colors:['黑','深灰'],sizes:['S','M','L','XL'],imgs:['Photo/高腰緊身褲.jpg']},
   {id:'sk01',cat:'bottoms',name:'魚尾練習裙',price:699,colors:['黑'],sizes:['S','M','L'],imgs:['Photo/魚尾練習裙.jpg']},
-  {id:'acc01',cat:'accessories',name:'彈力護腕',price:199,colors:['黑'],sizes:['F'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
-  {id:'sh01',cat:'shoes',name:'舞鞋（軟底）',price:990,colors:['黑'],sizes:['35','36','37','38','39','40'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
+  {id:'acc01',cat:'accessories',name:'彈力護腕',price:199,colors:['黑'],sizes:['F'],imgs:['Photo/上衣＋緊身褲套組.jpg']}, // TODO: 確認是否為正確圖片
+  {id:'sh01',cat:'shoes',name:'舞鞋（軟底）',price:990,colors:['黑'],sizes:['35','36','37','38','39','40'],imgs:['Photo/上衣＋緊身褲套組.jpg']}, // TODO: 確認是否為正確圖片
   {id:'set01',cat:'tops',name:'上衣＋緊身褲套組',price:849,colors:['多色'],sizes:['S','M','L'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
 ];
 
@@ -79,7 +91,7 @@ if (tabs) {
   });
 }
 
-function buildPager(total, pageSize = 6) {
+function buildPager(total, pageSize = PAGE_SIZE) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const mountTop = $('#pager'), mountBottom = $('#pagerBottom');
   const render = (mount) => {
@@ -87,8 +99,9 @@ function buildPager(total, pageSize = 6) {
     mount.innerHTML = '';
     for(let p=1;p<=pages;p++){
       const b=document.createElement('button');
+      b.type='button';
       b.className='page-btn' + (p===state.page?' active':'');
-      b.textContent=p;
+      b.textContent=String(p);
       b.onclick=()=>{ state.page=p; renderProducts(); };
       mount.appendChild(b);
     }
@@ -108,23 +121,23 @@ function renderProducts(){
   grid.innerHTML='';
   pageItems.forEach(p=>{
     const el=document.createElement('div'); el.className='product';
-    const first=p.imgs[0];
+    const first=p.imgs?.[0] || '';
     el.innerHTML=`
       <div class="imgbox">
-        <div class="main-img"><img alt="${p.name}" src="${first}"><div class="magnifier"></div></div>
-        <div class="thumbs">${p.imgs.map((src,i)=>`<img src="${src}" data-idx="${i}" class="${i===0?'active':''}">`).join('')}</div>
+        <div class="main-img"><img alt="${p.name}" src="${first}" loading="lazy"><div class="magnifier"></div></div>
+        <div class="thumbs">${(p.imgs||[]).map((src,i)=>`<img src="${src}" data-idx="${i}" class="${i===0?'active':''}" loading="lazy">`).join('')}</div>
       </div>
       <div class="body">
         <b>${p.name}</b>
         <div class="muted">分類：${p.cat}｜可選：顏色、尺寸</div>
         <div class="price">${fmt(p.price)}</div>
         <div class="qty">
-          <select class="select sel-color">${p.colors.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
-          <select class="select sel-size">${p.sizes.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+          <select class="select sel-color">${(p.colors||[]).map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+          <select class="select sel-size">${(p.sizes||[]).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
         </div>
         <div class="qty" style="margin-top:6px">
           <input class="input qty-input" type="number" min="1" value="1" style="width:84px" />
-          <button class="btn pri add">加入購物車</button>
+          <button type="button" class="btn pri add">加入購物車</button>
         </div>
       </div>
     `;
@@ -132,33 +145,39 @@ function renderProducts(){
     el.querySelectorAll('.thumbs img').forEach(img=>{
       img.addEventListener('click',()=>{
         el.querySelectorAll('.thumbs img').forEach(i=>i.classList.remove('active'));
-        img.classList.add('active'); main.src=img.src;
+        img.classList.add('active'); if(main) main.src=img.src;
       });
     });
-    el.querySelector('.add').onclick=()=>{
-      const color=el.querySelector('.sel-color').value;
-      const size=el.querySelector('.sel-size').value;
-      const qty=Math.max(1, parseInt(el.querySelector('.qty-input').value||'1',10));
-      addToCart({...p,color,size,qty,img:p.imgs[0]});
-    };
+    el.querySelector('.add')?.addEventListener('click',()=>{
+      const color=el.querySelector('.sel-color')?.value || '';
+      const size=el.querySelector('.sel-size')?.value || '';
+      const qty=Math.max(1, parseInt(el.querySelector('.qty-input')?.value||'1',10));
+      addToCart({...p,color,size,qty,img:first});
+    });
     grid.appendChild(el);
   });
 }
 function addToCart(item){
   const found=state.cart.find(i=>i.id===item.id&&i.color===item.color&&i.size===item.size);
-  if(found) found.qty += item.qty; else state.cart.push(item);
+  if(found) found.qty = (found.qty||1) + item.qty;
+  else state.cart.push(item);
   persist(); toast('已加入購物車'); updateBadge();
 }
 function removeItem(idx){ state.cart.splice(idx,1); persist(); renderCart(); updateBadge(); }
-function changeQty(idx,delta){ state.cart[idx].qty=Math.max(1,(state.cart[idx].qty||1)+delta); persist(); renderCart(); updateBadge(); }
+function changeQty(idx,delta){
+  const cur = state.cart[idx];
+  if(!cur) return;
+  cur.qty=Math.max(1,(cur.qty||1)+delta);
+  persist(); renderCart(); updateBadge();
+}
 window.removeItem = removeItem;
 window.changeQty  = changeQty;
 
 const drawer=$('#drawer');
 const openCartBtn  = $('#openCart');
 const closeCartBtn = $('#closeCart');
-if(openCartBtn) openCartBtn.onclick=()=>{drawer.classList.add('open'); renderCart();};
-if(closeCartBtn) closeCartBtn.onclick=()=>drawer.classList.remove('open');
+if(openCartBtn) openCartBtn.onclick=()=>{drawer?.classList.add('open'); renderCart();};
+if(closeCartBtn) closeCartBtn.onclick=()=>drawer?.classList.remove('open');
 
 function subtotal(){ return state.cart.reduce((s,i)=>s+i.price*(i.qty||1),0); }
 function calcShipping(){
@@ -173,7 +192,7 @@ function setShipOption(opt){ // 'home' | 'family' | 'seven'
   const r = document.querySelector(`input[name="ship"][value="${opt}"]`);
   if (r) { r.checked = true; }
   onShipChange();
-  sessionStorage.setItem('SHIP_OPT', opt);
+  try{ sessionStorage.setItem('SHIP_OPT', opt); }catch(_){}
 }
 
 function onShipChange(){
@@ -185,7 +204,7 @@ function onShipChange(){
   if(fam)   fam.style.display   = ship==='family'?'block':'none';
   if(seven) seven.style.display = ship==='seven' ?'block':'none';
   renderCart();
-  sessionStorage.setItem('SHIP_OPT', ship);
+  try{ sessionStorage.setItem('SHIP_OPT', ship); }catch(_){}
 }
 $$('input[name="ship"]').forEach(r=>r.addEventListener('change', onShipChange));
 
@@ -195,19 +214,20 @@ function renderCart(){
   if(state.cart.length===0){ list.innerHTML='<p class="muted" style="padding:8px 12px">購物車是空的</p>'; }
   state.cart.forEach((it,idx)=>{
     const el=document.createElement('div'); el.className='cart-item';
+    const pic = (it.imgs?.[0] ?? it.img) || '';
     el.innerHTML=`
-      <img src="${(it.imgs?it.imgs[0]:it.img)||''}" alt="${it.name}">
+      <img src="${pic}" alt="${it.name||''}">
       <div>
-        <b>${it.name}</b>
-        <div class="muted">顏色：${it.color}｜尺寸：${it.size}｜單價：${fmt(it.price)}</div>
+        <b>${it.name||''}</b>
+        <div class="muted">顏色：${it.color||''}｜尺寸：${it.size||''}｜單價：${fmt(it.price||0)}</div>
         <div class="qty" style="margin-top:6px">
-          <button class="btn" onclick="changeQty(${idx},-1)">-</button>
+          <button type="button" class="btn" onclick="changeQty(${idx},-1)">-</button>
           <span>${it.qty||1}</span>
-          <button class="btn" onclick="changeQty(${idx},1)">+</button>
-          <button class="btn" style="margin-left:auto;border-color:#3a2230;color:#fca5a5" onclick="removeItem(${idx})">移除</button>
+          <button type="button" class="btn" onclick="changeQty(${idx},1)">+</button>
+          <button type="button" class="btn" style="margin-left:auto;border-color:#3a2230;color:#fca5a5" onclick="removeItem(${idx})">移除</button>
         </div>
       </div>
-      <div><b>${fmt(it.price*(it.qty||1))}</b></div>`;
+      <div><b>${fmt((it.price||0)*(it.qty||1))}</b></div>`;
     list.appendChild(el);
   });
   const sub=subtotal(), ship=state.cart.length?calcShipping():0;
@@ -217,13 +237,13 @@ function renderCart(){
 }
 function updateBadge(){
   const n=state.cart.reduce((s,i)=>s+(i.qty||1),0);
-  const cc=$('#cartCount'); if(cc) cc.textContent=n;
+  const cc=$('#cartCount'); if(cc) cc.textContent=String(n);
 }
 
 // 清空購物車（thankyou 通知 + localStorage 備援）
 function clearCart(){
   state.cart = [];
-  sessionStorage.removeItem('cart');
+  try{ sessionStorage.removeItem('cart'); }catch(_){}
   renderCart();
   updateBadge();
   toast('付款完成，已清空購物車');
@@ -249,36 +269,46 @@ async function openCvsMap(logisticsSubType){
 }
 
 document.addEventListener('click',(e)=>{
-  if(e.target && e.target.id==='btnPickFamily'){
+  const t = e.target;
+  if(!(t instanceof HTMLElement)) return;
+  if(t.id==='btnPickFamily'){
     e.preventDefault();
     state.currentMapType='family';
-    sessionStorage.setItem('CVS_TYPE','family');
+    try{ sessionStorage.setItem('CVS_TYPE','family'); }catch(_){}
     setShipOption('family');
     openCvsMap('FAMIC2C');
   }
-  if(e.target && e.target.id==='btnPickSeven'){
+  if(t.id==='btnPickSeven'){
     e.preventDefault();
     state.currentMapType='seven';
-    sessionStorage.setItem('CVS_TYPE','seven');
+    try{ sessionStorage.setItem('CVS_TYPE','seven'); }catch(_){}
     setShipOption('seven');
     openCvsMap('UNIMARTC2C');
   }
 });
 
-// 地圖彈窗回傳
+// 地圖彈窗回傳（安全檢查：來源白名單）
 window.addEventListener('message',(ev)=>{
-  const data=ev.data||{};
-  if(data.type!=='EC_LOGISTICS_PICKED') return;
-  const p=data.payload||{};
-  const id = p.CVSStoreID || p.CVSStoreID1 || '';
-  const name = p.CVSStoreName || '';
-  const address = p.CVSAddress || '';
-  if(state.currentMapType==='family'){
-    const label = $('#familyPicked'); if(label) label.textContent = `${name}（${id}）｜${address}`;
-    state.cvs = { type:'family', id, name, address };
-  }else if(state.currentMapType==='seven'){
-    const label = $('#sevenPicked'); if(label) label.textContent = `${name}（${id}）｜${address}`;
-    state.cvs = { type:'seven', id, name, address };
+  try{
+    if(!TRUSTED_ORIGINS.includes(ev.origin)) return; // 安全性：只接受白名單
+    const data=ev.data||{};
+    if(data.type!=='EC_LOGISTICS_PICKED') return;
+    const p=data.payload||{};
+
+    // 常見欄位別名做防呆
+    const id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
+    const name = p.CVSStoreName || p.StName || p.StoreName || '';
+    const address = p.CVSAddress || p.StAddr || p.Address || '';
+
+    if(state.currentMapType==='family'){
+      const label = $('#familyPicked'); if(label) label.textContent = `${name}（${id}）｜${address}`;
+      state.cvs = { type:'family', id, name, address };
+    }else if(state.currentMapType==='seven'){
+      const label = $('#sevenPicked'); if(label) label.textContent = `${name}（${id}）｜${address}`;
+      state.cvs = { type:'seven', id, name, address };
+    }
+  }catch(e){
+    console.error(e);
   }
 });
 
@@ -293,9 +323,9 @@ window.addEventListener('message',(ev)=>{
     }
     localStorage.removeItem('EC_LOGISTICS_PICKED');
     const p = JSON.parse(raw);
-    const id = p.CVSStoreID || p.CVSStoreID1 || '';
-    const name = p.CVSStoreName || '';
-    const address = p.CVSAddress || '';
+    const id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
+    const name = p.CVSStoreName || p.StName || p.StoreName || '';
+    const address = p.CVSAddress || p.StAddr || p.Address || '';
     const type = sessionStorage.getItem('CVS_TYPE') || state.currentMapType;
     if(type==='family'){
       const label = document.querySelector('#familyPicked');
@@ -311,12 +341,18 @@ window.addEventListener('message',(ev)=>{
   }catch(e){}
 })();
 
-// thankyou 通知
+// thankyou／cashier 回傳（安全檢查 + 多分頁同步清空）
 window.addEventListener('message',(ev)=>{
-  const data = ev.data || {};
-  if (data && data.type === 'EC_PAY_DONE') {
-    clearCart();
-    try { localStorage.removeItem('EC_CLEAR_CART'); } catch(e){}
+  try{
+    if(!TRUSTED_ORIGINS.includes(ev.origin)) return; // 安全性：只接受白名單
+    const data = ev.data || {};
+    if (data && data.type === 'EC_PAY_DONE') {
+      try { localStorage.setItem('EC_CLEAR_CART','1'); } catch(_) {}
+      clearCart();
+      try { localStorage.removeItem('EC_CLEAR_CART'); } catch(_){}
+    }
+  }catch(e){
+    console.error(e);
   }
 });
 
@@ -324,7 +360,7 @@ window.addEventListener('message',(ev)=>{
 window.addEventListener('storage', (e)=>{
   if (e.key === 'EC_CLEAR_CART' && e.newValue === '1') {
     clearCart();
-    try { localStorage.removeItem('EC_CLEAR_CART'); } catch(e){}
+    try { localStorage.removeItem('EC_CLEAR_CART'); } catch(_){}
   }
 });
 
@@ -356,23 +392,32 @@ function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
 const checkoutBtn = $('#checkout');
 if (checkoutBtn) {
-  checkoutBtn.onclick = async ()=>{
+  checkoutBtn.addEventListener('click', async ()=>{
     if(!state.cart.length) return alert('購物車是空的');
 
-    const name=$('#name').value.trim();
-    const email=$('#email').value.trim();
-    const phone=$('#phone').value.trim();
+    const name=$('#name')?.value.trim() || '';
+    const email=$('#email')?.value.trim() || '';
+    const phone=$('#phone')?.value.trim() || '';
     const shipOpt=$('input[name="ship"]:checked')?.value || 'home';
-    const addr=$('#addr').value.trim();
+    const addr=$('#addr')?.value.trim() || '';
 
     if(!name) return alert('請填寫收件姓名');
     if(!validEmail(email)) return alert('請輸入正確 Email');
     if(!validPhone(phone)) return alert('手機需為 09 開頭 10 碼');
 
     let shippingInfo='';
-    if(shipOpt==='home'){ if(!addr) return alert('請填寫收件地址'); shippingInfo=`自家宅配｜${addr}`; }
-    if(shipOpt==='family'){ if(!state.cvs||state.cvs.type!=='family') return alert('請先選擇全家門市'); shippingInfo=`全家店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`; }
-    if(shipOpt==='seven'){ if(!state.cvs||state.cvs.type!=='seven')  return alert('請先選擇 7-11 門市'); shippingInfo=`7-11 店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`; }
+    if(shipOpt==='home'){
+      if(!addr) return alert('請填寫收件地址');
+      shippingInfo=`自家宅配｜${addr}`;
+    }
+    if(shipOpt==='family'){
+      if(!state.cvs||state.cvs.type!=='family') return alert('請先選擇全家門市');
+      shippingInfo=`全家店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`;
+    }
+    if(shipOpt==='seven'){
+      if(!state.cvs||state.cvs.type!=='seven')  return alert('請先選擇 7-11 門市');
+      shippingInfo=`7-11 店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`;
+    }
 
     const orderId = 'LF' + Date.now();
     const items = state.cart.map(i=>({id:i.id,name:i.name,color:i.color,size:i.size,qty:i.qty,price:i.price}));
@@ -380,10 +425,15 @@ if (checkoutBtn) {
     const shipFee = state.cart.length ? (sub>=FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)) : 0;
     const amount = sub + shipFee;
 
+    // ECPay 實務：限制字串長度（保守 200 內）
+    const itemNameRaw = items.map(i=>`${i.name}x${i.qty}`).join('#');
+    const itemName = itemNameRaw.slice(0, 200);
+    const tradeDesc = 'Linfaya Shop Order'.slice(0, 100);
+
     const payload = {
       orderId, amount,
-      itemName: items.map(i=>`${i.name}x${i.qty}`).join('#'),
-      tradeDesc: 'Linfaya Shop Order',
+      itemName,
+      tradeDesc,
       name, email, phone,
       shippingInfo,
       subtotal: sub,
@@ -411,7 +461,7 @@ if (checkoutBtn) {
       if(win) try{ win.close(); }catch(_){}
       alert('目前尚未連上後端，請稍後再試。');
     }
-  };
+  });
 }
 
 const year = $('#year'); if(year) year.textContent = new Date().getFullYear();
