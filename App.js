@@ -1,15 +1,20 @@
+// App.js － LINFAYA COUTURE
+// 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台（新視窗）
+// 後端需搭配：/api/ecpay/create、/api/ecpay/map/sign、/api/ecpay/return、/api/ecpay/order-result
+
 // ===== 基本設定 =====
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com'; // 後端（Render）
 const ADMIN_EMAIL = 'linfaya251@gmail.com';
 
-// 固定視窗名稱，避免雙視窗
+// 固定視窗名稱，避免瀏覽器多開
 const CVS_WIN_NAME = 'EC_CVS_MAP';
 const CASHIER_WIN_NAME = 'ECPAY_CASHIER';
 
 // ===== 商店規則與資料 =====
-const FREE_SHIP_THRESHOLD = 1000;
+const FREE_SHIP_THRESHOLD = 1000; // 滿千免運
 const PAGE_SIZE = 6;
 
+// 你的商品資料（可自行擴充）
 const PRODUCTS = [
   {id:'top01',cat:'tops',name:'無縫高彈背心',price:399,colors:['黑','膚'],sizes:['S','M','L'],imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg']},
   {id:'top02',cat:'tops',name:'鏤空美背短袖',price:429,colors:['黑','粉'],sizes:['S','M','L'],imgs:['Photo/鏤空美背短袖.jpg']},
@@ -21,11 +26,13 @@ const PRODUCTS = [
 ];
 
 // ===== 小工具 =====
-const $ = s => document.querySelector(s);
+const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const fmt = n => 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW');
+
 function toast(msg='已加入購物車',ms=1200){
-  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  const t=$('#toast'); if(!t) return;
+  t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),ms);
 }
 
@@ -34,24 +41,28 @@ const state = {
   cat: 'all',
   page: 1,
   cart: JSON.parse(sessionStorage.getItem('cart')||'[]'),
-  cvs: null,                  // 選店結果
+  cvs: null,                  // 選店結果 { type:'family'|'seven', id, name, address }
   currentMapType: null        // 'family' | 'seven'
 };
 function persist(){ sessionStorage.setItem('cart', JSON.stringify(state.cart)); }
 
 // ===== Tabs =====
-$('#tabs').addEventListener('click', (e)=>{
-  const btn = e.target.closest('.tab'); if(!btn) return;
-  $$('#tabs .tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  state.cat = btn.dataset.cat; state.page = 1;
-  renderProducts();
-});
+const tabs = $('#tabs');
+if (tabs) {
+  tabs.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab'); if(!btn) return;
+    $$('#tabs .tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    state.cat = btn.dataset.cat; state.page = 1;
+    renderProducts();
+  });
+}
 
 // ===== 分頁 =====
 function buildPager(total, pageSize, page, mountTop, mountBottom){
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const render = (mount) => {
+    if(!mount) return;
     mount.innerHTML = '';
     for(let p=1;p<=pages;p++){
       const b=document.createElement('button');
@@ -61,7 +72,7 @@ function buildPager(total, pageSize, page, mountTop, mountBottom){
       mount.appendChild(b);
     }
   };
-  render(mountTop); render(mountBottom);
+  render($('#pager')); render($('#pagerBottom'));
 }
 
 // ===== 商品清單 =====
@@ -70,10 +81,11 @@ function renderProducts(){
   const total=list.length, from=(state.page-1)*PAGE_SIZE;
   const pageItems=list.slice(from, from+PAGE_SIZE);
 
-  $('#infoText').textContent = `共 ${total} 件`;
-  buildPager(total, PAGE_SIZE, state.page, $('#pager'), $('#pagerBottom'));
+  const infoText = $('#infoText'); if(infoText) infoText.textContent = `共 ${total} 件`;
+  buildPager(total, PAGE_SIZE, state.page);
 
-  const grid=$('#grid'); grid.innerHTML='';
+  const grid=$('#grid'); if(!grid) return;
+  grid.innerHTML='';
   pageItems.forEach(p=>{
     const el=document.createElement('div'); el.className='product';
     const first=p.imgs[0];
@@ -106,7 +118,7 @@ function renderProducts(){
     el.querySelector('.add').onclick=()=>{
       const color=el.querySelector('.sel-color').value;
       const size=el.querySelector('.sel-size').value;
-      const qty=parseInt(el.querySelector('.qty-input').value||'1');
+      const qty=Math.max(1, parseInt(el.querySelector('.qty-input').value||'1',10));
       addToCart({...p,color,size,qty,img:p.imgs[0]});
     };
     grid.appendChild(el);
@@ -119,11 +131,15 @@ function addToCart(item){
 }
 function removeItem(idx){ state.cart.splice(idx,1); persist(); renderCart(); updateBadge(); }
 function changeQty(idx,delta){ state.cart[idx].qty=Math.max(1,(state.cart[idx].qty||1)+delta); persist(); renderCart(); updateBadge(); }
+window.removeItem = removeItem; // 讓 inline onclick 可用
+window.changeQty  = changeQty;
 
 // ===== 購物車抽屜 =====
 const drawer=$('#drawer');
-$('#openCart').onclick=()=>{drawer.classList.add('open'); renderCart();}
-$('#closeCart').onclick=()=>drawer.classList.remove('open');
+const openCartBtn  = $('#openCart');
+const closeCartBtn = $('#closeCart');
+if(openCartBtn) openCartBtn.onclick=()=>{drawer.classList.add('open'); renderCart();};
+if(closeCartBtn) closeCartBtn.onclick=()=>drawer.classList.remove('open');
 
 function subtotal(){ return state.cart.reduce((s,i)=>s+i.price*(i.qty||1),0); }
 function calcShipping(){
@@ -134,15 +150,19 @@ function calcShipping(){
 }
 function onShipChange(){
   const ship=$('input[name="ship"]:checked')?.value || 'home';
-  $('#homeFields').style.display = ship==='home'?'block':'none';
-  $('#familyFields').style.display = ship==='family'?'block':'none';
-  $('#sevenFields').style.display  = ship==='seven' ?'block':'none';
+  const home  = $('#homeFields');
+  const fam   = $('#familyFields');
+  const seven = $('#sevenFields');
+  if(home)  home.style.display  = ship==='home'  ?'block':'none';
+  if(fam)   fam.style.display   = ship==='family'?'block':'none';
+  if(seven) seven.style.display = ship==='seven' ?'block':'none';
   renderCart();
 }
 $$('input[name="ship"]').forEach(r=>r.addEventListener('change', onShipChange));
 
 function renderCart(){
-  const list=$('#cartList'); list.innerHTML='';
+  const list=$('#cartList'); if(!list) return;
+  list.innerHTML='';
   if(state.cart.length===0){ list.innerHTML='<p class="muted" style="padding:8px 12px">購物車是空的</p>'; }
   state.cart.forEach((it,idx)=>{
     const el=document.createElement('div'); el.className='cart-item';
@@ -162,29 +182,29 @@ function renderCart(){
     list.appendChild(el);
   });
   const sub=subtotal(), ship=state.cart.length?calcShipping():0;
-  $('#subtotal').textContent=fmt(sub);
-  $('#shipping').textContent=fmt(ship);
-  $('#grand').textContent=fmt(sub+ship);
+  const subtotalEl = $('#subtotal'); if(subtotalEl) subtotalEl.textContent=fmt(sub);
+  const shippingEl = $('#shipping'); if(shippingEl) shippingEl.textContent=fmt(ship);
+  const grandEl    = $('#grand');    if(grandEl)    grandEl.textContent=fmt(sub+ship);
 }
 function updateBadge(){
   const n=state.cart.reduce((s,i)=>s+(i.qty||1),0);
-  $('#cartCount').textContent=n;
+  const cc=$('#cartCount'); if(cc) cc.textContent=n;
 }
 
-// ===== 選店：固定視窗名稱避免雙視窗 =====
+// ===== 選店（固定視窗名稱，避免雙視窗）=====
 async function openCvsMap(logisticsSubType){
   const r = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ LogisticsSubType: logisticsSubType })
+    body: JSON.stringify({ LogisticsSubType: logisticsSubType }) // 'FAMIC2C' or 'UNIMARTC2C'
   });
   if(!r.ok){ alert('選店後端未配置'); return; }
   const {endpoint, fields} = await r.json();
 
-  // 先用固定名稱開一個視窗
+  // 固定名稱的視窗
   const win = window.open('about:blank', CVS_WIN_NAME);
   if(!win){ alert('請允許本網站彈出視窗'); return; }
 
-  // 用相同 target 提交，確保只會使用同一個視窗
+  // 以同一 target 提交，確保只會用到這一個視窗
   const form=document.createElement('form');
   form.method='POST'; form.action=endpoint; form.target=CVS_WIN_NAME;
   Object.entries(fields).forEach(([k,v])=>{
@@ -193,7 +213,7 @@ async function openCvsMap(logisticsSubType){
   document.body.appendChild(form); form.submit(); form.remove();
 }
 
-// 兩顆按鈕：對應不同 subtype
+// 兩顆選店按鈕：全家/7-11
 document.addEventListener('click',(e)=>{
   if(e.target && e.target.id==='btnPickFamily'){ e.preventDefault(); state.currentMapType='family'; openCvsMap('FAMIC2C'); }
   if(e.target && e.target.id==='btnPickSeven'){  e.preventDefault(); state.currentMapType='seven';  openCvsMap('UNIMARTC2C'); }
@@ -209,18 +229,19 @@ window.addEventListener('message',(ev)=>{
   const address = p.CVSAddress || '';
 
   if(state.currentMapType==='family'){
-    $('#familyPicked').textContent = `${name}（${id}）｜${address}`;
+    const label = $('#familyPicked'); if(label) label.textContent = `${name}（${id}）｜${address}`;
     state.cvs = { type:'family', id, name, address };
   }else if(state.currentMapType==='seven'){
-    $('#sevenPicked').textContent = `${name}（${id}）｜${address}`;
+    const label = $('#sevenPicked'); if(label) label.textContent = `${name}（${id}）｜${address}`;
     state.cvs = { type:'seven', id, name, address };
   }
 });
 
-// ===== 付款：固定視窗名稱避免雙視窗，並在新視窗進行收銀台 =====
+// ===== 付款（固定視窗名稱；傳 subtotal/shipFee/shippingInfo 給後端）=====
 function validPhone(v){ return /^09\d{8}$/.test(v); }
 function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
+// 以表單送出到指定 endpoint（target 可指定新視窗名稱）
 function postForm(endpoint, fields, target = '_self'){
   const form = document.createElement('form');
   form.method='POST'; form.action=endpoint; form.target=target;
@@ -232,62 +253,69 @@ function postForm(endpoint, fields, target = '_self'){
   setTimeout(()=>form.remove(), 3000);
 }
 
-$('#checkout').onclick = async ()=>{
-  if(!state.cart.length) return alert('購物車是空的');
+const checkoutBtn = $('#checkout');
+if (checkoutBtn) {
+  checkoutBtn.onclick = async ()=>{
+    if(!state.cart.length) return alert('購物車是空的');
 
-  const name=$('#name').value.trim();
-  const email=$('#email').value.trim();
-  const phone=$('#phone').value.trim();
-  const shipOpt=$('input[name="ship"]:checked')?.value || 'home';
-  const addr=$('#addr').value.trim();
+    const name=$('#name').value.trim();
+    const email=$('#email').value.trim();
+    const phone=$('#phone').value.trim();
+    const shipOpt=$('input[name="ship"]:checked')?.value || 'home';
+    const addr=$('#addr').value.trim();
 
-  if(!name) return alert('請填寫收件姓名');
-  if(!validEmail(email)) return alert('請輸入正確 Email');
-  if(!validPhone(phone)) return alert('手機需為 09 開頭 10 碼');
+    if(!name) return alert('請填寫收件姓名');
+    if(!validEmail(email)) return alert('請輸入正確 Email');
+    if(!validPhone(phone)) return alert('手機需為 09 開頭 10 碼');
 
-  let shippingInfo='';
-  if(shipOpt==='home'){ if(!addr) return alert('請填寫收件地址'); shippingInfo=`自家宅配｜${addr}`; }
-  if(shipOpt==='family'){ if(!state.cvs||state.cvs.type!=='family') return alert('請先選擇全家門市'); shippingInfo=`全家店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`; }
-  if(shipOpt==='seven'){ if(!state.cvs||state.cvs.type!=='seven')  return alert('請先選擇 7-11 門市'); shippingInfo=`7-11 店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`; }
+    let shippingInfo='';
+    if(shipOpt==='home'){ if(!addr) return alert('請填寫收件地址'); shippingInfo=`自家宅配｜${addr}`; }
+    if(shipOpt==='family'){ if(!state.cvs||state.cvs.type!=='family') return alert('請先選擇全家門市'); shippingInfo=`全家店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`; }
+    if(shipOpt==='seven'){ if(!state.cvs||state.cvs.type!=='seven')  return alert('請先選擇 7-11 門市'); shippingInfo=`7-11 店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`; }
 
-  const orderId = 'LF' + Date.now();
-  const items = state.cart.map(i=>({id:i.id,name:i.name,color:i.color,size:i.size,qty:i.qty,price:i.price}));
-  const sub=subtotal(); const shipFee=state.cart.length?(sub>=FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)):0;
-  const amount=sub+shipFee;
+    const orderId = 'LF' + Date.now();
+    const items = state.cart.map(i=>({id:i.id,name:i.name,color:i.color,size:i.size,qty:i.qty,price:i.price}));
+    const sub = state.cart.reduce((s,i)=>s+i.price*(i.qty||1),0);
+    const shipFee = state.cart.length ? (sub>=FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)) : 0;
+    const amount = sub + shipFee;
 
-  const payload = {
-    orderId, amount,
-    itemName: items.map(i=>`${i.name}x${i.qty}`).join('#'),
-    tradeDesc: 'Linfaya Shop Order',
-    name, email, phone,
-    shippingInfo, // <— 新增：後端會一起記錄寄信/Google Form
-    clientBackURL: 'https://alvanchao.github.io/#/thankyou',
-    returnURL: `${API_BASE}/api/ecpay/return`
+    // 後端要寫 Google「未付款」那筆，所以一併傳 subtotal / shipFee
+    const payload = {
+      orderId, amount,
+      itemName: items.map(i=>`${i.name}x${i.qty}`).join('#'),
+      tradeDesc: 'Linfaya Shop Order',
+      name, email, phone,
+      shippingInfo,
+      subtotal: sub,
+      shipFee: shipFee,
+      returnURL: `${API_BASE}/api/ecpay/return`
+    };
+
+    // 固定名稱的新視窗（收銀台）
+    const win = window.open('about:blank', CASHIER_WIN_NAME);
+    if(!win){ alert('請允許本網站彈出視窗'); return; }
+
+    try{
+      const r = await fetch(`${API_BASE}/api/ecpay/create`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(!r.ok) throw new Error('create failed');
+      const data = await r.json();
+      if(!data || !data.endpoint || !data.fields) throw new Error('missing fields');
+
+      // 在固定視窗開啟綠界（避免多開）
+      postForm(data.endpoint, data.fields, CASHIER_WIN_NAME);
+      toast('正在前往綠界付款…',1600);
+
+    }catch(e){
+      console.error(e);
+      win.close();
+      alert('目前尚未連上後端，請稍後再試。');
+    }
   };
-
-  // 先開固定名稱的新視窗，避免雙視窗
-  const win = window.open('about:blank', CASHIER_WIN_NAME);
-  if(!win){ alert('請允許本網站彈出視窗'); return; }
-
-  try{
-    const r = await fetch(`${API_BASE}/api/ecpay/create`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-    if(!r.ok) throw new Error('create failed');
-    const data = await r.json();
-    if(!data || !data.endpoint || !data.fields) throw new Error('missing fields');
-
-    // 在同一個視窗開啟綠界收銀台
-    postForm(data.endpoint, data.fields, CASHIER_WIN_NAME);
-    toast('正在前往綠界付款…',1600);
-  }catch(e){
-    console.error(e);
-    win.close();
-    alert('目前尚未連上後端，請稍後再試。');
-  }
-};
+}
 
 // ===== 其他初始化 =====
-$('#year').textContent = new Date().getFullYear();
+const year = $('#year'); if(year) year.textContent = new Date().getFullYear();
 updateBadge(); renderProducts(); onShipChange();
