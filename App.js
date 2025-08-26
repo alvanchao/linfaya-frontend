@@ -1,6 +1,7 @@
 // App.js － LINFAYA COUTURE
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
 // 重點：固定視窗名稱避免多開；iOS Safari 若擋彈窗就自動改「本頁開啟」避免卡住
+//       門市選完會自動回填；配送方式（宅配/全家/7-11）會記住並還原
 // 後端需搭配：/api/ecpay/create、/api/ecpay/map/sign、/api/ecpay/return、/api/ecpay/order-result
 
 // ===== 基本設定 =====
@@ -179,6 +180,15 @@ function calcShipping(){
   const ship=$('input[name="ship"]:checked')?.value || 'home';
   return ship==='home'?80:60;
 }
+
+// ✅ 新增：設定配送方式、更新畫面、記住選項
+function setShipOption(opt){ // 'home' | 'family' | 'seven'
+  const r = document.querySelector(`input[name="ship"][value="${opt}"]`);
+  if (r) { r.checked = true; }
+  onShipChange();
+  sessionStorage.setItem('SHIP_OPT', opt);
+}
+
 function onShipChange(){
   const ship=$('input[name="ship"]:checked')?.value || 'home';
   const home  = $('#homeFields');
@@ -188,6 +198,7 @@ function onShipChange(){
   if(fam)   fam.style.display   = ship==='family'?'block':'none';
   if(seven) seven.style.display = ship==='seven' ?'block':'none';
   renderCart();
+  sessionStorage.setItem('SHIP_OPT', ship); // ✅ 記住目前配送方式
 }
 $$('input[name="ship"]').forEach(r=>r.addEventListener('change', onShipChange));
 
@@ -231,23 +242,26 @@ async function openCvsMap(logisticsSubType){
   if(!r.ok){ alert('選店後端未配置'); return; }
   const {endpoint, fields} = await r.json();
 
+  // 先嘗試開命名視窗；若被擋，fallback 本頁開啟
   const win = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…");
   const target = win ? CVS_WIN_NAME : '_self';
   postForm(endpoint, fields, target);
 }
 
-// 兩顆選店按鈕：全家/7-11（記住使用者選哪一種，給本頁模式回填）
+// 兩顆選店按鈕：全家/7-11（記住使用者選哪一種，並先把配送方式切過去）
 document.addEventListener('click',(e)=>{
   if(e.target && e.target.id==='btnPickFamily'){
     e.preventDefault();
     state.currentMapType='family';
     sessionStorage.setItem('CVS_TYPE','family');
+    setShipOption('family');                 // ✅ 新增：先切換配送方式
     openCvsMap('FAMIC2C');
   }
   if(e.target && e.target.id==='btnPickSeven'){
     e.preventDefault();
     state.currentMapType='seven';
     sessionStorage.setItem('CVS_TYPE','seven');
+    setShipOption('seven');                  // ✅ 新增：先切換配送方式
     openCvsMap('UNIMARTC2C');
   }
 });
@@ -269,25 +283,32 @@ window.addEventListener('message',(ev)=>{
   }
 });
 
-// 啟動時：若地圖在本頁開啟，從 localStorage 撈回剛選的門市（無彈窗模式）
+// 啟動時：若地圖在本頁開啟，從 localStorage 撈回剛選的門市（無彈窗模式）並還原配送方式
 (function(){
   try{
     const raw = localStorage.getItem('EC_LOGISTICS_PICKED');
-    if(!raw) return;
+    if(!raw){
+      // 就算沒有剛選門市，也把上次配送選項恢復
+      const saved = sessionStorage.getItem('SHIP_OPT');
+      if (saved) setShipOption(saved);
+      return;
+    }
     localStorage.removeItem('EC_LOGISTICS_PICKED');
     const p = JSON.parse(raw);
     const id = p.CVSStoreID || p.CVSStoreID1 || '';
     const name = p.CVSStoreName || '';
     const address = p.CVSAddress || '';
-    const type = sessionStorage.getItem('CVS_TYPE') || state.currentMapType;
+    const type = sessionStorage.getItem('CVS_TYPE') || state.currentMapType; // 'family'|'seven'
     if(type==='family'){
       const label = document.querySelector('#familyPicked');
       if(label) label.textContent = `${name}（${id}）｜${address}`;
       state.cvs = { type:'family', id, name, address };
+      setShipOption('family');               // ✅ 勾回「全家店到店」
     }else if(type==='seven'){
       const label = document.querySelector('#sevenPicked');
       if(label) label.textContent = `${name}（${id}）｜${address}`;
       state.cvs = { type:'seven', id, name, address };
+      setShipOption('seven');                // ✅ 勾回「7-11 店到店」
     }
   }catch(e){}
 })();
