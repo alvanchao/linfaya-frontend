@@ -2,7 +2,7 @@
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
 // 重點：固定視窗名稱避免多開；iOS Safari 若擋彈窗就自動改「本頁開啟」避免卡住
 //       門市選完會自動回填；配送方式（宅配/全家/7-11）會記住並還原
-// 後端需搭配：/api/ecpay/create、/api/ecpay/map/sign、/api/ecpay/return、/api/ecpay/order-result
+//       付款完成自動清空購物車（postMessage + localStorage 備援）
 
 // ===== 基本設定 =====
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com'; // 後端（Render）
@@ -181,7 +181,7 @@ function calcShipping(){
   return ship==='home'?80:60;
 }
 
-// ✅ 新增：設定配送方式、更新畫面、記住選項
+// ✅ 設定配送方式、更新畫面、記住選項
 function setShipOption(opt){ // 'home' | 'family' | 'seven'
   const r = document.querySelector(`input[name="ship"][value="${opt}"]`);
   if (r) { r.checked = true; }
@@ -233,6 +233,15 @@ function updateBadge(){
   const cc=$('#cartCount'); if(cc) cc.textContent=n;
 }
 
+// ✅ 付款成功後清空購物車
+function clearCart(){
+  state.cart = [];
+  sessionStorage.removeItem('cart');
+  renderCart();
+  updateBadge();
+  toast('付款完成，已清空購物車');
+}
+
 // ===== 選店（固定視窗名稱；被擋就改「本頁開啟」）=====
 async function openCvsMap(logisticsSubType){
   const r = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
@@ -254,14 +263,14 @@ document.addEventListener('click',(e)=>{
     e.preventDefault();
     state.currentMapType='family';
     sessionStorage.setItem('CVS_TYPE','family');
-    setShipOption('family');                 // ✅ 新增：先切換配送方式
+    setShipOption('family');                 // 先切換配送方式
     openCvsMap('FAMIC2C');
   }
   if(e.target && e.target.id==='btnPickSeven'){
     e.preventDefault();
     state.currentMapType='seven';
     sessionStorage.setItem('CVS_TYPE','seven');
-    setShipOption('seven');                  // ✅ 新增：先切換配送方式
+    setShipOption('seven');                  // 先切換配送方式
     openCvsMap('UNIMARTC2C');
   }
 });
@@ -303,15 +312,32 @@ window.addEventListener('message',(ev)=>{
       const label = document.querySelector('#familyPicked');
       if(label) label.textContent = `${name}（${id}）｜${address}`;
       state.cvs = { type:'family', id, name, address };
-      setShipOption('family');               // ✅ 勾回「全家店到店」
+      setShipOption('family');               // 勾回「全家店到店」
     }else if(type==='seven'){
       const label = document.querySelector('#sevenPicked');
       if(label) label.textContent = `${name}（${id}）｜${address}`;
       state.cvs = { type:'seven', id, name, address };
-      setShipOption('seven');                // ✅ 勾回「7-11 店到店」
+      setShipOption('seven');                // 勾回「7-11 店到店」
     }
   }catch(e){}
 })();
+
+// 付款完成：thankyou.html 會 postMessage 通知這裡
+window.addEventListener('message',(ev)=>{
+  const data = ev.data || {};
+  if (data && data.type === 'EC_PAY_DONE') {
+    clearCart();
+    try { localStorage.removeItem('EC_CLEAR_CART'); } catch(e){}
+  }
+});
+
+// 備援：另一個分頁觸發 localStorage 旗標時，同步清空
+window.addEventListener('storage', (e)=>{
+  if (e.key === 'EC_CLEAR_CART' && e.newValue === '1') {
+    clearCart();
+    try { localStorage.removeItem('EC_CLEAR_CART'); } catch(e){}
+  }
+});
 
 // ===== 付款（固定視窗名稱；被擋就用本頁開啟；傳 subtotal/shipFee/shippingInfo 給後端）=====
 function validPhone(v){ return /^09\d{8}$/.test(v); }
