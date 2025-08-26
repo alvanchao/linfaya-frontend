@@ -1,9 +1,10 @@
 // App.js － LINFAYA COUTURE
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
-// 修正重點：
+// 強化：
 // - postMessage 安全性：加入來源白名單檢查
 // - 付款完成：以 localStorage 旗標同步所有分頁清空購物車
 // - Safari/iOS 彈窗：預開命名視窗，若被擋改用本頁開啟
+// - 逾時與重試：fetchJSON（AbortController + 指數退避）
 // - 邊界防呆：缺欄位檢查、ECPay 參數長度限制、門市欄位多別名支援
 
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
@@ -24,6 +25,7 @@ const TRUSTED_ORIGINS = [
   'https://payment-stage.ecpay.com.tw'
 ];
 
+// 模擬資料（請確認 acc01/sh01 圖片是否正確）
 const PRODUCTS = [
   {id:'top01',cat:'tops',name:'無縫高彈背心',price:399,colors:['黑','膚'],sizes:['S','M','L'],imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg']},
   {id:'top02',cat:'tops',name:'鏤空美背短袖',price:429,colors:['黑','粉'],sizes:['S','M','L'],imgs:['Photo/鏤空美背短袖.jpg']},
@@ -37,6 +39,37 @@ const PRODUCTS = [
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const fmt = n => 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW');
+
+// ---- 工具：可逾時＋重試的 fetchJSON ----
+async function fetchJSON(url, fetchOpts = {}, retryOpts = {}) {
+  const {
+    timeoutMs = 20000,          // 20 秒逾時
+    retries = 2,                // 額外重試 2 次（共 3 次）
+    retryDelayBaseMs = 800      // 指數退避基準（800ms, 1600ms, ...）
+  } = retryOpts;
+
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(new Error('Timeout reached, aborting!')), timeoutMs);
+    try {
+      const r = await fetch(url, { ...fetchOpts, signal: ac.signal });
+      clearTimeout(t);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (e) {
+      clearTimeout(t);
+      lastErr = e;
+      const msg = String(e && e.message || e);
+      // 對 4xx 不重試（參數錯或未授權）
+      if (/HTTP\s4\d\d/.test(msg)) break;
+      if (attempt === retries) break;
+      const delay = retryDelayBaseMs * Math.pow(2, attempt);
+      await new Promise(res => setTimeout(res, delay));
+    }
+  }
+  throw lastErr;
+}
 
 function toast(msg='已加入購物車',ms=1200){
   const t=$('#toast'); if(!t) return;
@@ -253,12 +286,15 @@ function clearCart(){
 async function openCvsMap(logisticsSubType){
   const preWin = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…"); // 先於點擊時開
   try{
-    const r = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ LogisticsSubType: logisticsSubType })
-    });
-    if(!r.ok) throw new Error('map/sign failed');
-    const {endpoint, fields} = await r.json();
+    const {endpoint, fields} = await fetchJSON(
+      `${API_BASE}/api/ecpay/map/sign`,
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ LogisticsSubType: logisticsSubType })
+      },
+      { timeoutMs: 20000, retries: 2 }
+    );
     const target = preWin ? CVS_WIN_NAME : '_self';
     postForm(endpoint, fields, target);
   }catch(e){
@@ -444,12 +480,15 @@ if (checkoutBtn) {
     const win = openNamedWindow(CASHIER_WIN_NAME, "正在前往綠界收銀台…");
 
     try{
-      const r = await fetch(`${API_BASE}/api/ecpay/create`,{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      if(!r.ok) throw new Error('create failed');
-      const data = await r.json();
+      const data = await fetchJSON(
+        `${API_BASE}/api/ecpay/create`,
+        {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        },
+        { timeoutMs: 20000, retries: 2 }
+      );
       if(!data || !data.endpoint || !data.fields) throw new Error('missing fields');
 
       const target = win ? CASHIER_WIN_NAME : '_self';
