@@ -1,22 +1,17 @@
 // App.js － LINFAYA COUTURE
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
-// 重點：固定視窗名稱避免多開；iOS Safari 若擋彈窗就自動改「本頁開啟」
-//       門市選完會自動回填；配送方式記住並還原
-//       付款完成自動清空購物車（多重保險）
+// 修正：Safari 彈窗先預開命名視窗、付款完成多重保險清空購物車
+// 保留：配送方式記住與還原、門市回填、iOS 被擋改本頁開啟
 
-// ===== 基本設定 =====
-const API_BASE = 'https://linfaya-ecpay-backend.onrender.com'; // 後端（Render）
+const API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
 const ADMIN_EMAIL = 'linfaya251@gmail.com';
 
-// 固定視窗名稱（避免瀏覽器多開）
 const CVS_WIN_NAME = 'EC_CVS_MAP';
 const CASHIER_WIN_NAME = 'ECPAY_CASHIER';
 
-// ===== 商店規則與資料 =====
-const FREE_SHIP_THRESHOLD = 1000; // 滿千免運
+const FREE_SHIP_THRESHOLD = 1000;
 const PAGE_SIZE = 6;
 
-// 你的商品資料（可自行擴充）
 const PRODUCTS = [
   {id:'top01',cat:'tops',name:'無縫高彈背心',price:399,colors:['黑','膚'],sizes:['S','M','L'],imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg']},
   {id:'top02',cat:'tops',name:'鏤空美背短袖',price:429,colors:['黑','粉'],sizes:['S','M','L'],imgs:['Photo/鏤空美背短袖.jpg']},
@@ -27,7 +22,6 @@ const PRODUCTS = [
   {id:'set01',cat:'tops',name:'上衣＋緊身褲套組',price:849,colors:['多色'],sizes:['S','M','L'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
 ];
 
-// ===== 小工具 =====
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const fmt = n => 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW');
@@ -38,20 +32,18 @@ function toast(msg='已加入購物車',ms=1200){
   setTimeout(()=>t.classList.remove('show'),ms);
 }
 
-// 嘗試開一個命名視窗；若被 Safari 擋掉，回傳 null（之後改用本頁開啟）
 function openNamedWindow(name, preloadHtml = "載入中，請稍候…") {
   let w = null;
   try { w = window.open('', name); } catch (_) { w = null; }
   if (!w || w.closed || typeof w.closed === 'undefined') return null;
   try {
     w.document.open();
-    w.document.write(`<!doctype html><meta charset="utf-8"><title>Loading</title><body style="font:14px/1.6 -apple-system,blinkmacsystemfont,Segoe UI,Roboto,Helvetica,Arial"> ${preloadHtml}</body>`);
+    w.document.write(`<!doctype html><meta charset="utf-8"><title>Loading</title><body style="font:14px/1.6 -apple-system,blinkmacsystemfont,Segoe UI,Roboto,Helvetica,Arial">${preloadHtml}</body>`);
     w.document.close();
   } catch (_) {}
   return w;
 }
 
-// 以 POST 表單送出：target 可是命名視窗或 _self（本頁開啟）
 function postForm(endpoint, fields, target = '_self') {
   const form = document.createElement('form');
   form.method = 'POST';
@@ -67,17 +59,15 @@ function postForm(endpoint, fields, target = '_self') {
   setTimeout(()=>form.remove(), 3000);
 }
 
-// ===== 狀態 =====
 const state = {
   cat: 'all',
   page: 1,
   cart: JSON.parse(sessionStorage.getItem('cart')||'[]'),
-  cvs: null,                  // 選店結果 { type:'family'|'seven', id, name, address }
-  currentMapType: null        // 'family' | 'seven'
+  cvs: null,
+  currentMapType: null
 };
 function persist(){ sessionStorage.setItem('cart', JSON.stringify(state.cart)); }
 
-// ===== Tabs =====
 const tabs = $('#tabs');
 if (tabs) {
   tabs.addEventListener('click', (e)=>{
@@ -89,8 +79,7 @@ if (tabs) {
   });
 }
 
-// ===== 分頁 =====
-function buildPager(total, pageSize = PAGE_SIZE) {
+function buildPager(total, pageSize = 6) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const mountTop = $('#pager'), mountBottom = $('#pagerBottom');
   const render = (mount) => {
@@ -107,7 +96,6 @@ function buildPager(total, pageSize = PAGE_SIZE) {
   render(mountTop); render(mountBottom);
 }
 
-// ===== 商品清單 =====
 function renderProducts(){
   const list = state.cat==='all' ? PRODUCTS : PRODUCTS.filter(p=>p.cat===state.cat);
   const total=list.length, from=(state.page-1)*PAGE_SIZE;
@@ -166,7 +154,6 @@ function changeQty(idx,delta){ state.cart[idx].qty=Math.max(1,(state.cart[idx].q
 window.removeItem = removeItem;
 window.changeQty  = changeQty;
 
-// ===== 購物車抽屜 =====
 const drawer=$('#drawer');
 const openCartBtn  = $('#openCart');
 const closeCartBtn = $('#closeCart');
@@ -181,7 +168,7 @@ function calcShipping(){
   return ship==='home'?80:60;
 }
 
-// ✅ 設定配送方式、更新畫面、記住選項
+// 配送選項
 function setShipOption(opt){ // 'home' | 'family' | 'seven'
   const r = document.querySelector(`input[name="ship"][value="${opt}"]`);
   if (r) { r.checked = true; }
@@ -198,7 +185,7 @@ function onShipChange(){
   if(fam)   fam.style.display   = ship==='family'?'block':'none';
   if(seven) seven.style.display = ship==='seven' ?'block':'none';
   renderCart();
-  sessionStorage.setItem('SHIP_OPT', ship); // ✅ 記住目前配送方式
+  sessionStorage.setItem('SHIP_OPT', ship);
 }
 $$('input[name="ship"]').forEach(r=>r.addEventListener('change', onShipChange));
 
@@ -233,7 +220,7 @@ function updateBadge(){
   const cc=$('#cartCount'); if(cc) cc.textContent=n;
 }
 
-// ✅ 付款成功後清空購物車
+// 清空購物車（thankyou 通知 + localStorage 備援）
 function clearCart(){
   state.cart = [];
   sessionStorage.removeItem('cart');
@@ -242,40 +229,43 @@ function clearCart(){
   toast('付款完成，已清空購物車');
 }
 
-// ===== 選店（固定視窗名稱；被擋就改「本頁開啟」）=====
+// ===== 選店（Safari 安全版：先預開命名視窗，再送表單）=====
 async function openCvsMap(logisticsSubType){
-  const r = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ LogisticsSubType: logisticsSubType })
-  });
-  if(!r.ok){ alert('選店後端未配置'); return; }
-  const {endpoint, fields} = await r.json();
-
-  // 先嘗試開命名視窗；若被擋，fallback 本頁開啟
-  const win = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…");
-  const target = win ? CVS_WIN_NAME : '_self';
-  postForm(endpoint, fields, target);
+  const preWin = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…"); // 先於點擊時開
+  try{
+    const r = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ LogisticsSubType: logisticsSubType })
+    });
+    if(!r.ok) throw new Error('map/sign failed');
+    const {endpoint, fields} = await r.json();
+    const target = preWin ? CVS_WIN_NAME : '_self';
+    postForm(endpoint, fields, target);
+  }catch(e){
+    console.error(e);
+    if (preWin) try{ preWin.close(); }catch(_){}
+    alert('目前未能開啟門市地圖，請稍後再試。');
+  }
 }
 
-// 兩顆選店按鈕：全家/7-11（記住使用者選哪一種，並先把配送方式切過去）
 document.addEventListener('click',(e)=>{
   if(e.target && e.target.id==='btnPickFamily'){
     e.preventDefault();
     state.currentMapType='family';
     sessionStorage.setItem('CVS_TYPE','family');
-    setShipOption('family');                 // 先切換配送方式
+    setShipOption('family');
     openCvsMap('FAMIC2C');
   }
   if(e.target && e.target.id==='btnPickSeven'){
     e.preventDefault();
     state.currentMapType='seven';
     sessionStorage.setItem('CVS_TYPE','seven');
-    setShipOption('seven');                  // 先切換配送方式
+    setShipOption('seven');
     openCvsMap('UNIMARTC2C');
   }
 });
 
-// 後端在 /api/ecpay/map/callback 以 postMessage 回來（彈窗模式）
+// 地圖彈窗回傳
 window.addEventListener('message',(ev)=>{
   const data=ev.data||{};
   if(data.type!=='EC_LOGISTICS_PICKED') return;
@@ -292,12 +282,11 @@ window.addEventListener('message',(ev)=>{
   }
 });
 
-// 啟動時：若地圖在本頁開啟，從 localStorage 撈回剛選的門市（無彈窗模式）並還原配送方式
+// 地圖本頁回來：還原配送方式 + 門市
 (function(){
   try{
     const raw = localStorage.getItem('EC_LOGISTICS_PICKED');
     if(!raw){
-      // 就算沒有剛選門市，也把上次配送選項恢復
       const saved = sessionStorage.getItem('SHIP_OPT');
       if (saved) setShipOption(saved);
       return;
@@ -307,22 +296,22 @@ window.addEventListener('message',(ev)=>{
     const id = p.CVSStoreID || p.CVSStoreID1 || '';
     const name = p.CVSStoreName || '';
     const address = p.CVSAddress || '';
-    const type = sessionStorage.getItem('CVS_TYPE') || state.currentMapType; // 'family'|'seven'
+    const type = sessionStorage.getItem('CVS_TYPE') || state.currentMapType;
     if(type==='family'){
       const label = document.querySelector('#familyPicked');
       if(label) label.textContent = `${name}（${id}）｜${address}`;
       state.cvs = { type:'family', id, name, address };
-      setShipOption('family');               // 勾回「全家店到店」
+      setShipOption('family');
     }else if(type==='seven'){
       const label = document.querySelector('#sevenPicked');
       if(label) label.textContent = `${name}（${id}）｜${address}`;
       state.cvs = { type:'seven', id, name, address };
-      setShipOption('seven');                // 勾回「7-11 店到店」
+      setShipOption('seven');
     }
   }catch(e){}
 })();
 
-// 付款完成：thankyou.html 會 postMessage 通知這裡
+// thankyou 通知
 window.addEventListener('message',(ev)=>{
   const data = ev.data || {};
   if (data && data.type === 'EC_PAY_DONE') {
@@ -331,7 +320,7 @@ window.addEventListener('message',(ev)=>{
   }
 });
 
-// 備援：另一個分頁觸發 localStorage 旗標時，同步清空
+// 備援：不同分頁同步清空
 window.addEventListener('storage', (e)=>{
   if (e.key === 'EC_CLEAR_CART' && e.newValue === '1') {
     clearCart();
@@ -339,33 +328,29 @@ window.addEventListener('storage', (e)=>{
   }
 });
 
-// === 付款完成清空購物車：旗標檢查（啟動 + 回到頁面 + bfcache 返回） ===
+// 進頁/回頁/快取回來都檢查一次旗標
 function checkClearFlag(){
   try{
     if (localStorage.getItem('EC_CLEAR_CART') === '1') {
-      localStorage.removeItem('EC_CLEAR_CART'); // 先清旗標，避免重複觸發
-      clearCart();                               // 清空購物車 + 重新渲染
+      localStorage.removeItem('EC_CLEAR_CART');
+      clearCart();
     }
   }catch(e){}
 }
-// 1) 進頁面就檢查一次
 checkClearFlag();
-// 2) 切回此分頁時檢查（新視窗付款關閉後回來）
 window.addEventListener('focus', checkClearFlag);
 document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) checkClearFlag(); });
-// 3) 從 bfcache 返回時重檢並同步畫面
 window.addEventListener('pageshow', (e)=>{
   if (e.persisted) {
     checkClearFlag();
     try {
       state.cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
-      renderCart();
-      updateBadge();
+      renderCart(); updateBadge();
     } catch(_) {}
   }
 });
 
-// ===== 付款（固定視窗名稱；被擋就用本頁開啟；傳 subtotal/shipFee/shippingInfo 給後端）=====
+// ===== 付款 =====
 function validPhone(v){ return /^09\d{8}$/.test(v); }
 function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
@@ -429,6 +414,5 @@ if (checkoutBtn) {
   };
 }
 
-// ===== 其他初始化 =====
 const year = $('#year'); if(year) year.textContent = new Date().getFullYear();
 updateBadge(); renderProducts(); onShipChange();
