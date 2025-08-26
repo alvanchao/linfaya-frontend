@@ -1,56 +1,182 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <title>Linfaya Shop (Stage)</title>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LINFAYA COUTURE｜服飾・配件・舞鞋</title>
+  <meta name="description" content="舒適實穿的服飾、配件與舞鞋，快速出貨與貼心服務。" />
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", Arial, sans-serif; padding: 16px; }
-    label { display:block; margin-top:12px; }
-    input, select, button { padding: 8px; font-size: 16px; }
-    .row { margin: 12px 0; }
-    .cvs { margin-top: 8px; padding: 8px; background:#f6f6f6; border-radius:8px; }
-    .ok { color: #0a7f42; }
-    .err { color: #b00020; }
+    :root{ --bg:#0b0c10;--panel:#111319;--muted:#8a94a7;--pri:#5eead4;--pri-2:#2dd4bf;--text:#e6e9ef;--accent:#a78bfa }
+    *{box-sizing:border-box} html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b0c10,#0e1117);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans","PingFang TC","Hiragino Sans",sans-serif}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    header{position:sticky;top:0;backdrop-filter:saturate(140%) blur(8px);background:rgba(11,12,16,.7);border-bottom:1px solid #1f2430;z-index:20}
+    .nav{display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo-img{height:36px;width:auto;display:block}
+    .actions{display:flex;gap:10px}
+    .btn{border:1px solid #2a2f3a;background:#121521;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+    .btn:hover{transform:translateY(-1px);border-color:#3b4252}
+    .btn.pri{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center;padding:28px 0}
+    .card{background:radial-gradient(1200px 400px at -10% -120%,rgba(45,212,191,.12),transparent 50%),#0e121b;border:1px solid #1e2430;border-radius:18px;padding:18px}
+    .muted{color:var(--muted)}
+
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+    .tab{padding:8px 12px;border:1px solid #2b3342;border-radius:999px;cursor:pointer;color:#c7cede}
+    .tab.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
+    .pager{display:flex;gap:6px}
+    .page-btn{padding:6px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer}
+    .page-btn.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:600px){.grid{grid-template-columns:1fr}}
+
+    .product{background:#0f1320;border:1px solid #1f2430;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+    .product .imgbox{position:relative;background:#0a0d14}
+    .product .main-img{position:relative;width:100%;padding-top:70%;overflow:hidden}
+    .product .main-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .thumbs{display:flex;gap:8px;padding:10px;overflow:auto}
+    .thumbs img{width:64px;height:64px;object-fit:cover;border:1px solid #283040;border-radius:10px;cursor:pointer;opacity:.8}
+    .thumbs img.active{opacity:1;outline:2px solid var(--pri)}
+    .magnifier{position:absolute;border:1px solid #2b3342;border-radius:50%;width:110px;height:110px;pointer-events:none;display:none;box-shadow:0 10px 25px rgba(0,0,0,.35)}
+    .product .body{padding:14px;display:flex;flex-direction:column;gap:8px}
+    .price{font-weight:700}
+
+    .qty{display:flex;align-items:center;gap:8px}
+    .input, .select{border:1px solid #2a2f3a;background:#0e121b;color:var(--text);padding:10px;border-radius:12px}
+
+    .drawer{position:fixed;right:0;top:0;width:380px;max-width:100%;height:100%;background:#0c1018;border-left:1px solid #1e2430;transform:translateX(110%);transition:.2s;z-index:50;display:flex;flex-direction:column}
+    .drawer.open{transform:translateX(0)}
+    .drawer header{position:sticky;top:0;background:transparent}
+    .drawer .list{padding:12px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+    .cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;border:1px solid #212736;border-radius:14px;padding:8px}
+    .cart-item img{width:64px;height:64px;border-radius:10px;object-fit:cover}
+    .summary{margin-top:auto;padding:12px;border-top:1px solid #1f2430;background:#0b0f17}
+    .summary .row{display:flex;justify-content:space-between;margin:6px 0}
+    .summary .total{font-size:18px;font-weight:800}
+
+    .footer{color:#939db2;font-size:13px;border-top:1px solid #1f2430;padding:16px 0;margin-top:20px}
+    .pill{font-size:12px;color:#b7c1d6;border:1px solid #2b3342;border-radius:999px;padding:6px 10px}
+    .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0f1522;border:1px solid #273044;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s}
+    .toast.show{opacity:1}
   </style>
 </head>
 <body>
-  <h1>Linfaya Shop（Stage）</h1>
-
-  <div class="row">
-    <label>商品名稱</label>
-    <input id="itemName" value="練習服 #1" />
-  </div>
-  <div class="row">
-    <label>金額（NTD）</label>
-    <input id="amount" type="number" value="100" />
-  </div>
-
-  <div class="row">
-    <label>收件人</label>
-    <input id="name" placeholder="姓名" />
-    <input id="phone" placeholder="手機 09xxxxxxxx" />
-    <input id="email" placeholder="email@example.com" />
-  </div>
-
-  <div class="row cvs">
-    <strong>超商取貨門市</strong>
-    <div>
-      <select id="subtype">
-        <option value="FAMIC2C">全家 FAMIC2C</option>
-        <option value="UNIMARTC2C">7-ELEVEN UNIMARTC2C</option>
-      </select>
-      <button id="btnPick">選擇門市</button>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <img class="logo-img" src="Linfaya_logo.JPEG" alt="Linfaya Logo">
+        <div>
+          <b>LINFAYA COUTURE</b><br>
+          <small class="muted">舒適好穿｜實穿耐用</small>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="openCart">購物車 <span id="cartCount" class="pill">0</span></button>
+      </div>
     </div>
-    <div id="storeInfo"></div>
-  </div>
+  </header>
 
-  <div class="row">
-    <button id="btnPay">前往付款</button>
-  </div>
+  <main class="container">
+    <section class="hero">
+      <div class="card">
+        <h1>精選服飾・配件・舞鞋</h1>
+        <p class="muted">付款：綠界 ECPay（信用卡／ATM／超商代碼）。<b>滿 NT$1,000 免運</b>（本島）。</p>
+      </div>
+      <div class="card">
+        <b>小提醒</b>
+        <p class="muted">完成付款後的「感謝頁」會提示：信件可能延遲，請檢查垃圾信或「促銷」分類。</p>
+      </div>
+    </section>
 
-  <div id="msg"></div>
+    <section class="section">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-cat="all">全部</button>
+        <button class="tab" data-cat="tops">Tops</button>
+        <button class="tab" data-cat="bottoms">Bottoms</button>
+        <button class="tab" data-cat="accessories">Accessories</button>
+        <button class="tab" data-cat="shoes">Shoes</button>
+      </div>
 
-  <script src="./App.js"></script>
+      <div class="toolbar">
+        <div class="muted" id="infoText">共 0 件</div>
+        <div class="pager" id="pager"></div>
+      </div>
+
+      <div id="grid" class="grid"></div>
+
+      <div class="toolbar">
+        <span></span>
+        <div class="pager" id="pagerBottom"></div>
+      </div>
+    </section>
+
+    <div class="footer">© <span id="year"></span> LINFAYA COUTURE · 客服：linfaya251@gmail.com</div>
+  </main>
+
+  <!-- Cart Drawer -->
+  <aside class="drawer" id="drawer">
+    <header class="container nav" style="padding:12px 16px">
+      <div class="brand">
+        <img class="logo-img" src="Linfaya_logo.JPEG" alt="Linfaya Logo" style="height:28px">
+        <b>購物車</b>
+      </div>
+      <button class="btn" id="closeCart">關閉</button>
+    </header>
+
+    <div class="list" id="cartList"></div>
+    <div class="summary">
+      <div class="row"><span>小計</span><b id="subtotal">NT$0</b></div>
+      <div class="row"><span>運費（台灣本島）</span><span id="shipping">NT$0</span></div>
+      <div class="row total"><span>合計</span><span id="grand">NT$0</span></div>
+
+      <div class="form" style="display:grid;gap:10px;margin-top:8px">
+        <div class="field"><label>收件姓名</label><input class="input" id="name" placeholder="王小明" /></div>
+        <div class="field"><label>電子郵件 Email</label><input class="input" id="email" type="email" placeholder="name@example.com" /></div>
+        <div class="field"><label>手機</label><input class="input" id="phone" placeholder="09xxxxxxxx（10碼）" /></div>
+
+        <div class="field">
+          <label>配送方式</label>
+          <div class="qty" style="flex-wrap:wrap">
+            <label><input type="radio" name="ship" value="home" checked> 自家宅配（+80）</label>
+            <label><input type="radio" name="ship" value="family"> 全家店到店（+60）</label>
+            <label><input type="radio" name="ship" value="seven"> 7-11 店到店（+60）</label>
+          </div>
+        </div>
+
+        <div class="field" id="homeFields">
+          <label>收件地址</label>
+          <input class="input" id="addr" placeholder="台北市信義區⋯⋯" />
+        </div>
+
+        <div class="field" id="familyFields" style="display:none">
+          <label>全家門市</label>
+          <div class="qty" style="flex-wrap:wrap">
+            <button class="btn" id="btnPickFamily">選擇門市（官方地圖）</button>
+            <span class="muted" id="familyPicked" style="margin-left:8px">尚未選擇</span>
+          </div>
+        </div>
+
+        <div class="field" id="sevenFields" style="display:none">
+          <label>7-11 門市</label>
+          <div class="qty" style="flex-wrap:wrap">
+            <button class="btn" id="btnPickSeven">選擇門市（官方地圖）</button>
+            <span class="muted" id="sevenPicked" style="margin-left:8px">尚未選擇</span>
+          </div>
+        </div>
+
+        <button class="btn pri" id="checkout">前往綠界付款</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast">已加入購物車</div>
+
+  <script src="App.js"></script>
 </body>
 </html>
