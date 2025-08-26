@@ -1,12 +1,13 @@
 // App.js － LINFAYA COUTURE
-// 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台（新視窗）
+// 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
+// 重點：固定視窗名稱避免多開；iOS Safari 若擋彈窗就自動改「本頁開啟」避免卡住
 // 後端需搭配：/api/ecpay/create、/api/ecpay/map/sign、/api/ecpay/return、/api/ecpay/order-result
 
 // ===== 基本設定 =====
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com'; // 後端（Render）
 const ADMIN_EMAIL = 'linfaya251@gmail.com';
 
-// 固定視窗名稱，避免瀏覽器多開
+// 固定視窗名稱（避免瀏覽器多開）
 const CVS_WIN_NAME = 'EC_CVS_MAP';
 const CASHIER_WIN_NAME = 'ECPAY_CASHIER';
 
@@ -36,6 +37,35 @@ function toast(msg='已加入購物車',ms=1200){
   setTimeout(()=>t.classList.remove('show'),ms);
 }
 
+// 嘗試開一個命名視窗；若被 Safari 擋掉，回傳 null（之後改用本頁開啟）
+function openNamedWindow(name, preloadHtml = "載入中，請稍候…") {
+  let w = null;
+  try { w = window.open('', name); } catch (_) { w = null; }
+  if (!w || w.closed || typeof w.closed === 'undefined') return null;
+  try {
+    w.document.open();
+    w.document.write(`<!doctype html><meta charset="utf-8"><title>Loading</title><body style="font:14px/1.6 -apple-system,blinkmacsystemfont,Segoe UI,Roboto,Helvetica,Arial"> ${preloadHtml}</body>`);
+    w.document.close();
+  } catch (_) {}
+  return w;
+}
+
+// 以 POST 表單送出：target 可是命名視窗或 _self（本頁開啟）
+function postForm(endpoint, fields, target = '_self') {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = endpoint;
+  form.target = target;
+  Object.entries(fields).forEach(([k,v])=>{
+    const i = document.createElement('input');
+    i.type = 'hidden'; i.name = k; i.value = v;
+    form.appendChild(i);
+  });
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(()=>form.remove(), 3000);
+}
+
 // ===== 狀態 =====
 const state = {
   cat: 'all',
@@ -59,20 +89,21 @@ if (tabs) {
 }
 
 // ===== 分頁 =====
-function buildPager(total, pageSize, page, mountTop, mountBottom){
+function buildPager(total, pageSize = PAGE_SIZE) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
+  const mountTop = $('#pager'), mountBottom = $('#pagerBottom');
   const render = (mount) => {
     if(!mount) return;
     mount.innerHTML = '';
     for(let p=1;p<=pages;p++){
       const b=document.createElement('button');
-      b.className='page-btn' + (p===page?' active':'');
+      b.className='page-btn' + (p===state.page?' active':'');
       b.textContent=p;
       b.onclick=()=>{ state.page=p; renderProducts(); };
       mount.appendChild(b);
     }
   };
-  render($('#pager')); render($('#pagerBottom'));
+  render(mountTop); render(mountBottom);
 }
 
 // ===== 商品清單 =====
@@ -82,7 +113,7 @@ function renderProducts(){
   const pageItems=list.slice(from, from+PAGE_SIZE);
 
   const infoText = $('#infoText'); if(infoText) infoText.textContent = `共 ${total} 件`;
-  buildPager(total, PAGE_SIZE, state.page);
+  buildPager(total, PAGE_SIZE);
 
   const grid=$('#grid'); if(!grid) return;
   grid.innerHTML='';
@@ -191,7 +222,7 @@ function updateBadge(){
   const cc=$('#cartCount'); if(cc) cc.textContent=n;
 }
 
-// ===== 選店（固定視窗名稱，避免雙視窗）=====
+// ===== 選店（固定視窗名稱；被擋就改「本頁開啟」）=====
 async function openCvsMap(logisticsSubType){
   const r = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -200,17 +231,10 @@ async function openCvsMap(logisticsSubType){
   if(!r.ok){ alert('選店後端未配置'); return; }
   const {endpoint, fields} = await r.json();
 
-  // 固定名稱的視窗
-  const win = window.open('about:blank', CVS_WIN_NAME);
-  if(!win){ alert('請允許本網站彈出視窗'); return; }
-
-  // 以同一 target 提交，確保只會用到這一個視窗
-  const form=document.createElement('form');
-  form.method='POST'; form.action=endpoint; form.target=CVS_WIN_NAME;
-  Object.entries(fields).forEach(([k,v])=>{
-    const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v; form.appendChild(i);
-  });
-  document.body.appendChild(form); form.submit(); form.remove();
+  // 先嘗試開命名視窗；若被擋，fallback 本頁開啟
+  const win = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…");
+  const target = win ? CVS_WIN_NAME : '_self';
+  postForm(endpoint, fields, target);
 }
 
 // 兩顆選店按鈕：全家/7-11
@@ -237,21 +261,9 @@ window.addEventListener('message',(ev)=>{
   }
 });
 
-// ===== 付款（固定視窗名稱；傳 subtotal/shipFee/shippingInfo 給後端）=====
+// ===== 付款（固定視窗名稱；被擋就用本頁開啟；傳 subtotal/shipFee/shippingInfo 給後端）=====
 function validPhone(v){ return /^09\d{8}$/.test(v); }
 function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
-// 以表單送出到指定 endpoint（target 可指定新視窗名稱）
-function postForm(endpoint, fields, target = '_self'){
-  const form = document.createElement('form');
-  form.method='POST'; form.action=endpoint; form.target=target;
-  Object.keys(fields).forEach(k=>{
-    const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value = `${fields[k]}`; form.appendChild(i);
-  });
-  document.body.appendChild(form);
-  form.submit();
-  setTimeout(()=>form.remove(), 3000);
-}
 
 const checkoutBtn = $('#checkout');
 if (checkoutBtn) {
@@ -279,7 +291,7 @@ if (checkoutBtn) {
     const shipFee = state.cart.length ? (sub>=FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)) : 0;
     const amount = sub + shipFee;
 
-    // 後端要寫 Google「未付款」那筆，所以一併傳 subtotal / shipFee
+    // 後端要寫 Google「未付款」那筆，所以一併傳 subtotal / shipFee / shippingInfo
     const payload = {
       orderId, amount,
       itemName: items.map(i=>`${i.name}x${i.qty}`).join('#'),
@@ -291,9 +303,8 @@ if (checkoutBtn) {
       returnURL: `${API_BASE}/api/ecpay/return`
     };
 
-    // 固定名稱的新視窗（收銀台）
-    const win = window.open('about:blank', CASHIER_WIN_NAME);
-    if(!win){ alert('請允許本網站彈出視窗'); return; }
+    // 先嘗試開命名視窗；若被擋就改用本頁開啟
+    const win = openNamedWindow(CASHIER_WIN_NAME, "正在前往綠界收銀台…");
 
     try{
       const r = await fetch(`${API_BASE}/api/ecpay/create`,{
@@ -304,13 +315,13 @@ if (checkoutBtn) {
       const data = await r.json();
       if(!data || !data.endpoint || !data.fields) throw new Error('missing fields');
 
-      // 在固定視窗開啟綠界（避免多開）
-      postForm(data.endpoint, data.fields, CASHIER_WIN_NAME);
-      toast('正在前往綠界付款…',1600);
+      const target = win ? CASHIER_WIN_NAME : '_self';
+      postForm(data.endpoint, data.fields, target);
+      if(!win){ toast('已在本頁開啟綠界付款'); }
 
     }catch(e){
       console.error(e);
-      win.close();
+      if(win) try{ win.close(); }catch(_){}
       alert('目前尚未連上後端，請稍後再試。');
     }
   };
