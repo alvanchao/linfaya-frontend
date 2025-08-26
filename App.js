@@ -2,6 +2,10 @@
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com'; // 後端（Render）
 const ADMIN_EMAIL = 'linfaya251@gmail.com';
 
+// 固定視窗名稱，避免雙視窗
+const CVS_WIN_NAME = 'EC_CVS_MAP';
+const CASHIER_WIN_NAME = 'ECPAY_CASHIER';
+
 // ===== 商店規則與資料 =====
 const FREE_SHIP_THRESHOLD = 1000;
 const PAGE_SIZE = 6;
@@ -167,21 +171,22 @@ function updateBadge(){
   $('#cartCount').textContent=n;
 }
 
-// ===== 選店（新版：正確的 LogisticsSubType，並接 EC_LOGISTICS_PICKED）=====
+// ===== 選店：固定視窗名稱避免雙視窗 =====
 async function openCvsMap(logisticsSubType){
-  // logisticsSubType 必須是 FAMIC2C 或 UNIMARTC2C
   const r = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ LogisticsSubType: logisticsSubType })
   });
   if(!r.ok){ alert('選店後端未配置'); return; }
   const {endpoint, fields} = await r.json();
-  const win = window.open('about:blank','_blank');
+
+  // 先用固定名稱開一個視窗
+  const win = window.open('about:blank', CVS_WIN_NAME);
   if(!win){ alert('請允許本網站彈出視窗'); return; }
 
-  // 以隱藏表單 POST 到官方地圖
+  // 用相同 target 提交，確保只會使用同一個視窗
   const form=document.createElement('form');
-  form.method='POST'; form.action=endpoint; form.target=win.name;
+  form.method='POST'; form.action=endpoint; form.target=CVS_WIN_NAME;
   Object.entries(fields).forEach(([k,v])=>{
     const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v; form.appendChild(i);
   });
@@ -212,11 +217,10 @@ window.addEventListener('message',(ev)=>{
   }
 });
 
-// ===== 付款（新版：前端直接 POST 到綠界）=====
+// ===== 付款：固定視窗名稱避免雙視窗，並在新視窗進行收銀台 =====
 function validPhone(v){ return /^09\d{8}$/.test(v); }
 function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-// 將 endpoint + fields 透過表單送出（同視窗或新視窗）
 function postForm(endpoint, fields, target = '_self'){
   const form = document.createElement('form');
   form.method='POST'; form.action=endpoint; form.target=target;
@@ -251,17 +255,20 @@ $('#checkout').onclick = async ()=>{
   const sub=subtotal(); const shipFee=state.cart.length?(sub>=FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)):0;
   const amount=sub+shipFee;
 
-  // 呼叫後端建立訂單（後端會回傳 { endpoint, fields }）
   const payload = {
     orderId, amount,
     itemName: items.map(i=>`${i.name}x${i.qty}`).join('#'),
     tradeDesc: 'Linfaya Shop Order',
     name, email, phone,
+    shippingInfo, // <— 新增：後端會一起記錄寄信/Google Form
     clientBackURL: 'https://alvanchao.github.io/#/thankyou',
     returnURL: `${API_BASE}/api/ecpay/return`
   };
 
-  const newWin = window.open('about:blank','_blank');
+  // 先開固定名稱的新視窗，避免雙視窗
+  const win = window.open('about:blank', CASHIER_WIN_NAME);
+  if(!win){ alert('請允許本網站彈出視窗'); return; }
+
   try{
     const r = await fetch(`${API_BASE}/api/ecpay/create`,{
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -271,12 +278,12 @@ $('#checkout').onclick = async ()=>{
     const data = await r.json();
     if(!data || !data.endpoint || !data.fields) throw new Error('missing fields');
 
-    // 直接 POST 到綠界收銀台
-    postForm(data.endpoint, data.fields, newWin.name);
+    // 在同一個視窗開啟綠界收銀台
+    postForm(data.endpoint, data.fields, CASHIER_WIN_NAME);
     toast('正在前往綠界付款…',1600);
   }catch(e){
     console.error(e);
-    if(newWin && !newWin.closed) newWin.close();
+    win.close();
     alert('目前尚未連上後端，請稍後再試。');
   }
 };
