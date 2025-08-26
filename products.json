@@ -1,0 +1,43 @@
+[
+  {
+    "id": "top01",
+    "cat": "tops",
+    "name": "無縫高彈背心",
+    "price": 399,
+    "imgs": ["Photo/無縫高彈背心.jpg"],
+    "description": "透氣彈性、運動友善。",
+    "visible": true,
+    "variants": [
+      { "color": "黑", "size": "S", "status": "現貨" },
+      { "color": "黑", "size": "M", "status": "預購" },
+      { "color": "膚", "size": "S", "status": "售完" }
+    ]
+  },
+  {
+    "id": "btm01",
+    "cat": "bottoms",
+    "name": "高腰緊身褲",
+    "price": 499,
+    "imgs": ["Photo/高腰緊身褲.jpg"],
+    "visible": true,
+    "variants": [
+      { "color": "黑", "size": "S", "status": "現貨" },
+      { "color": "黑", "size": "M", "status": "現貨" },
+      { "color": "深灰", "size": "M", "status": "預購" },
+      { "color": "深灰", "size": "L", "status": "售完" }
+    ]
+  },
+  {
+    "id": "set01",
+    "cat": "tops",
+    "name": "上衣＋緊身褲套組",
+    "price": 849,
+    "imgs": ["https://drive.google.com/uc?id=1kCP2V_e7QY56Og7YT_ztvkU2Ref94Y-L"],
+    "visible": true,
+    "variants": [
+      { "color": "多色", "size": "S", "status": "預購" },
+      { "color": "多色", "size": "M", "status": "預購" },
+      { "color": "多色", "size": "L", "status": "預購" }
+    ]
+  }
+]
