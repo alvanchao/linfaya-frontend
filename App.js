@@ -162,7 +162,7 @@ function addToCart(item){
 }
 function removeItem(idx){ state.cart.splice(idx,1); persist(); renderCart(); updateBadge(); }
 function changeQty(idx,delta){ state.cart[idx].qty=Math.max(1,(state.cart[idx].qty||1)+delta); persist(); renderCart(); updateBadge(); }
-window.removeItem = removeItem; // 讓 inline onclick 可用
+window.removeItem = removeItem;
 window.changeQty  = changeQty;
 
 // ===== 購物車抽屜 =====
@@ -226,24 +226,33 @@ function updateBadge(){
 async function openCvsMap(logisticsSubType){
   const r = await fetch(`${API_BASE}/api/ecpay/map/sign`,{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ LogisticsSubType: logisticsSubType }) // 'FAMIC2C' or 'UNIMARTC2C'
+    body: JSON.stringify({ LogisticsSubType: logisticsSubType })
   });
   if(!r.ok){ alert('選店後端未配置'); return; }
   const {endpoint, fields} = await r.json();
 
-  // 先嘗試開命名視窗；若被擋，fallback 本頁開啟
   const win = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…");
   const target = win ? CVS_WIN_NAME : '_self';
   postForm(endpoint, fields, target);
 }
 
-// 兩顆選店按鈕：全家/7-11
+// 兩顆選店按鈕：全家/7-11（記住使用者選哪一種，給本頁模式回填）
 document.addEventListener('click',(e)=>{
-  if(e.target && e.target.id==='btnPickFamily'){ e.preventDefault(); state.currentMapType='family'; openCvsMap('FAMIC2C'); }
-  if(e.target && e.target.id==='btnPickSeven'){  e.preventDefault(); state.currentMapType='seven';  openCvsMap('UNIMARTC2C'); }
+  if(e.target && e.target.id==='btnPickFamily'){
+    e.preventDefault();
+    state.currentMapType='family';
+    sessionStorage.setItem('CVS_TYPE','family');
+    openCvsMap('FAMIC2C');
+  }
+  if(e.target && e.target.id==='btnPickSeven'){
+    e.preventDefault();
+    state.currentMapType='seven';
+    sessionStorage.setItem('CVS_TYPE','seven');
+    openCvsMap('UNIMARTC2C');
+  }
 });
 
-// 後端在 /api/ecpay/map/callback 以 postMessage({type:"EC_LOGISTICS_PICKED", payload:{...}}) 回來
+// 後端在 /api/ecpay/map/callback 以 postMessage 回來（彈窗模式）
 window.addEventListener('message',(ev)=>{
   const data=ev.data||{};
   if(data.type!=='EC_LOGISTICS_PICKED') return;
@@ -251,7 +260,6 @@ window.addEventListener('message',(ev)=>{
   const id = p.CVSStoreID || p.CVSStoreID1 || '';
   const name = p.CVSStoreName || '';
   const address = p.CVSAddress || '';
-
   if(state.currentMapType==='family'){
     const label = $('#familyPicked'); if(label) label.textContent = `${name}（${id}）｜${address}`;
     state.cvs = { type:'family', id, name, address };
@@ -260,6 +268,29 @@ window.addEventListener('message',(ev)=>{
     state.cvs = { type:'seven', id, name, address };
   }
 });
+
+// 啟動時：若地圖在本頁開啟，從 localStorage 撈回剛選的門市（無彈窗模式）
+(function(){
+  try{
+    const raw = localStorage.getItem('EC_LOGISTICS_PICKED');
+    if(!raw) return;
+    localStorage.removeItem('EC_LOGISTICS_PICKED');
+    const p = JSON.parse(raw);
+    const id = p.CVSStoreID || p.CVSStoreID1 || '';
+    const name = p.CVSStoreName || '';
+    const address = p.CVSAddress || '';
+    const type = sessionStorage.getItem('CVS_TYPE') || state.currentMapType;
+    if(type==='family'){
+      const label = document.querySelector('#familyPicked');
+      if(label) label.textContent = `${name}（${id}）｜${address}`;
+      state.cvs = { type:'family', id, name, address };
+    }else if(type==='seven'){
+      const label = document.querySelector('#sevenPicked');
+      if(label) label.textContent = `${name}（${id}）｜${address}`;
+      state.cvs = { type:'seven', id, name, address };
+    }
+  }catch(e){}
+})();
 
 // ===== 付款（固定視窗名稱；被擋就用本頁開啟；傳 subtotal/shipFee/shippingInfo 給後端）=====
 function validPhone(v){ return /^09\d{8}$/.test(v); }
@@ -291,7 +322,6 @@ if (checkoutBtn) {
     const shipFee = state.cart.length ? (sub>=FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)) : 0;
     const amount = sub + shipFee;
 
-    // 後端要寫 Google「未付款」那筆，所以一併傳 subtotal / shipFee / shippingInfo
     const payload = {
       orderId, amount,
       itemName: items.map(i=>`${i.name}x${i.qty}`).join('#'),
@@ -303,7 +333,6 @@ if (checkoutBtn) {
       returnURL: `${API_BASE}/api/ecpay/return`
     };
 
-    // 先嘗試開命名視窗；若被擋就改用本頁開啟
     const win = openNamedWindow(CASHIER_WIN_NAME, "正在前往綠界收銀台…");
 
     try{
