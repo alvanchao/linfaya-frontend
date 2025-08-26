@@ -19,8 +19,28 @@
   <button class="btn" onclick="window.close()">關閉此視窗</button>
 
   <script>
+    // 顯示時間
     const t = new Date();
     document.getElementById('time').textContent = '交易時間：' + t.toLocaleString('zh-TW');
+
+    // 1) 優先用 postMessage 通知原頁清空購物車
+    try{
+      if (window.opener) {
+        window.opener.postMessage({ type: 'EC_PAY_DONE' }, '*');
+      }
+    }catch(e){}
+
+    // 2) 備援：設定 localStorage 旗標，讓原頁用 storage 事件清空
+    try{
+      localStorage.setItem('EC_CLEAR_CART', '1');
+    }catch(e){}
+
+    // 3) 若本次付款是「同分頁」進行（沒有 opener），這個分頁也要把自己的 sessionStorage 清空
+    try{
+      if (!window.opener && window.sessionStorage) {
+        sessionStorage.removeItem('cart');
+      }
+    }catch(e){}
   </script>
 </body>
 </html>
