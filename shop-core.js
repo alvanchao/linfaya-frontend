@@ -45,36 +45,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var opt = getShipOpt();
     return (opt === 'home') ? 80 : 60; // 與 checkout-and-shipping.js 一致
   }
-  function ymd(d){ var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'); return y+'/'+m+'/'+dd; }
-
-  // 小提醒（預購）面板
-  function renderPreorderPanel() {
-    var wrap = document.getElementById('preorderPanel');
-    if (!wrap) return;
-    var eta='';
-    try{
-      var t=new Date(), min=new Date(t), max=new Date(t);
-      min.setDate(min.getDate()+(w.LEAD_DAYS_MIN||7));
-      max.setDate(max.getDate()+(w.LEAD_DAYS_MAX||14));
-      eta = ymd(min) + ' ～ ' + ymd(max); // 全形波浪符
-    }catch(_){}
-    const panel = document.createElement('div');
-    panel.innerHTML =
-      '<div style="display:flex;flex-direction:column;gap:8px">' +
-        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
-          '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
-          (w.PREORDER_MODE ? '<span class="chip small active" style="pointer-events:none">預計出貨： ' + eta + '</span>' : '') +
-        '</div>' +
-        '<div style="font-size:13px;color:#cfd3dc;line-height:1.7">' +
-          (w.PREORDER_MODE
-            ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + (w.LEAD_DAYS_MIN||7) + '–' + (w.LEAD_DAYS_MAX||14) + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>'
-            : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
-          ) +
-          '<div style="margin-top:4px">※ 完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
-        '</div>' +
-      '</div>';
-    wrap.replaceChildren(panel); // 避免重複堆疊
-  }
 
   // 暴露給 checkout 使用
   w.renderCart  = function(){ updateCart(false); }; // 不自動開抽屜
@@ -143,7 +113,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ====== 商品渲染 ======
   function renderProducts(cat, page) {
-    renderPreorderPanel();
     grid.innerHTML = '';
 
     var list = (cat === 'all') ? products : products.filter(function(p){ return p.cat === cat; });
@@ -276,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateBadge();
     saveCart();
 
-    if (openDrawer) drawer && drawer.classList.add('open'); // 只有你指定時（例如加入後要開）才會開
+    if (openDrawer) drawer && drawer.classList.add('open'); // 僅在你指定時才會開
   }
 
   // ====== 清單點擊（縮圖 / chips / 加入購物車） ======
@@ -307,7 +276,6 @@ document.addEventListener('DOMContentLoaded', function () {
       chip.classList.add('active');
       if (p && type === 'color') refreshSizeChips(card, p);
       if (p && type === 'size')  refreshQtyChips(card, p);
-      // 數量 chip 不需刷新其他區塊
       return;
     }
 
