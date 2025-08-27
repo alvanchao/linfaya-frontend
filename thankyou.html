@@ -3,44 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>付款完成 - LINFAYA COUTURE</title>
+  <title>感謝您的訂購</title>
   <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans","PingFang TC","Hiragino Sans",sans-serif;margin:0;background:linear-gradient(180deg,#0b0c10,#0e1117);color:#e6e9ef;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center}
-    h1{font-size:28px;margin-bottom:12px}
-    p{color:#8a94a7;margin:6px 0}
-    .btn{display:inline-block;margin-top:20px;padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b0c10;font-weight:bold;text-decoration:none;transition:transform .15s;cursor:pointer}
-    .btn:hover{transform:translateY(-2px)}
+    :root{ --bg:#0b0c10;--panel:#111319;--muted:#8a94a7;--pri:#5eead4;--accent:#a78bfa;--text:#e6e9ef }
+    body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans",sans-serif;background:linear-gradient(180deg,#0b0c10,#0e1117);color:var(--text);text-align:center;display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .card{background:#141821;padding:24px;border-radius:16px;max-width:460px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+    h1{margin:0 0 12px;font-size:22px}
+    p{margin:8px 0;color:var(--muted);line-height:1.6}
+    .highlight{color:#fff;font-weight:600}
   </style>
 </head>
 <body>
-  <h1>付款完成 🎉</h1>
-  <p>感謝您的訂購，我們會盡快出貨！</p>
-  <p id="time"></p>
-  <button class="btn" onclick="window.close()">關閉此視窗</button>
+  <div class="card">
+    <h1>付款成功</h1>
+    <p>感謝您的訂購，我們已收到您的款項。</p>
+    <p id="preorder" style="display:none"></p>
+    <p class="highlight">訂單明細與後續通知，將寄送至您的 Email。</p>
+    <p style="margin-top:16px"><a href="index.html" style="color:var(--pri)">返回商店</a></p>
+  </div>
 
   <script>
-    // 顯示時間
-    const t = new Date();
-    document.getElementById('time').textContent = '交易時間：' + t.toLocaleString('zh-TW');
-
-    // 1) 優先用 postMessage 通知原頁清空購物車
-    try{
-      if (window.opener) {
-        window.opener.postMessage({ type: 'EC_PAY_DONE' }, '*');
+    (async function(){
+      try{
+        const r = await fetch("https://linfaya-ecpay-backend.onrender.com/api/health");
+        const j = await r.json();
+        // 確認 server.js 的環境變數 PREORDER_MODE
+        if (j && j.env && j.env.PREORDER_MODE === "true") {
+          const leadMin = j.env.LEAD_DAYS_MIN || 7;
+          const leadMax = j.env.LEAD_DAYS_MAX || 14;
+          const el = document.getElementById("preorder");
+          el.textContent = `※ 本訂單為預購，出貨需約 ${leadMin}–${leadMax} 個工作天；若遇延遲我們會主動通知。`;
+          el.style.display = "block";
+        }
+      }catch(e){
+        console.error("health check error", e);
       }
-    }catch(e){}
-
-    // 2) 備援：設定 localStorage 旗標，讓原頁用 storage 事件清空
-    try{
-      localStorage.setItem('EC_CLEAR_CART', '1');
-    }catch(e){}
-
-    // 3) 若本次付款是「同分頁」進行（沒有 opener），這個分頁也要把自己的 sessionStorage 清空
-    try{
-      if (!window.opener && window.sessionStorage) {
-        sessionStorage.removeItem('cart');
-      }
-    }catch(e){}
+    })();
   </script>
 </body>
 </html>
