@@ -19,7 +19,8 @@
     .btn:hover{transform:translateY(-1px);border-color:#3b4252}
     .btn.pri{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
 
-    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center;padding:28px 0}
+    /* hero 改成單欄 */
+    .hero{display:grid;grid-template-columns:1fr;gap:24px;align-items:center;padding:28px 0}
     .card{background:radial-gradient(1200px 400px at -10% -120%,rgba(45,212,191,.12),transparent 50%),#0e121b;border:1px solid #1e2430;border-radius:18px;padding:18px}
     .muted{color:var(--muted)}
 
@@ -33,7 +34,7 @@
     .page-btn.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
 
     .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-    @media (max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
     @media (max-width:600px){.grid{grid-template-columns:1fr}}
 
     .product{background:#0f1320;border:1px solid #1f2430;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
@@ -83,15 +84,11 @@
   </header>
 
   <main class="container">
+    <!-- hero 保留一張卡；小提醒改由 App.js 動態插入 -->
     <section class="hero">
       <div class="card">
         <h1>精選服飾・配件・舞鞋</h1>
         <p class="muted">付款：綠界 ECPay（信用卡／ATM／超商代碼）。<b>滿 NT$1,000 免運</b>（本島）。</p>
-      </div>
-      <div class="card">
-        <b>小提醒</b>
-        <p class="muted">完成付款後的「感謝頁」會提示：信件可能延遲，請檢查垃圾信或「促銷」分類。</p>
-        <p class="muted">本店商品同時於多平台販售，庫存數量以實際出貨為準，敬請見諒。</p>
       </div>
     </section>
 
