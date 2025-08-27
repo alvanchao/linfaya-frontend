@@ -95,8 +95,8 @@
       '.chips{display:flex;gap:8px;flex-wrap:wrap}',
       '.chip{min-width:40px;padding:8px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer;text-align:center;user-select:none}',
       '.chip:hover{transform:translateY(-1px);border-color:#3b4252}',
-      /* ⬇︎ 修改：選中的分類 → 黑底白字 + 白框，風格與頁籤一致 */
-      '.chip.active{background:#000;color:#fff;border:1px solid #fff}',
+      /* 顏色／尺寸 chip 的選中態維持彩色漸層 */
+      '.chip.active{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b0c10;border:none}',
       '.chip.small{min-width:32px;padding:6px 8px;border-radius:8px}',
       '.chip.disabled{opacity:.4;cursor:not-allowed;filter:grayscale(20%);text-decoration:line-through}',
       '.oos-note{color:#fca5a5;font-size:12px;margin-top:6px}',
@@ -111,16 +111,15 @@
     d.head.appendChild(style);
   })();
 
-  // 頁首「小提醒」IIFE
+  // 頁首「小提醒」IIFE（改為上下對齊）
   (function attachPreorderBanner(){
     if (!w.PREORDER_MODE && !w.REQUIRE_PREORDER_CHECKBOX) return; // 沒啟用就跳過
     var mount = d.createElement('section');
     mount.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px;color:#e6e9ef;line-height:1.6';
-
     var eta = w.PREORDER_MODE ? ('預計出貨區間：' + w.preorderRangeToday(w.LEAD_DAYS_MIN, w.LEAD_DAYS_MAX)) : '';
 
-    /* ⬇︎ 修改：以垂直 flex 容器包裹，固定上下間距，字型對齊更一致 */
-    var inner =
+    // ⬇︎ 用直向 flex 包住標題與內文，固定間距，上下對齊
+    mount.innerHTML =
       '<div style="display:flex;flex-direction:column;gap:6px">' +
         '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
         '<div style="font-size:13px;color:#cfd3dc;line-height:1.6">' +
@@ -132,8 +131,6 @@
           '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
         '</div>' +
       '</div>';
-
-    mount.innerHTML = inner;
 
     var header = d.querySelector('header');
     if (header && header.parentNode) {
