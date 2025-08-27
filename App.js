@@ -1,6 +1,6 @@
-// App.js － LINFAYA COUTURE（Chips 版：顏色/尺寸/數量 + 購物車重設）
-// - 商品卡：顏色/尺寸/數量 全用 chips（1～MAX_QTY）
-// - 購物車：卡片樣式、chips 改數量、UI 更直覺
+// App.js － LINFAYA COUTURE（Chips + 庫存禁用 + 新版購物車）
+// - 商品卡：顏色/尺寸/數量 chips；依 stockMap 灰掉不可售（只需標「售完=0」，未標視為可售）
+// - 購物車：卡片樣式 + 數量 chips（1～MAX）
 // - 保留：預購提醒（不含付款文字）、ECPay、全家/7-11 選店、逾時重試、多分頁清空
 
 // ====== 常數 ======
@@ -29,23 +29,75 @@ const LEAD_DAYS_MAX = 14;
 const REQUIRE_PREORDER_CHECKBOX = true;
 const MAX_QTY_PER_ITEM = 5;
 
-// ====== 商品資料（示例）======
+// ====== 商品資料（依你現有 7 件；僅標示「售完」的組合，沒標=可售）======
 const PRODUCTS = [
-  {id:'top01',cat:'tops',name:'無縫高彈背心',price:399,colors:['黑','膚'],sizes:['S','M','L'],imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg']},
-  {id:'top02',cat:'tops',name:'鏤空美背短袖',price:429,colors:['黑','粉'],sizes:['S','M','L'],imgs:['Photo/鏤空美背短袖.jpg']},
-  {id:'btm01',cat:'bottoms',name:'高腰緊身褲',price:499,colors:['黑','深灰'],sizes:['S','M','L','XL'],imgs:['Photo/高腰緊身褲.jpg']},
-  {id:'sk01',cat:'bottoms',name:'魚尾練習裙',price:699,colors:['黑'],sizes:['S','M','L'],imgs:['Photo/魚尾練習裙.jpg']},
-  {id:'acc01',cat:'accessories',name:'彈力護腕',price:199,colors:['黑'],sizes:['F'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
-  {id:'sh01',cat:'shoes',name:'舞鞋（軟底）',price:990,colors:['黑'],sizes:['35','36','37','38','39','40'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
-  {id:'set01',cat:'tops',name:'上衣＋緊身褲套組',price:849,colors:['多色'],sizes:['S','M','L'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
+  {
+    id:'top01',cat:'tops',name:'無縫高彈背心',price:399,
+    colors:['黑','膚'],sizes:['S','M','L'],
+    imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg'],
+    stockMap:{
+      '黑-M':0,   // 售完
+      '膚-S':0    // 售完
+    }
+  },
+  {
+    id:'top02',cat:'tops',name:'鏤空美背短袖',price:429,
+    colors:['黑','粉'],sizes:['S','M','L'],
+    imgs:['Photo/鏤空美背短袖.jpg'],
+    stockMap:{
+      '粉-L':0    // 售完
+    }
+  },
+  {
+    id:'btm01',cat:'bottoms',name:'高腰緊身褲',price:499,
+    colors:['黑','深灰'],sizes:['S','M','L','XL'],
+    imgs:['Photo/高腰緊身褲.jpg'],
+    stockMap:{
+      '黑-XL':0,  // 售完
+      '深灰-S':0  // 售完
+    }
+  },
+  {
+    id:'sk01',cat:'bottoms',name:'魚尾練習裙',price:699,
+    colors:['黑'],sizes:['S','M','L'],
+    imgs:['Photo/魚尾練習裙.jpg'],
+    stockMap:{
+      // 全可售（不填即代表可售）
+    }
+  },
+  {
+    id:'acc01',cat:'accessories',name:'彈力護腕',price:199,
+    colors:['黑'],sizes:['F'],
+    imgs:['Photo/上衣＋緊身褲套組.jpg'],
+    stockMap:{
+      // 全可售
+    }
+  },
+  {
+    id:'sh01',cat:'shoes',name:'舞鞋（軟底）',price:990,
+    colors:['黑'],sizes:['35','36','37','38','39','40'],
+    imgs:['Photo/上衣＋緊身褲套組.jpg'],
+    stockMap:{
+      '黑-39':0   // 售完
+    }
+  },
+  {
+    id:'set01',cat:'tops',name:'上衣＋緊身褲套組',price:849,
+    colors:['多色'],sizes:['S','M','L'],
+    imgs:['Photo/上衣＋緊身褲套組.jpg'],
+    stockMap:{
+      '多色-L':0  // 售完
+    }
+  },
 ];
 
 // ====== 小工具 ======
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const fmt = n => 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW');
+const qtyValues = Array.from({length:MAX_QTY_PER_ITEM},(_,i)=>i+1);
 
-// 注入 chips 樣式（一次）
+// 注入 chips 樣式
 (function injectChipStyle(){
   const css = `
   .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -53,11 +105,13 @@ const fmt = n => 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW');
   .chip:hover{transform:translateY(-1px);border-color:#3b4252}
   .chip.active{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b0c10;border:none}
   .chip.small{min-width:32px;padding:6px 8px;border-radius:8px}
+  .chip.disabled{opacity:.4;cursor:not-allowed;filter:grayscale(20%);text-decoration:line-through}
   .cart-card{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;border:1px solid #212736;border-radius:14px;background:#0e121b;padding:10px}
   .cart-right{text-align:right}
   .cart-attr{color:#8a94a7;font-size:12px}
   .cart-actions{display:flex;gap:8px;align-items:center;margin-top:6px}
   .link-danger{border:1px solid #3a2230;color:#fca5a5;background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
+  .oos-note{color:#fca5a5;font-size:12px;margin-top:6px}
   `;
   const style = document.createElement('style');
   style.textContent = css;
@@ -140,6 +194,21 @@ function postForm(endpoint, fields, target = '_self') {
   setTimeout(()=>form.remove(), 3000);
 }
 
+// ====== 庫存判斷 ======
+function isOOS(product, color, size){
+  const k = `${color}-${size}`;
+  if (!product.stockMap) return false;      // 沒提供 map → 視為可售
+  if (!(k in product.stockMap)) return false; // 沒列出 → 視為可售
+  return Number(product.stockMap[k]) <= 0;
+}
+function anySizeAvailable(product, color){
+  return (product.sizes||[]).some(sz=>!isOOS(product, color, sz));
+}
+function firstAvailableSize(product, color){
+  const sz = (product.sizes||[]).find(s=>!isOOS(product, color, s));
+  return sz || null;
+}
+
 // ====== 狀態 ======
 const state = {
   cat: 'all',
@@ -207,14 +276,21 @@ function buildPager(total, pageSize = PAGE_SIZE) {
 })();
 
 // ====== 共用：渲染 chips ======
-function renderChips(values=[], activeValue, cls=''){
-  return `<div class="chips">${values.map(v=>{
-    const a = String(v)===String(activeValue) ? ' active' : '';
-    return `<button type="button" class="chip ${cls}${a}" data-value="${String(v)}">${v}</button>`;
-  }).join('')}</div>`;
+function chipHTML(label, value, active=false, disabled=false, extraClass=''){
+  const cls = ['chip', extraClass, active?'active':'', disabled?'disabled':''].filter(Boolean).join(' ');
+  const disAttr = disabled ? 'aria-disabled="true" data-disabled="1"' : '';
+  return `<button type="button" class="${cls}" data-value="${String(value)}" ${disAttr}>${label}</button>`;
+}
+function renderChips(values=[], activeValue, { small=false, disableCheck=null }={}){
+  return `<div class="chips">${
+    values.map(v=>{
+      const disabled = typeof disableCheck==='function' ? !!disableCheck(v) : false;
+      return chipHTML(v, v, String(v)===String(activeValue), disabled, small?'small':'');
+    }).join('')
+  }</div>`;
 }
 
-// ====== 商品列表（chips：顏色/尺寸/數量）======
+// ====== 商品列表（chips：顏色/尺寸/數量 + 庫存禁用）======
 function renderProducts(){
   const list = state.cat==='all' ? PRODUCTS : PRODUCTS.filter(p=>p.cat===state.cat);
   const total=list.length, from=(state.page-1)*PAGE_SIZE;
@@ -225,12 +301,14 @@ function renderProducts(){
 
   const grid=$('#grid'); if(!grid) return;
   grid.innerHTML='';
+
   pageItems.forEach(p=>{
     const el=document.createElement('div'); el.className='product';
     const first=p.imgs?.[0] || '';
-    const defaultColor = p.colors?.[0] || '';
-    const defaultSize  = p.sizes?.[0] || '';
-    const defaultQty   = 1;
+    // 預設：第一個有貨的顏色/尺寸
+    const defColor = (p.colors||[]).find(c=>anySizeAvailable(p,c)) || (p.colors?.[0]||'');
+    const defSize  = firstAvailableSize(p, defColor) || (p.sizes?.[0]||'');
+    const defQty   = 1;
 
     el.innerHTML=`
       <div class="imgbox">
@@ -244,17 +322,28 @@ function renderProducts(){
 
         <div style="margin-top:4px">
           <div class="muted" style="font-size:12px;margin-bottom:6px">顏色</div>
-          <div class="color-group">${renderChips(p.colors, defaultColor)}</div>
+          <div class="color-group">
+            ${renderChips(p.colors, defColor, {
+              disableCheck: (c)=>!anySizeAvailable(p, c)
+            })}
+          </div>
         </div>
 
         <div style="margin-top:6px">
           <div class="muted" style="font-size:12px;margin-bottom:6px">尺寸</div>
-          <div class="size-group">${renderChips(p.sizes, defaultSize)}</div>
+          <div class="size-group">
+            ${renderChips(p.sizes, defSize, {
+              disableCheck: (s)=>isOOS(p, defColor, s)
+            })}
+          </div>
+          <div class="oos-note" style="display:none">此顏色已售完</div>
         </div>
 
         <div style="margin-top:6px">
           <div class="muted" style="font-size:12px;margin-bottom:6px">數量</div>
-          <div class="qty-group">${renderChips(Array.from({length:MAX_QTY_PER_ITEM},(_,i)=>i+1), defaultQty, 'small ')}</div>
+          <div class="qty-group">
+            ${renderChips(qtyValues, defQty, { small:true })}
+          </div>
         </div>
 
         <div class="qty" style="margin-top:10px">
@@ -265,7 +354,6 @@ function renderProducts(){
       </div>
     `;
 
-    // thumbs 切換主圖
     const main=el.querySelector('.main-img img');
     el.querySelectorAll('.thumbs img').forEach(img=>{
       img.addEventListener('click',()=>{
@@ -274,25 +362,60 @@ function renderProducts(){
       });
     });
 
-    // chips 切換
-    const pick = (groupSel, target) => {
-      el.querySelectorAll(`${groupSel} .chip`).forEach(c=>c.classList.remove('active'));
-      target.classList.add('active');
-    };
+    const oosNote = el.querySelector('.oos-note');
+
+    // 事件：chips 切換
     el.addEventListener('click',(ev)=>{
       const chip = ev.target.closest('.chip');
       if(!chip) return;
-      const group = chip.closest('.color-group,.size-group,.qty-group');
-      if(group) pick(group.classList.contains('color-group') ? '.color-group'
-               : group.classList.contains('size-group') ? '.size-group'
-               : '.qty-group', chip);
+      if (chip.dataset.disabled === '1') return; // 禁用不動作
+
+      // 判斷所在群組
+      const isColor = !!chip.closest('.color-group');
+      const isSize  = !!chip.closest('.size-group');
+      const isQty   = !!chip.closest('.qty-group');
+
+      // 切換 active
+      const pick = (groupSel, target) => {
+        el.querySelectorAll(`${groupSel} .chip`).forEach(c=>c.classList.remove('active'));
+        target.classList.add('active');
+      };
+
+      if (isColor){
+        // 顏色切換 → 尺寸依此顏色重新渲染（灰掉售完），並自動選第一個可售尺寸；如全售完，顯示提示
+        pick('.color-group', chip);
+        const color = chip.dataset.value;
+        const sizeWrap = el.querySelector('.size-group');
+        const firstOk = firstAvailableSize(p, color);
+
+        if (!firstOk){
+          sizeWrap.innerHTML = renderChips(p.sizes, '', { disableCheck:(s)=>true });
+          if (oosNote) oosNote.style.display = 'block';
+        }else{
+          sizeWrap.innerHTML = renderChips(p.sizes, firstOk, { disableCheck:(s)=>isOOS(p, color, s) });
+          if (oosNote) oosNote.style.display = 'none';
+        }
+      }
+
+      if (isSize){
+        pick('.size-group', chip);
+      }
+
+      if (isQty){
+        pick('.qty-group', chip);
+      }
     });
 
     // 加入購物車
     el.querySelector('.add')?.addEventListener('click',()=>{
-      const color = el.querySelector('.color-group .chip.active')?.dataset.value || defaultColor;
-      const size  = el.querySelector('.size-group .chip.active')?.dataset.value || defaultSize;
-      const qty   = parseInt(el.querySelector('.qty-group .chip.active')?.dataset.value || defaultQty, 10);
+      const color = el.querySelector('.color-group .chip.active')?.dataset.value;
+      const size  = el.querySelector('.size-group .chip.active')?.dataset.value;
+      const qty   = parseInt(el.querySelector('.qty-group .chip.active')?.dataset.value || '1', 10);
+
+      if (!color){ return alert('請先選擇顏色'); }
+      if (!size){ return alert('此顏色目前已售完，請改選其他顏色'); }
+      if (isOOS(p, color, size)){ return alert('此尺寸目前已售完'); }
+
       addToCart({...p,color,size,qty,img:first});
     });
 
@@ -377,8 +500,8 @@ function renderCart(){
         <div class="cart-attr">顏色：${it.color||''}｜尺寸：${it.size||''}｜單價：${fmt(it.price||0)}</div>
         <div class="cart-actions">
           <div class="chips">
-            ${Array.from({length:MAX_QTY_PER_ITEM},(_,i)=>{
-              const v=i+1; const a = v===(it.qty||1)?' active':'';
+            ${qtyValues.map(v=>{
+              const a = v===(it.qty||1)?' active':'';
               return `<button type="button" class="chip small${a}" data-qty="${v}" data-idx="${idx}">${v}</button>`;
             }).join('')}
           </div>
@@ -688,4 +811,4 @@ if (checkoutBtn) {
 const year = $('#year'); if(year) year.textContent = new Date().getFullYear();
 
 // 初始渲染
-updateBadge(); renderProducts(); onShipChange(); renderCart(); // 先渲染購物車，避免 chips 事件代理未掛上
+updateBadge(); renderProducts(); onShipChange(); renderCart();
