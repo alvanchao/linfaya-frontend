@@ -100,7 +100,7 @@ window.PRODUCTS = [
   // ====== 新增：專屬客製化修改 ======
   {
     id:'custom01',
-    cat:'accessories',        // 放在 Accessories 分類
+    cat:'customerize',        // 放在 Accessories 分類
     name:'專屬客製化修改',
     price:10,                 // 基本單價 = 10 元 / 份
     colors:['X'],           // 固定選項
