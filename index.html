@@ -18,25 +18,10 @@
     .btn{border:1px solid #2a2f3a;background:#121521;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px}
     .btn:hover{transform:translateY(-1px);border-color:#3b4252}
     .btn.pri{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
-
-    /* hero 改成單欄 */
-    .hero{display:grid;grid-template-columns:1fr;gap:24px;align-items:center;padding:28px 0}
-    .card{background:radial-gradient(1200px 400px at -10% -120%,rgba(45,212,191,.12),transparent 50%),#0e121b;border:1px solid #1e2430;border-radius:18px;padding:18px}
     .muted{color:var(--muted)}
-
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
-    .tab{padding:8px 12px;border:1px solid #2b3342;border-radius:999px;cursor:pointer;color:#c7cede}
-    .tab.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
-
-    .toolbar{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
-    .pager{display:flex;gap:6px}
-    .page-btn{padding:6px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer}
-    .page-btn.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
-
-    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}
     @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
     @media (max-width:600px){.grid{grid-template-columns:1fr}}
-
     .product{background:#0f1320;border:1px solid #1f2430;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
     .product .imgbox{position:relative;background:#0a0d14}
     .product .main-img{position:relative;width:100%;padding-top:70%;overflow:hidden}
@@ -44,27 +29,23 @@
     .thumbs{display:flex;gap:8px;padding:10px;overflow:auto}
     .thumbs img{width:64px;height:64px;object-fit:cover;border:1px solid #283040;border-radius:10px;cursor:pointer;opacity:.8}
     .thumbs img.active{opacity:1;outline:2px solid var(--pri)}
-    .magnifier{position:absolute;border:1px solid #2b3342;border-radius:50%;width:110px;height:110px;pointer-events:none;display:none;box-shadow:0 10px 25px rgba(0,0,0,.35)}
-    .product .body{padding:14px;display:flex;flex-direction:column;gap:8px}
+    .body{padding:14px;display:flex;flex-direction:column;gap:8px}
     .price{font-weight:700}
-
-    .qty{display:flex;align-items:center;gap:8px}
-    .input, .select{border:1px solid #2a2f3a;background:#0e121b;color:var(--text);padding:10px;border-radius:12px}
-
     .drawer{position:fixed;right:0;top:0;width:380px;max-width:100%;height:100%;background:#0c1018;border-left:1px solid #1e2430;transform:translateX(110%);transition:.2s;z-index:50;display:flex;flex-direction:column}
     .drawer.open{transform:translateX(0)}
-    .drawer header{position:sticky;top:0;background:transparent}
+    .drawer header{position:sticky;top:0;background:#0b0c10}
     .drawer .list{padding:12px;display:flex;flex-direction:column;gap:12px;overflow:auto}
-    .cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;border:1px solid #212736;border-radius:14px;padding:8px}
-    .cart-item img{width:64px;height:64px;border-radius:10px;object-fit:cover}
     .summary{margin-top:auto;padding:12px;border-top:1px solid #1f2430;background:#0b0f17}
-    .summary .row{display:flex;justify-content:space-between;margin:6px 0}
-    .summary .total{font-size:18px;font-weight:800}
-
     .footer{color:#939db2;font-size:13px;border-top:1px solid #1f2430;padding:16px 0;margin-top:20px}
-    .pill{font-size:12px;color:#b7c1d6;border:1px solid #2b3342;border-radius:999px;padding:6px 10px}
     .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0f1522;border:1px solid #273044;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s}
     .toast.show{opacity:1}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+    .tab{padding:8px 12px;border:1px solid #2b3342;border-radius:999px;cursor:pointer;color:#c7cede}
+    .tab.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
+    .pager{display:flex;gap:6px}
+    .page-btn{padding:6px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer}
+    .page-btn.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
   </style>
 </head>
 <body>
@@ -84,14 +65,6 @@
   </header>
 
   <main class="container">
-    <!-- hero 保留一張卡；小提醒改由 App.js 動態插入 -->
-    <section class="hero">
-      <div class="card">
-        <h1>精選服飾・配件・舞鞋</h1>
-        <p class="muted">付款：綠界 ECPay（信用卡／ATM／超商代碼）。<b>滿 NT$1,000 免運</b>（本島）。</p>
-      </div>
-    </section>
-
     <section class="section">
       <div class="tabs" id="tabs">
         <button class="tab active" data-cat="all">全部</button>
@@ -126,18 +99,15 @@
       </div>
       <button class="btn" id="closeCart">關閉</button>
     </header>
-
     <div class="list" id="cartList"></div>
     <div class="summary">
       <div class="row"><span>小計</span><b id="subtotal">NT$0</b></div>
-      <div class="row"><span>運費（台灣本島）</span><span id="shipping">NT$0</span></div>
+      <div class="row"><span>運費</span><span id="shipping">NT$0</span></div>
       <div class="row total"><span>合計</span><span id="grand">NT$0</span></div>
-
       <div class="form" style="display:grid;gap:10px;margin-top:8px">
         <div class="field"><label>收件姓名</label><input class="input" id="name" placeholder="王小明" /></div>
         <div class="field"><label>電子郵件</label><input class="input" id="email" type="email" placeholder="name@example.com" /></div>
         <div class="field"><label>手機</label><input class="input" id="phone" placeholder="09xxxxxxxx（10碼）" /></div>
-
         <div class="field">
           <label>配送方式</label>
           <div class="qty" style="flex-wrap:wrap">
@@ -146,28 +116,24 @@
             <label><input type="radio" name="ship" value="seven"> 7-11 店到店（+60）</label>
           </div>
         </div>
-
         <div class="field" id="homeFields">
           <label>收件地址</label>
           <input class="input" id="addr" placeholder="台北市信義區⋯⋯" />
         </div>
-
         <div class="field" id="familyFields" style="display:none">
           <label>全家門市</label>
           <div class="qty" style="flex-wrap:wrap">
             <button class="btn" id="btnPickFamily">選擇門市（官方地圖）</button>
-            <span class="muted" id="familyPicked" style="margin-left:8px">尚未選擇</span>
+            <span class="muted" id="familyPicked">尚未選擇</span>
           </div>
         </div>
-
         <div class="field" id="sevenFields" style="display:none">
           <label>7-11 門市</label>
           <div class="qty" style="flex-wrap:wrap">
             <button class="btn" id="btnPickSeven">選擇門市（官方地圖）</button>
-            <span class="muted" id="sevenPicked" style="margin-left:8px">尚未選擇</span>
+            <span class="muted" id="sevenPicked">尚未選擇</span>
           </div>
         </div>
-
         <button class="btn pri" id="checkout">前往綠界付款</button>
       </div>
     </div>
