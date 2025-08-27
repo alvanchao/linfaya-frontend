@@ -46,8 +46,23 @@
     .toast.show{opacity:1}
 
     .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
-    .tab{padding:8px 12px;border:1px solid #2b3342;border-radius:999px;cursor:pointer;color:#c7cede}
-    .tab.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+    /* ⬇︎ 未選取：黑底白字＋白框 */
+    .tab{
+      padding:8px 12px;
+      border:1px solid #ffffff;
+      border-radius:999px;
+      cursor:pointer;
+      color:#ffffff;
+      background:#000000;
+    }
+    .tab:hover{filter:brightness(1.06)}
+    /* ⬇︎ 已選取：維持彩色漸層 */
+    .tab.active{
+      background:linear-gradient(135deg,var(--pri),var(--accent));
+      color:#0b0c10;
+      border:none;
+    }
+
     .toolbar{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
     .pager{display:flex;gap:6px}
     .page-btn{padding:6px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer}
