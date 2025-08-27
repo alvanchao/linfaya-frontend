@@ -1,4 +1,4 @@
-// shop-core.js — 分類分頁＋數量步進器＋庫存反灰＋不要自動開購物車
+// shop-core.js — Chips數量選擇＋不自動開購物車＋分類切換重設縮圖
 document.addEventListener('DOMContentLoaded', function () {
   var w = window;
   var fmt   = w.fmt   ? w.fmt   : function(n){ return 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW'); };
@@ -43,30 +43,20 @@ document.addEventListener('DOMContentLoaded', function () {
     if (subtotal <= 0) return 0;
     if (subtotal >= FREE_SHIP_THRESHOLD) return 0;
     var opt = getShipOpt();
-    return (opt === 'home') ? 80 : 60;
+    return (opt === 'home') ? 80 : 60; // 與 checkout-and-shipping.js 一致
   }
-  function ymd(d){ // yyyy/MM/dd
-    var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
-    return y+'/'+m+'/'+dd;
-  }
+  function ymd(d){ var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'); return y+'/'+m+'/'+dd; }
   function buildPreorderPanelHTML(){
-    // 只負責字面；樣式由 index.css（內嵌 style）處理
-    var eta = '';
-    try{
-      var today = new Date();
-      var min = new Date(today); min.setDate(min.getDate() + (w.LEAD_DAYS_MIN||7));
-      var max = new Date(today); max.setDate(max.getDate() + (w.LEAD_DAYS_MAX||14));
-      eta = ymd(min) + ' ～ ' + ymd(max); // 全形波浪符與你截圖一致
-    }catch(_){}
-    return '' +
+    var eta=''; try{ var t=new Date(), min=new Date(t), max=new Date(t); min.setDate(min.getDate()+(w.LEAD_DAYS_MIN||7)); max.setDate(max.getDate()+(w.LEAD_DAYS_MAX||14)); eta=ymd(min)+' ～ '+ymd(max);}catch(_){}
+    return ''+
       '<div style="display:flex;flex-direction:column;gap:8px">' +
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
           '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
-          (w.PREORDER_MODE ? '<span class="chip small active" style="pointer-events:none">預計出貨： ' + eta + '</span>' : '') +
+          (w.PREORDER_MODE ? '<span class="chip small active" style="pointer-events:none">預計出貨： '+eta+'</span>' : '') +
         '</div>' +
         '<div style="font-size:13px;color:#cfd3dc;line-height:1.7">' +
           (w.PREORDER_MODE
-            ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + w.LEAD_DAYS_MIN + '–' + w.LEAD_DAYS_MAX + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>'
+            ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 '+w.LEAD_DAYS_MIN+'–'+w.LEAD_DAYS_MAX+' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>'
             : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
           ) +
           '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
@@ -91,19 +81,26 @@ document.addEventListener('DOMContentLoaded', function () {
       b.textContent = (c==='all'?'全部':c);
       b.addEventListener('click', function(){
         currentCat = c; currentPage = 1;
+        // 更新 tab 樣式
+        cats.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.dataset.cat===c); });
+        // 重新渲染清單
         renderProducts(currentCat, currentPage);
+        // 捲回清單頂端，視覺更明顯
+        try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){}
       });
       cats.appendChild(b);
     });
   }
 
-  // ====== 規格可選性（庫存 0 反灰） ======
+  // ====== 庫存/上限 ======
   function capFor(p, color, size){
     var cap = MAX_QTY_PER_ITEM;
     var k = (color||'')+'-'+(size||'');
     if (p.stockMap && (k in p.stockMap)) cap = Math.min(cap, Number(p.stockMap[k]||0));
     return cap;
   }
+
+  // ====== chips 依顏色/尺寸刷新（尺寸與數量） ======
   function refreshSizeChips(card, p){
     var color = (card.querySelector('.color-group .chip.active')||{}).dataset?.val || (p.colors&&p.colors[0]) || '';
     card.querySelectorAll('.size-group .chip').forEach(function(btn){
@@ -119,16 +116,37 @@ document.addEventListener('DOMContentLoaded', function () {
       var firstOk = card.querySelector('.size-group .chip:not(.disabled)');
       if (firstOk) firstOk.classList.add('active');
     }
+    // 尺寸確定後刷新數量 chips
+    refreshQtyChips(card, p);
+  }
+
+  function refreshQtyChips(card, p){
+    var color = (card.querySelector('.color-group .chip.active')||{}).dataset?.val || (p.colors&&p.colors[0]) || '';
+    var size  = (card.querySelector('.size-group  .chip.active')||{}).dataset?.val  || (p.sizes && p.sizes[0]) || '';
+    var cap   = capFor(p, color, size);
+    var qtyWrap = card.querySelector('.qty-group');
+    if (!qtyWrap) return;
+    // 目前選到的數量
+    var current = (qtyWrap.querySelector('.chip.active')||{}).dataset?.val;
+    current = Number(current||1);
+    // 重新渲染 1..min(MAX, cap)
+    var maxShow = Math.max(1, Math.min(MAX_QTY_PER_ITEM, cap));
+    var html = '';
+    for (var i=1; i<=maxShow; i++){
+      html += '<button class="chip'+(i===Math.min(current,maxShow)?' active':'')+'" data-type="qty" data-val="'+i+'">'+i+'</button>';
+    }
+    qtyWrap.innerHTML = html;
   }
 
   // ====== 商品渲染 ======
   function renderProducts(cat, page) {
     grid.innerHTML = '';
 
-    // 小提醒（預購）如果你在頁面上有 panel 容器，可在這裡插入
+    // 小提醒面板（若頁面有容器）
     var panel = document.getElementById('preorderPanel');
     if (panel) panel.innerHTML = buildPreorderPanelHTML();
 
+    // 篩選＋分頁
     var list = (cat === 'all') ? products : products.filter(function(p){ return p.cat === cat; });
     var start = (page - 1) * PAGE_SIZE;
     var slice = list.slice(start, start + PAGE_SIZE);
@@ -164,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
               '<div class="muted" style="font-size:12px;margin-bottom:6px">尺寸</div>' +
               '<div class="chips size-group">' +
                 (p.sizes||[]).map(function (s, i) {
-                  // 先以第一個顏色檢查可用性，待使用者切換顏色再刷新
+                  // 先用第一個顏色檢查可用性
                   var cap = capFor(p, firstColor, s);
                   var dis = (cap<=0) ? ' disabled class="chip disabled' : ' class="chip';
                   return '<button'+dis + (i===0?' active':'') + '" data-type="size" data-val="' + s + '">' + s + '</button>';
@@ -172,10 +190,12 @@ document.addEventListener('DOMContentLoaded', function () {
               '</div>' +
             '</div>' +
 
+            '<div style="margin-top:8px">' +
+              '<div class="muted" style="font-size:12px;margin-bottom:6px">數量</div>' +
+              '<div class="chips qty-group"></div>' +
+            '</div>' +
+
             '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">' +
-              '<div class="btn small" data-role="qdec">－</div>' +
-              '<span class="muted" data-role="qty" style="min-width:24px;text-align:center">1</span>' +
-              '<div class="btn small" data-role="qinc">＋</div>' +
               '<button class="btn pri add">加入購物車</button>' +
             '</div>' +
           '</div>' +
@@ -186,11 +206,15 @@ document.addEventListener('DOMContentLoaded', function () {
     infoText && (infoText.textContent = '共 ' + list.length + ' 件');
     renderPager(pager, list.length, page);
 
-    // 渲染後，依首次顏色刷新尺寸可選
+    // 渲染後，依首次顏色刷新尺寸與數量；縮圖第一張帶 active
     grid.querySelectorAll('.product').forEach(function(card){
       var id = card.dataset.id;
-      var p = products.find(function(x){return x.id===id;});
-      if (p) refreshSizeChips(card, p);
+      var p  = products.find(function(x){return x.id===id;});
+      if (p) refreshSizeChips(card, p); // 這也會帶動 refreshQtyChips
+      var thumbs = card.querySelectorAll('.thumbs img');
+      thumbs.forEach(function(img,i){ img.classList.toggle('active', i===0); });
+      var main = card.querySelector('.main-img img');
+      if (thumbs[0]) main.src = thumbs[0].dataset.main || thumbs[0].src;
     });
   }
 
@@ -206,13 +230,14 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', function () {
           currentPage = i0;
           renderProducts(currentCat, currentPage);
+          try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){}
         });
       })(i);
       mount.appendChild(btn);
     }
   }
 
-  // ====== 購物車渲染（不自動開抽屜） ======
+  // ====== 購物車渲染（從不自動開抽屜） ======
   function updateCart(openDrawer) {
     if (!cartList) return;
     cartList.innerHTML = '';
@@ -220,7 +245,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!cart.length) {
       cartList.innerHTML = '<div class="empty">購物車是空的，去逛逛吧！</div>';
-      // 不自動開抽屜
       if (subtotalEl) subtotalEl.textContent = fmt(0);
       if (shippingEl) shippingEl.textContent = fmt(0);
       if (grandEl) grandEl.textContent = fmt(0);
@@ -256,10 +280,10 @@ document.addEventListener('DOMContentLoaded', function () {
     updateBadge();
     saveCart();
 
-    if (openDrawer) drawer && drawer.classList.add('open');
+    if (openDrawer) drawer && drawer.classList.add('open'); // 我們只在你指定時才開
   }
 
-  // ====== 事件：清單點擊（縮圖 / 規格 / 數量 / 加入購物車） ======
+  // ====== 事件：清單點擊（縮圖 / chips） ======
   grid.addEventListener('click', function (e) {
     var t = e.target;
     if (!(t instanceof HTMLElement)) return;
@@ -269,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var main = t.closest('.imgbox').querySelector('.main-img img');
       t.parentElement.querySelectorAll('img').forEach(function(img){ img.classList.remove('active'); });
       t.classList.add('active');
-      main.src = t.dataset.main;
+      main.src = t.dataset.main || t.src;
       return;
     }
 
@@ -278,29 +302,15 @@ document.addEventListener('DOMContentLoaded', function () {
     var id = card.dataset.id;
     var p  = products.find(function(x){ return x.id===id; });
 
-    // chips
+    // chips（顏色 / 尺寸 / 數量）
     var chip = t.closest('.chip[data-type]');
     if (chip && !chip.classList.contains('disabled')) {
+      var type = chip.dataset.type;
       var group = chip.closest('.chips');
       group.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('active'); });
       chip.classList.add('active');
-      if (p && chip.dataset.type === 'color') refreshSizeChips(card, p);
-      return;
-    }
-
-    // 數量步進器
-    var qtyEl = card.querySelector('[data-role="qty"]');
-    if (t.matches('[data-role="qinc"]')) {
-      var color = (card.querySelector('.color-group .chip.active')||{}).dataset?.val || '';
-      var size  = (card.querySelector('.size-group  .chip.active')||{}).dataset?.val  || '';
-      var cap = capFor(p, color, size);
-      var q = Math.min(cap, Number(qtyEl.textContent||'1')+1, MAX_QTY_PER_ITEM);
-      qtyEl.textContent = String(q);
-      return;
-    }
-    if (t.matches('[data-role="qdec"]')) {
-      var q2 = Math.max(1, Number(qtyEl.textContent||'1')-1);
-      qtyEl.textContent = String(q2);
+      if (p && type === 'color') refreshSizeChips(card, p);
+      if (p && type === 'size')  refreshQtyChips(card, p);
       return;
     }
 
@@ -308,9 +318,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (t.classList.contains('add')) {
       var colorSel = card.querySelector('.color-group .chip.active');
       var sizeSel  = card.querySelector('.size-group  .chip.active');
+      var qtySel   = card.querySelector('.qty-group   .chip.active');
       var color = colorSel ? colorSel.dataset.val : ((p.colors && p.colors[0]) || '');
       var size  = sizeSel  ? sizeSel.dataset.val  : ((p.sizes  && p.sizes[0])  || '');
-      var qty   = Math.max(1, Number(qtyEl ? qtyEl.textContent : '1')||1);
+      var qty   = Math.max(1, Number(qtySel ? qtySel.dataset.val : '1')||1);
 
       // 庫存上限
       var cap = capFor(p, color, size);
@@ -332,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       if (!merged){ cart.push(item); toast('已加入購物車'); }
 
-      updateCart(true); // 加入時才打開購物車
+      updateCart(false); // 不開抽屜
       return;
     }
   });
@@ -360,7 +371,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 開關購物車按鈕
+  // 開關購物車按鈕（只有你按了才會打開）
   var openBtn  = document.getElementById('openCart');
   var closeBtn = document.getElementById('closeCart');
   if (openBtn)  openBtn.addEventListener('click', function(){ drawer && drawer.classList.add('open'); updateCart(false); });
@@ -369,5 +380,5 @@ document.addEventListener('DOMContentLoaded', function () {
   // 初始化
   renderCats();
   renderProducts('all', 1);
-  updateCart(false); // 初始化時不開啟抽屜
+  updateCart(false); // 初始化不開抽屜
 });
