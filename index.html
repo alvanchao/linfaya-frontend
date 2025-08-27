@@ -6,103 +6,158 @@
   <title>LINFAYA COUTURE｜服飾・配件・舞鞋</title>
   <meta name="description" content="舒適實穿的服飾、配件與舞鞋，快速出貨與貼心服務。" />
   <style>
-    :root{ --bg:#0b0c10;--panel:#111319;--muted:#8a94a7;--pri:#5eead4;--text:#e6e9ef;--accent:#a78bfa }
+    :root{
+      --bg:#0b0c10;--panel:#111319;--panel-2:#161a22;
+      --muted:#8a94a7;--pri:#5eead4;--text:#e6e9ef;--accent:#a78bfa;--danger:#f87171
+    }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b0c10,#0e1117);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans","PingFang TC","Hiragino Sans",sans-serif}
     a{color:inherit;text-decoration:none}
-    .container{max-width:1100px;margin:0 auto;padding:20px}
-    header{position:sticky;top:0;backdrop-filter:saturate(140%) blur(8px);background:rgba(11,12,16,.7);border-bottom:1px solid #1f2430;z-index:20}
-    .nav{display:flex;align-items:center;justify-content:space-between}
-    .brand{display:flex;gap:10px;align-items:center}
-    .logo-img{height:36px;width:auto;display:block}
-    .actions{display:flex;gap:10px}
-    .btn{border:1px solid #2a2f3a;background:#121521;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px}
-    .btn:hover{transform:translateY(-1px);border-color:#3b4252}
-    .btn.pri{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+    .container{max-width:1080px;margin:0 auto;padding:16px}
+    header.site{position:sticky;top:0;z-index:20;background:rgba(11,12,16,.6);backdrop-filter:blur(8px);border-bottom:1px solid #1f2430}
+    .brand{font-weight:700;letter-spacing:.2em}
     .muted{color:var(--muted)}
-
-    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}
-    @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width:600px){.grid{grid-template-columns:1fr}}
-
-    .product{background:#0f1320;border:1px solid #1f2430;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
-    .product .imgbox{position:relative;background:#0a0d14}
-    .product .main-img{position:relative;width:100%;padding-top:70%;overflow:hidden}
-    .product .main-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-    .thumbs{display:flex;gap:8px;padding:10px;overflow:auto}
-    .thumbs img{width:64px;height:64px;object-fit:cover;border:1px solid #283040;border-radius:10px;cursor:pointer;opacity:.8}
-    .thumbs img.active{opacity:1;outline:2px solid var(--pri)}
-    .body{padding:14px;display:flex;flex-direction:column;gap:8px}
-    .price{font-weight:700}
-
-    .drawer{position:fixed;right:0;top:0;width:380px;max-width:100%;height:100%;background:#0c1018;border-left:1px solid #1f2430;transform:translateX(110%);transition:.2s;z-index:50;display:flex;flex-direction:column}
-    .drawer.open{transform:translateX(0)}
-    .drawer header{position:sticky;top:0;background:#0b0c10}
-    .drawer .list{padding:12px;display:flex;flex-direction:column;gap:12px;overflow:auto}
-    .summary{margin-top:auto;padding:12px;border-top:1px solid #1f2430;background:#0b0f17}
-
-    .footer{color:#939db2;font-size:13px;border-top:1px solid #1f2430;padding:16px 0;margin-top:20px}
-    .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0f1522;border:1px solid #273044;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s}
-    .toast.show{opacity:1}
-
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
-    /* 已經交給 .chip.small 樣式來處理，這裡不用再加 */
-
-    .toolbar{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
-    .pager{display:flex;gap:6px}
-    .page-btn{padding:6px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer}
-    .page-btn.active{background:linear-gradient(135deg,var(--pri),var(--accent));color:#0b0c10;border:none}
+    .btn{background:var(--panel-2);border:1px solid #222834;color:var(--text);padding:8px 12px;border-radius:12px;cursor:pointer}
+    .btn.ghost{background:transparent;border-color:#2a3242}
+    .btn.small{padding:4px 8px;border-radius:8px;font-size:12px}
+    .btn.pri{background:var(--pri);border-color:transparent;color:#0b0c10;font-weight:700}
+    .link-danger{background:transparent;border:none;color:var(--danger);cursor:pointer}
+    .badge{display:inline-flex;min-width:20px;height:20px;align-items:center;justify-content:center;background:var(--accent);color:#0b0c10;border-radius:999px;padding:0 6px;font-size:12px;font-weight:700;margin-left:6px}
+    main .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    #grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media (max-width:900px){#grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){#grid{grid-template-columns:1fr}}
+    .product{background:var(--panel);border:1px solid #1d2230;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+    .imgbox{background:#0f1218}
+    .main-img{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .main-img img{width:100%;height:100%;object-fit:cover}
+    .thumbs{display:flex;gap:6px;padding:8px;border-top:1px solid #171b25}
+    .thumbs img{width:52px;height:52px;object-fit:cover;border:1px solid #222a3a;border-radius:8px;opacity:.7;cursor:pointer}
+    .thumbs img.active{opacity:1;border-color:var(--pri)}
+    .body{padding:12px;display:flex;flex-direction:column;gap:8px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{padding:6px 10px;border-radius:999px;border:1px solid #2a3142;background:#0e1117;color:var(--text);cursor:pointer}
+    .chip.active{border-color:var(--pri);box-shadow:0 0 0 1px rgba(94,234,212,.2) inset}
+    #pager,#pagerBottom{display:flex;gap:8px;justify-content:center;margin:16px 0}
+    .page-btn{background:transparent;border:1px solid #2a3142;color:var(--text);padding:6px 10px;border-radius:8px;cursor:pointer}
+    .page-btn.active{border-color:var(--pri)}
+    /* Drawer */
+    .drawer{position:fixed;right:-420px;top:0;width:420px;max-width:100vw;height:100vh;background:var(--panel);border-left:1px solid #1e2431;transition:right .25s ease;z-index:30;display:flex;flex-direction:column}
+    .drawer.open{right:0}
+    .drawer header{border-bottom:1px solid #1e2431}
+    .drawer .list{padding:12px;flex:1;overflow:auto}
+    .drawer .summary{border-top:1px solid #1e2431;padding:12px;background:#0e1117}
+    .cart-card{display:grid;grid-template-columns:72px 1fr auto;gap:10px;padding:10px;border:1px solid #1b2130;border-radius:12px;background:#0f131a;margin-bottom:10px}
+    .cart-attr{font-size:12px;color:var(--muted);margin:4px 0 6px}
+    .cart-actions{display:flex;align-items:center;gap:8px}
+    .cart-right{align-self:center;font-weight:700}
+    .row{display:flex;align-items:center;justify-content:space-between;margin:6px 0}
+    .row.total{font-size:18px;font-weight:800}
+    .form{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    .field label{display:block;margin-bottom:6px;font-size:14px;color:var(--muted)}
+    .input{width:100%;padding:10px;border-radius:10px;border:1px solid #283144;background:#0b0f16;color:var(--text)}
+    .qty{display:flex;gap:12px;flex-wrap:wrap}
+    .empty{padding:20px;text-align:center;color:var(--muted)}
+    /* Toast */
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:40;background:#111827;border:1px solid #243044;color:#e5e7eb;padding:10px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
   </style>
 </head>
 <body>
-  <header>
-    <div class="container nav">
-      <div class="brand">
-        <img class="logo-img" src="Linfaya_logo.JPEG" alt="Linfaya Logo">
-        <div>
-          <b>LINFAYA COUTURE</b><br>
-          <small class="muted">舒適好穿｜實穿耐用</small>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn" id="openCart">購物車 <span id="cartCount" class="pill">0</span></button>
+  <!-- 頁首 -->
+  <header class="site">
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div class="brand">LINFAYA COUTURE</div>
+      <div>
+        <button id="openCart" class="btn">購物車 <span id="cartCount" class="badge">0</span></button>
       </div>
     </div>
   </header>
 
-  <!-- 小提醒區塊會由 utils-and-ui.js 插入，並且自動對齊 LOGO -->
-
+  <!-- 主內容 -->
   <main class="container">
-    <section class="section">
-      <!-- ✅ 頁籤改用 tab chip small（與顏色/尺寸一致） -->
-      <div class="tabs" id="tabs">
-        <button class="tab chip small active" data-cat="all">全部</button>
-        <button class="tab chip small" data-cat="tops">Tops</button>
-        <button class="tab chip small" data-cat="bottoms">Bottoms</button>
-        <button class="tab chip small" data-cat="accessories">Accessories</button>
-        <button class="tab chip small" data-cat="shoes">Shoes</button>
-      </div>
+    <div class="toolbar">
+      <div class="muted">精選商品</div>
+      <div id="infoText" class="muted">共 0 件</div>
+    </div>
 
-      <div class="toolbar">
-        <div class="muted" id="infoText">共 0 件</div>
-        <div class="pager" id="pager"></div>
-      </div>
+    <!-- 商品清單 -->
+    <div id="grid"></div>
 
-      <div id="grid" class="grid"></div>
-
-      <div class="toolbar">
-        <span></span>
-        <div class="pager" id="pagerBottom"></div>
-      </div>
-    </section>
-
-    <div class="footer">© <span id="year"></span> LINFAYA COUTURE · 客服：linfaya251@gmail.com</div>
+    <!-- 分頁 -->
+    <div id="pager"></div>
+    <div id="pagerBottom"></div>
   </main>
 
-  <!-- 依賴順序：config → utils → shop-core → checkout -->
-  <script src="./config-and-data.js?v=5"></script>
-  <script src="./utils-and-ui.js?v=5"></script>
-  <script src="./shop-core.js?v=5"></script>
-  <script src="./checkout-and-shipping.js?v=5"></script>
+  <!-- === Cart Drawer（購物車抽屜）=== -->
+  <aside id="drawer" class="drawer">
+    <header class="container" style="display:flex;align-items:center;justify-content:space-between">
+      <div class="brand"><b>購物車</b></div>
+      <button id="closeCart" class="btn">關閉</button>
+    </header>
+
+    <div class="list" id="cartList"></div>
+
+    <div class="summary">
+      <div class="row"><span>小計</span><b id="subtotal">NT$0</b></div>
+      <div class="row"><span>運費</span><b id="shipping">NT$0</b></div>
+      <div class="row total"><span>合計</span><b id="grand">NT$0</b></div>
+
+      <div class="form">
+        <div class="field">
+          <label>收件姓名</label>
+          <input id="name" class="input" placeholder="王小明" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input id="email" class="input" placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label>手機</label>
+          <input id="phone" class="input" placeholder="0912xxxxxx" />
+        </div>
+
+        <div class="field">
+          <label>配送方式</label>
+          <div class="qty">
+            <label><input type="radio" name="ship" value="home" checked /> 自家宅配</label>
+            <label><input type="radio" name="ship" value="family" /> 全家店到店</label>
+            <label><input type="radio" name="ship" value="seven" /> 7-11 店到店</label>
+          </div>
+        </div>
+
+        <div id="homeFields" class="field">
+          <label>宅配地址</label>
+          <input id="addr" class="input" placeholder="地址" />
+        </div>
+
+        <div id="familyFields" class="field" style="display:none">
+          <button type="button" id="btnPickFamily" class="btn">選擇全家門市</button>
+          <div id="familyPicked" class="muted">尚未選擇</div>
+        </div>
+
+        <div id="sevenFields" class="field" style="display:none">
+          <button type="button" id="btnPickSeven" class="btn">選擇 7-11 門市</button>
+          <div id="sevenPicked" class="muted">尚未選擇</div>
+        </div>
+
+        <!-- 預購同意（若啟用預購用得到） -->
+        <div class="field" id="preorderField">
+          <label><input type="checkbox" id="agreePreorder" /> 我已了解此為預購，願意等待出貨。</label>
+        </div>
+      </div>
+
+      <button id="checkout" class="btn pri">前往付款</button>
+    </div>
+  </aside>
+
+  <!-- Toast：加入購物車等提示 -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Scripts：順序很重要，請勿調換 -->
+  <script src="config-and-data.js"></script>
+  <script src="utils-and-ui.js"></script>
+  <script src="shop-core.js"></script>
+  <script src="checkout-and-shipping.js"></script>
 </body>
 </html>
