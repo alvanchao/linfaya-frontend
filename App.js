@@ -1,9 +1,9 @@
-// App.js － LINFAYA COUTURE（預購模式 + 深色小提醒，已移除付款文字）
-// 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
-// 強化：預購模式（頁首提醒、商品卡小字、購物車必勾同意、交期區間）、單品數量上限
-// 保留：postMessage 安全性、Safari 視窗命名、多分頁清空、fetchJSON 重試
+// App.js － LINFAYA COUTURE（Chips 版：顏色/尺寸/數量 + 購物車重設）
+// - 商品卡：顏色/尺寸/數量 全用 chips（1～MAX_QTY）
+// - 購物車：卡片樣式、chips 改數量、UI 更直覺
+// - 保留：預購提醒（不含付款文字）、ECPay、全家/7-11 選店、逾時重試、多分頁清空
 
-// ====== 你原本的常數（保留）======
+// ====== 常數 ======
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
 const ADMIN_EMAIL = 'linfaya251@gmail.com';
 
@@ -22,14 +22,14 @@ const TRUSTED_ORIGINS = [
   'https://payment-stage.ecpay.com.tw'
 ];
 
-// ====== ✅ 預購設定（可調整）======
-const PREORDER_MODE = true;              // 官網採預購
-const LEAD_DAYS_MIN = 7;                 // 最短工作天
-const LEAD_DAYS_MAX = 14;                // 最長工作天
-const REQUIRE_PREORDER_CHECKBOX = true;  // 結帳前必須勾同意
-const MAX_QTY_PER_ITEM = 5;              // 單筆單品上限
+// ====== 預購設定 ======
+const PREORDER_MODE = true;
+const LEAD_DAYS_MIN = 7;
+const LEAD_DAYS_MAX = 14;
+const REQUIRE_PREORDER_CHECKBOX = true;
+const MAX_QTY_PER_ITEM = 5;
 
-// ====== 商品資料（保留）======
+// ====== 商品資料（示例）======
 const PRODUCTS = [
   {id:'top01',cat:'tops',name:'無縫高彈背心',price:399,colors:['黑','膚'],sizes:['S','M','L'],imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg']},
   {id:'top02',cat:'tops',name:'鏤空美背短袖',price:429,colors:['黑','粉'],sizes:['S','M','L'],imgs:['Photo/鏤空美背短袖.jpg']},
@@ -45,13 +45,32 @@ const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const fmt = n => 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW');
 
+// 注入 chips 樣式（一次）
+(function injectChipStyle(){
+  const css = `
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{min-width:40px;padding:8px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer;text-align:center;user-select:none}
+  .chip:hover{transform:translateY(-1px);border-color:#3b4252}
+  .chip.active{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b0c10;border:none}
+  .chip.small{min-width:32px;padding:6px 8px;border-radius:8px}
+  .cart-card{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;border:1px solid #212736;border-radius:14px;background:#0e121b;padding:10px}
+  .cart-right{text-align:right}
+  .cart-attr{color:#8a94a7;font-size:12px}
+  .cart-actions{display:flex;gap:8px;align-items:center;margin-top:6px}
+  .link-danger{border:1px solid #3a2230;color:#fca5a5;background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
+  `;
+  const style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+})();
+
 // 預購交期（工作天）計算
 function addWorkingDays(fromDate, n){
   const d = new Date(fromDate);
   let added = 0;
   while (added < n){
     d.setDate(d.getDate() + 1);
-    const day = d.getDay(); // 0 Sun ... 6 Sat
+    const day = d.getDay();
     if (day !== 0 && day !== 6) added += 1;
   }
   return d;
@@ -65,14 +84,9 @@ function preorderRangeToday(min, max){
   return `${ymd(addWorkingDays(now, min))} ～ ${ymd(addWorkingDays(now, max))}`;
 }
 
-// ---- 工具：可逾時＋重試的 fetchJSON（保留）----
+// 逾時 + 重試 fetch
 async function fetchJSON(url, fetchOpts = {}, retryOpts = {}) {
-  const {
-    timeoutMs = 20000,
-    retries = 2,
-    retryDelayBaseMs = 800
-  } = retryOpts;
-
+  const { timeoutMs = 20000, retries = 2, retryDelayBaseMs = 800 } = retryOpts;
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     const ac = new AbortController();
@@ -85,11 +99,9 @@ async function fetchJSON(url, fetchOpts = {}, retryOpts = {}) {
     } catch (e) {
       clearTimeout(t);
       lastErr = e;
-      const msg = String(e && e.message || e);
-      if (/HTTP\s4\d\d/.test(msg)) break;
+      if (/HTTP\s4\d\d/.test(String(e?.message||e))) break;
       if (attempt === retries) break;
-      const delay = retryDelayBaseMs * Math.pow(2, attempt);
-      await new Promise(res => setTimeout(res, delay));
+      await new Promise(res => setTimeout(res, retryDelayBaseMs * Math.pow(2, attempt)));
     }
   }
   throw lastErr;
@@ -128,17 +140,18 @@ function postForm(endpoint, fields, target = '_self') {
   setTimeout(()=>form.remove(), 3000);
 }
 
-// ====== 全域狀態 ======
+// ====== 狀態 ======
 const state = {
   cat: 'all',
   page: 1,
   cart: JSON.parse(sessionStorage.getItem('cart')||'[]'),
   cvs: null,
   currentMapType: null,
-  agreePreorder: !REQUIRE_PREORDER_CHECKBOX // 若不要求勾選，預設 true
+  agreePreorder: !REQUIRE_PREORDER_CHECKBOX
 };
 function persist(){ sessionStorage.setItem('cart', JSON.stringify(state.cart)); }
 
+// Tabs
 const tabs = $('#tabs');
 if (tabs) {
   tabs.addEventListener('click', (e)=>{
@@ -168,7 +181,7 @@ function buildPager(total, pageSize = PAGE_SIZE) {
   render(mountTop); render(mountBottom);
 }
 
-// ====== ✅ 頁首「小提醒」（深色 + 不含付款文字）======
+// ====== 頁首「小提醒」（深色、不含付款文字）======
 (function attachPreorderBanner(){
   const mount = document.createElement('section');
   mount.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px;color:#e6e9ef;line-height:1.6';
@@ -193,6 +206,15 @@ function buildPager(total, pageSize = PAGE_SIZE) {
   }
 })();
 
+// ====== 共用：渲染 chips ======
+function renderChips(values=[], activeValue, cls=''){
+  return `<div class="chips">${values.map(v=>{
+    const a = String(v)===String(activeValue) ? ' active' : '';
+    return `<button type="button" class="chip ${cls}${a}" data-value="${String(v)}">${v}</button>`;
+  }).join('')}</div>`;
+}
+
+// ====== 商品列表（chips：顏色/尺寸/數量）======
 function renderProducts(){
   const list = state.cat==='all' ? PRODUCTS : PRODUCTS.filter(p=>p.cat===state.cat);
   const total=list.length, from=(state.page-1)*PAGE_SIZE;
@@ -206,6 +228,10 @@ function renderProducts(){
   pageItems.forEach(p=>{
     const el=document.createElement('div'); el.className='product';
     const first=p.imgs?.[0] || '';
+    const defaultColor = p.colors?.[0] || '';
+    const defaultSize  = p.sizes?.[0] || '';
+    const defaultQty   = 1;
+
     el.innerHTML=`
       <div class="imgbox">
         <div class="main-img"><img alt="${p.name}" src="${first}" loading="lazy"><div class="magnifier"></div></div>
@@ -215,21 +241,31 @@ function renderProducts(){
         <b>${p.name}</b>
         <div class="muted">分類：${p.cat}｜可選：顏色、尺寸</div>
         <div class="price">${fmt(p.price)}</div>
-        <div class="qty">
-          <select class="select sel-color">${(p.colors||[]).map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
-          <select class="select sel-size">${(p.sizes||[]).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+
+        <div style="margin-top:4px">
+          <div class="muted" style="font-size:12px;margin-bottom:6px">顏色</div>
+          <div class="color-group">${renderChips(p.colors, defaultColor)}</div>
         </div>
-        <div class="qty" style="margin-top:6px">
-          <input class="input qty-input" type="number" min="1" max="${MAX_QTY_PER_ITEM}" value="1" style="width:84px" />
+
+        <div style="margin-top:6px">
+          <div class="muted" style="font-size:12px;margin-bottom:6px">尺寸</div>
+          <div class="size-group">${renderChips(p.sizes, defaultSize)}</div>
+        </div>
+
+        <div style="margin-top:6px">
+          <div class="muted" style="font-size:12px;margin-bottom:6px">數量</div>
+          <div class="qty-group">${renderChips(Array.from({length:MAX_QTY_PER_ITEM},(_,i)=>i+1), defaultQty, 'small ')}</div>
+        </div>
+
+        <div class="qty" style="margin-top:10px">
           <button type="button" class="btn pri add">加入購物車</button>
         </div>
-        ${
-          PREORDER_MODE
-            ? `<div class="muted" style="font-size:12px;margin-top:6px">預購交期約 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 工作天。</div>`
-            : ``
-        }
+
+        ${ PREORDER_MODE ? `<div class="muted" style="font-size:12px;margin-top:8px">預購交期約 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 工作天。</div>` : `` }
       </div>
     `;
+
+    // thumbs 切換主圖
     const main=el.querySelector('.main-img img');
     el.querySelectorAll('.thumbs img').forEach(img=>{
       img.addEventListener('click',()=>{
@@ -237,49 +273,57 @@ function renderProducts(){
         img.classList.add('active'); if(main) main.src=img.src;
       });
     });
+
+    // chips 切換
+    const pick = (groupSel, target) => {
+      el.querySelectorAll(`${groupSel} .chip`).forEach(c=>c.classList.remove('active'));
+      target.classList.add('active');
+    };
+    el.addEventListener('click',(ev)=>{
+      const chip = ev.target.closest('.chip');
+      if(!chip) return;
+      const group = chip.closest('.color-group,.size-group,.qty-group');
+      if(group) pick(group.classList.contains('color-group') ? '.color-group'
+               : group.classList.contains('size-group') ? '.size-group'
+               : '.qty-group', chip);
+    });
+
+    // 加入購物車
     el.querySelector('.add')?.addEventListener('click',()=>{
-      const color=el.querySelector('.sel-color')?.value || '';
-      const size=el.querySelector('.sel-size')?.value || '';
-      let qty=Math.max(1, parseInt(el.querySelector('.qty-input')?.value||'1',10));
-      if(qty > MAX_QTY_PER_ITEM){
-        qty = MAX_QTY_PER_ITEM;
-        alert(`單一商品每筆最多 ${MAX_QTY_PER_ITEM} 件（預購模式）。已自動調整。`);
-      }
+      const color = el.querySelector('.color-group .chip.active')?.dataset.value || defaultColor;
+      const size  = el.querySelector('.size-group .chip.active')?.dataset.value || defaultSize;
+      const qty   = parseInt(el.querySelector('.qty-group .chip.active')?.dataset.value || defaultQty, 10);
       addToCart({...p,color,size,qty,img:first});
     });
+
     grid.appendChild(el);
   });
 }
+
 function addToCart(item){
   const found=state.cart.find(i=>i.id===item.id&&i.color===item.color&&i.size===item.size);
   if(found){
-    const next = (found.qty||1) + item.qty;
-    if(next > MAX_QTY_PER_ITEM){
-      found.qty = MAX_QTY_PER_ITEM;
-      toast(`單一商品每筆最多 ${MAX_QTY_PER_ITEM} 件`);
-    }else{
-      found.qty = next;
-      toast('已加入購物車');
-    }
+    const next = Math.min(MAX_QTY_PER_ITEM, (found.qty||1) + item.qty);
+    found.qty = next;
+    if(next === MAX_QTY_PER_ITEM) toast(`單一商品每筆最多 ${MAX_QTY_PER_ITEM} 件`);
+    else toast('已加入購物車');
   }else{
-    if(item.qty > MAX_QTY_PER_ITEM) item.qty = MAX_QTY_PER_ITEM;
+    item.qty = Math.max(1, Math.min(MAX_QTY_PER_ITEM, item.qty||1));
     state.cart.push(item);
     toast('已加入購物車');
   }
   persist(); updateBadge();
 }
+
+// ====== 購物車（卡片樣式 + chips 改數量）======
 function removeItem(idx){ state.cart.splice(idx,1); persist(); renderCart(); updateBadge(); }
-function changeQty(idx,delta){
-  const cur = state.cart[idx];
-  if(!cur) return;
-  cur.qty = Math.max(1, Math.min(MAX_QTY_PER_ITEM, (cur.qty||1)+delta));
-  if(cur.qty === MAX_QTY_PER_ITEM && delta>0){
-    toast(`單一商品每筆最多 ${MAX_QTY_PER_ITEM} 件`);
-  }
+function setQty(idx, qty){
+  const cur = state.cart[idx]; if(!cur) return;
+  cur.qty = Math.max(1, Math.min(MAX_QTY_PER_ITEM, parseInt(qty,10)||1));
   persist(); renderCart(); updateBadge();
 }
 window.removeItem = removeItem;
-window.changeQty  = changeQty;
+window.setQty    = setQty;
 
 const drawer=$('#drawer');
 const openCartBtn  = $('#openCart');
@@ -295,8 +339,7 @@ function calcShipping(){
   return ship==='home'?80:60;
 }
 
-// 配送選項
-function setShipOption(opt){ // 'home' | 'family' | 'seven'
+function setShipOption(opt){
   const r = document.querySelector(`input[name="ship"][value="${opt}"]`);
   if (r) { r.checked = true; }
   onShipChange();
@@ -316,31 +359,47 @@ function onShipChange(){
 }
 $$('input[name="ship"]').forEach(r=>r.addEventListener('change', onShipChange));
 
-// ====== ✅ 購物車渲染（含預購勾選區）======
 function renderCart(){
   const list=$('#cartList'); if(!list) return;
   list.innerHTML='';
-  if(state.cart.length===0){ list.innerHTML='<p class="muted" style="padding:8px 12px">購物車是空的</p>'; }
+  if(state.cart.length===0){
+    list.innerHTML='<p class="muted" style="padding:8px 12px">購物車是空的</p>';
+  }
+
   state.cart.forEach((it,idx)=>{
-    const el=document.createElement('div'); el.className='cart-item';
     const pic = (it.imgs?.[0] ?? it.img) || '';
-    el.innerHTML=`
-      <img src="${pic}" alt="${it.name||''}">
+    const row = document.createElement('div');
+    row.className = 'cart-card';
+    row.innerHTML = `
+      <img src="${pic}" alt="${it.name||''}" style="width:72px;height:72px;border-radius:12px;object-fit:cover">
       <div>
-        <b>${it.name||''}</b>
-        <div class="muted">顏色：${it.color||''}｜尺寸：${it.size||''}｜單價：${fmt(it.price||0)}</div>
-        <div class="qty" style="margin-top:6px">
-          <button type="button" class="btn" onclick="changeQty(${idx},-1)">-</button>
-          <span>${it.qty||1}</span>
-          <button type="button" class="btn" onclick="changeQty(${idx},1)">+</button>
-          <button type="button" class="btn" style="margin-left:auto;border-color:#3a2230;color:#fca5a5" onclick="removeItem(${idx})">移除</button>
+        <div><b>${it.name||''}</b></div>
+        <div class="cart-attr">顏色：${it.color||''}｜尺寸：${it.size||''}｜單價：${fmt(it.price||0)}</div>
+        <div class="cart-actions">
+          <div class="chips">
+            ${Array.from({length:MAX_QTY_PER_ITEM},(_,i)=>{
+              const v=i+1; const a = v===(it.qty||1)?' active':'';
+              return `<button type="button" class="chip small${a}" data-qty="${v}" data-idx="${idx}">${v}</button>`;
+            }).join('')}
+          </div>
+          <button class="link-danger" onclick="removeItem(${idx})">移除</button>
         </div>
       </div>
-      <div><b>${fmt((it.price||0)*(it.qty||1))}</b></div>`;
-    list.appendChild(el);
+      <div class="cart-right"><b>${fmt((it.price||0)*(it.qty||1))}</b></div>
+    `;
+    list.appendChild(row);
   });
 
-  // 預購同意區（插在 #preorderMount，若無就插在 cartList 後面）
+  // 事件代理：點選 chips 改數量
+  list.onclick = (ev)=>{
+    const btn = ev.target.closest('.chip.small[data-qty]');
+    if(!btn) return;
+    const idx = parseInt(btn.dataset.idx,10);
+    const qty = parseInt(btn.dataset.qty,10);
+    setQty(idx, qty);
+  };
+
+  // 預購同意
   let mount = $('#preorderMount');
   if (!mount) {
     mount = document.createElement('div');
@@ -350,13 +409,13 @@ function renderCart(){
   }
   if (PREORDER_MODE && REQUIRE_PREORDER_CHECKBOX && state.cart.length){
     mount.innerHTML = `
-      <div style="padding:10px 12px;border-top:1px solid #eee;background:#fafafa;border-radius:8px">
-        <div style="font-size:13px;color:#333;margin-bottom:6px">
+      <div style="padding:10px 12px;border-top:1px solid #1f2430;background:#0b0f17;border-radius:8px">
+        <div style="font-size:13px;color:#e6e9ef;margin-bottom:6px">
           <b>預購提醒</b>：此筆訂單為預購，出貨需 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 工作天；
           若逾期將主動通知並提供退款／更換。
-          <div style="margin-top:4px;color:#000">預計出貨區間：${preorderRangeToday(LEAD_DAYS_MIN, LEAD_DAYS_MAX)}</div>
+          <div style="margin-top:4px;color:#fff">預計出貨區間：${preorderRangeToday(LEAD_DAYS_MIN, LEAD_DAYS_MAX)}</div>
         </div>
-        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:#333">
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:#e6e9ef">
           <input id="agreePreorder" type="checkbox" ${state.agreePreorder?'checked':''}/>
           <span>我已了解並同意預購交期與相關說明。</span>
         </label>
@@ -404,7 +463,7 @@ function clearCart(){
   toast('付款完成，已清空購物車');
 }
 
-// ===== 選店（Safari 安全版：先預開命名視窗，再送表單）=====
+// ===== 選店（Safari 安全版）=====
 async function openCvsMap(logisticsSubType){
   const preWin = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…");
   try{
@@ -445,7 +504,7 @@ document.addEventListener('click',(e)=>{
   }
 });
 
-// 地圖彈窗回傳（安全檢查：來源白名單）
+// 地圖彈窗回傳（安全檢查）
 window.addEventListener('message',(ev)=>{
   try{
     if(!TRUSTED_ORIGINS.includes(ev.origin)) return;
@@ -498,7 +557,7 @@ window.addEventListener('message',(ev)=>{
   }catch(e){}
 })();
 
-// thankyou／cashier 回傳（安全檢查 + 多分頁同步清空）
+// thankyou／cashier 回傳（多分頁同步清空）
 window.addEventListener('message',(ev)=>{
   try{
     if(!TRUSTED_ORIGINS.includes(ev.origin)) return;
@@ -629,4 +688,4 @@ if (checkoutBtn) {
 const year = $('#year'); if(year) year.textContent = new Date().getFullYear();
 
 // 初始渲染
-updateBadge(); renderProducts(); onShipChange(); updatePayButtonState();
+updateBadge(); renderProducts(); onShipChange(); renderCart(); // 先渲染購物車，避免 chips 事件代理未掛上
