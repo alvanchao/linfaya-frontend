@@ -96,5 +96,16 @@ window.PRODUCTS = [
     sizes: ['S','M','L'],
     imgs: ['Photo/上衣＋緊身褲套組.jpg'],
     stockMap: { '多色-L': 0 }
+  },
+  // ====== 新增：專屬客製化修改 ======
+  {
+    id:'custom01',
+    cat:'accessories',        // 放在 Accessories 分類
+    name:'專屬客製化修改',
+    price:10,                 // 基本單價 = 10 元 / 份
+    colors:['客製'],           // 固定選項
+    sizes:['一份'],            // 固定選項
+    imgs:['Photo/客製修改.jpg'],// 你可以放一張示意圖
+    stockMap:{}               // 不限庫存
   }
 ];
