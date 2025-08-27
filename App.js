@@ -1,12 +1,12 @@
-// App.js － LINFAYA COUTURE
+// App.js － LINFAYA COUTURE（預購模式整合版）
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
 // 強化：
-// - postMessage 安全性：加入來源白名單檢查
-// - 付款完成：以 localStorage 旗標同步所有分頁清空購物車
-// - Safari/iOS 彈窗：預開命名視窗，若被擋改用本頁開啟
-// - 逾時與重試：fetchJSON（AbortController + 指數退避）
-// - 邊界防呆：缺欄位檢查、ECPay 參數長度限制、門市欄位多別名支援
+// - 預購模式（頁首提醒、商品卡小字、購物車必勾同意、交期區間）
+// - 數量上限：單筆單品 MAX_QTY_PER_ITEM（避免一次大量）
+// - postMessage 安全性、Safari 視窗命名、付款完成多分頁清空（沿用）
+// - fetchJSON 逾時與重試（沿用）
 
+// ====== 你原本的常數（保留）======
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
 const ADMIN_EMAIL = 'linfaya251@gmail.com';
 
@@ -25,27 +25,56 @@ const TRUSTED_ORIGINS = [
   'https://payment-stage.ecpay.com.tw'
 ];
 
-// 模擬資料（請確認 acc01/sh01 圖片是否正確）
+// ====== ✅ 新增：預購設定（可調整）======
+const PREORDER_MODE = true;              // 官網採預購
+const LEAD_DAYS_MIN = 7;                 // 最短工作天
+const LEAD_DAYS_MAX = 14;                // 最長工作天
+const REQUIRE_PREORDER_CHECKBOX = true;  // 結帳前必須勾同意
+const MAX_QTY_PER_ITEM = 5;              // 單筆單品上限
+// 若未連動庫存，這裡暫不使用 SAFE_STOCK_FACTOR；維持你的數量輸入框，但會套上限
+
+// ====== 商品資料（保留）======
 const PRODUCTS = [
   {id:'top01',cat:'tops',name:'無縫高彈背心',price:399,colors:['黑','膚'],sizes:['S','M','L'],imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg']},
   {id:'top02',cat:'tops',name:'鏤空美背短袖',price:429,colors:['黑','粉'],sizes:['S','M','L'],imgs:['Photo/鏤空美背短袖.jpg']},
   {id:'btm01',cat:'bottoms',name:'高腰緊身褲',price:499,colors:['黑','深灰'],sizes:['S','M','L','XL'],imgs:['Photo/高腰緊身褲.jpg']},
   {id:'sk01',cat:'bottoms',name:'魚尾練習裙',price:699,colors:['黑'],sizes:['S','M','L'],imgs:['Photo/魚尾練習裙.jpg']},
-  {id:'acc01',cat:'accessories',name:'彈力護腕',price:199,colors:['黑'],sizes:['F'],imgs:['Photo/上衣＋緊身褲套組.jpg']}, // TODO: 確認是否為正確圖片
-  {id:'sh01',cat:'shoes',name:'舞鞋（軟底）',price:990,colors:['黑'],sizes:['35','36','37','38','39','40'],imgs:['Photo/上衣＋緊身褲套組.jpg']}, // TODO: 確認是否為正確圖片
+  {id:'acc01',cat:'accessories',name:'彈力護腕',price:199,colors:['黑'],sizes:['F'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
+  {id:'sh01',cat:'shoes',name:'舞鞋（軟底）',price:990,colors:['黑'],sizes:['35','36','37','38','39','40'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
   {id:'set01',cat:'tops',name:'上衣＋緊身褲套組',price:849,colors:['多色'],sizes:['S','M','L'],imgs:['Photo/上衣＋緊身褲套組.jpg']},
 ];
 
+// ====== 小工具 ======
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const fmt = n => 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW');
 
-// ---- 工具：可逾時＋重試的 fetchJSON ----
+// 預購交期（工作天）計算
+function addWorkingDays(fromDate, n){
+  const d = new Date(fromDate);
+  let added = 0;
+  while (added < n){
+    d.setDate(d.getDate() + 1);
+    const day = d.getDay(); // 0 Sun ... 6 Sat
+    if (day !== 0 && day !== 6) added += 1;
+  }
+  return d;
+}
+function ymd(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return `${y}/${m}/${dd}`;
+}
+function preorderRangeToday(min, max){
+  const now = new Date();
+  return `${ymd(addWorkingDays(now, min))} ～ ${ymd(addWorkingDays(now, max))}`;
+}
+
+// ---- 工具：可逾時＋重試的 fetchJSON（保留）----
 async function fetchJSON(url, fetchOpts = {}, retryOpts = {}) {
   const {
-    timeoutMs = 20000,          // 20 秒逾時
-    retries = 2,                // 額外重試 2 次（共 3 次）
-    retryDelayBaseMs = 800      // 指數退避基準（800ms, 1600ms, ...）
+    timeoutMs = 20000,
+    retries = 2,
+    retryDelayBaseMs = 800
   } = retryOpts;
 
   let lastErr;
@@ -61,7 +90,6 @@ async function fetchJSON(url, fetchOpts = {}, retryOpts = {}) {
       clearTimeout(t);
       lastErr = e;
       const msg = String(e && e.message || e);
-      // 對 4xx 不重試（參數錯或未授權）
       if (/HTTP\s4\d\d/.test(msg)) break;
       if (attempt === retries) break;
       const delay = retryDelayBaseMs * Math.pow(2, attempt);
@@ -104,12 +132,14 @@ function postForm(endpoint, fields, target = '_self') {
   setTimeout(()=>form.remove(), 3000);
 }
 
+// ====== 全域狀態 ======
 const state = {
   cat: 'all',
   page: 1,
   cart: JSON.parse(sessionStorage.getItem('cart')||'[]'),
   cvs: null,
-  currentMapType: null
+  currentMapType: null,
+  agreePreorder: !REQUIRE_PREORDER_CHECKBOX // 若不要求勾選，預設 true
 };
 function persist(){ sessionStorage.setItem('cart', JSON.stringify(state.cart)); }
 
@@ -142,6 +172,33 @@ function buildPager(total, pageSize = PAGE_SIZE) {
   render(mountTop); render(mountBottom);
 }
 
+// ====== ✅ 頁首「小提醒」自動掛載 ======
+(function attachPreorderBanner(){
+  const mount = document.createElement('section');
+  mount.style.cssText = 'background:#f7f7f7;padding:8px 12px;border-radius:8px;margin:8px 12px';
+  const eta = PREORDER_MODE ? `預計出貨區間（工作天）：${preorderRangeToday(LEAD_DAYS_MIN, LEAD_DAYS_MAX)}` : '';
+  mount.innerHTML = `
+    <strong>小提醒</strong>
+    <div style="font-size:13px;color:#666;line-height:1.6">
+      <div>付款：綠界 ECPay（信用卡／ATM／超商代碼）。滿 NT$1,000 免運（本島）。</div>
+      ${
+        PREORDER_MODE
+        ? `<div>※ 本官網採 <b>預購</b> 模式，下單後約需 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 個<b>工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>
+           <div style="margin-top:4px;color:#333">${eta}</div>`
+        : `<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>`
+      }
+      <div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>
+    </div>
+  `;
+  // 儘量掛在 header 後面；找不到就插在 body 最前
+  const header = document.querySelector('header');
+  if(header && header.parentNode){
+    header.parentNode.insertBefore(mount, header.nextSibling);
+  }else{
+    document.body.insertBefore(mount, document.body.firstChild);
+  }
+})();
+
 function renderProducts(){
   const list = state.cat==='all' ? PRODUCTS : PRODUCTS.filter(p=>p.cat===state.cat);
   const total=list.length, from=(state.page-1)*PAGE_SIZE;
@@ -169,9 +226,14 @@ function renderProducts(){
           <select class="select sel-size">${(p.sizes||[]).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
         </div>
         <div class="qty" style="margin-top:6px">
-          <input class="input qty-input" type="number" min="1" value="1" style="width:84px" />
+          <input class="input qty-input" type="number" min="1" max="${MAX_QTY_PER_ITEM}" value="1" style="width:84px" />
           <button type="button" class="btn pri add">加入購物車</button>
         </div>
+        ${
+          PREORDER_MODE
+            ? `<div class="muted" style="font-size:12px;margin-top:6px">預購交期約 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 工作天。</div>`
+            : ``
+        }
       </div>
     `;
     const main=el.querySelector('.main-img img');
@@ -184,7 +246,11 @@ function renderProducts(){
     el.querySelector('.add')?.addEventListener('click',()=>{
       const color=el.querySelector('.sel-color')?.value || '';
       const size=el.querySelector('.sel-size')?.value || '';
-      const qty=Math.max(1, parseInt(el.querySelector('.qty-input')?.value||'1',10));
+      let qty=Math.max(1, parseInt(el.querySelector('.qty-input')?.value||'1',10));
+      if(qty > MAX_QTY_PER_ITEM){
+        qty = MAX_QTY_PER_ITEM;
+        alert(`單一商品每筆最多 ${MAX_QTY_PER_ITEM} 件（預購模式）。已自動調整。`);
+      }
       addToCart({...p,color,size,qty,img:first});
     });
     grid.appendChild(el);
@@ -192,15 +258,30 @@ function renderProducts(){
 }
 function addToCart(item){
   const found=state.cart.find(i=>i.id===item.id&&i.color===item.color&&i.size===item.size);
-  if(found) found.qty = (found.qty||1) + item.qty;
-  else state.cart.push(item);
-  persist(); toast('已加入購物車'); updateBadge();
+  if(found){
+    const next = (found.qty||1) + item.qty;
+    if(next > MAX_QTY_PER_ITEM){
+      found.qty = MAX_QTY_PER_ITEM;
+      toast(`單一商品每筆最多 ${MAX_QTY_PER_ITEM} 件`);
+    }else{
+      found.qty = next;
+      toast('已加入購物車');
+    }
+  }else{
+    if(item.qty > MAX_QTY_PER_ITEM) item.qty = MAX_QTY_PER_ITEM;
+    state.cart.push(item);
+    toast('已加入購物車');
+  }
+  persist(); updateBadge();
 }
 function removeItem(idx){ state.cart.splice(idx,1); persist(); renderCart(); updateBadge(); }
 function changeQty(idx,delta){
   const cur = state.cart[idx];
   if(!cur) return;
-  cur.qty=Math.max(1,(cur.qty||1)+delta);
+  cur.qty = Math.max(1, Math.min(MAX_QTY_PER_ITEM, (cur.qty||1)+delta));
+  if(cur.qty === MAX_QTY_PER_ITEM && delta>0){
+    toast(`單一商品每筆最多 ${MAX_QTY_PER_ITEM} 件`);
+  }
   persist(); renderCart(); updateBadge();
 }
 window.removeItem = removeItem;
@@ -241,6 +322,7 @@ function onShipChange(){
 }
 $$('input[name="ship"]').forEach(r=>r.addEventListener('change', onShipChange));
 
+// ====== ✅ 購物車渲染（含預購勾選區）======
 function renderCart(){
   const list=$('#cartList'); if(!list) return;
   list.innerHTML='';
@@ -263,14 +345,60 @@ function renderCart(){
       <div><b>${fmt((it.price||0)*(it.qty||1))}</b></div>`;
     list.appendChild(el);
   });
+
+  // 預購同意區（插在 #preorderMount，若無就插在 cartList 後面）
+  let mount = $('#preorderMount');
+  if (!mount) {
+    mount = document.createElement('div');
+    mount.id = 'preorderMount';
+    mount.style.margin = '8px 0';
+    list.parentNode?.insertBefore(mount, list.nextSibling);
+  }
+  if (PREORDER_MODE && REQUIRE_PREORDER_CHECKBOX && state.cart.length){
+    mount.innerHTML = `
+      <div style="padding:10px 12px;border-top:1px solid #eee;background:#fafafa;border-radius:8px">
+        <div style="font-size:13px;color:#333;margin-bottom:6px">
+          <b>預購提醒</b>：此筆訂單為預購，出貨需 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 工作天；
+          若逾期將主動通知並提供退款／更換。
+          <div style="margin-top:4px;color:#000">預計出貨區間：${preorderRangeToday(LEAD_DAYS_MIN, LEAD_DAYS_MAX)}</div>
+        </div>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:#333">
+          <input id="agreePreorder" type="checkbox" ${state.agreePreorder?'checked':''}/>
+          <span>我已了解並同意預購交期與相關說明。</span>
+        </label>
+      </div>
+    `;
+    const chk = $('#agreePreorder');
+    if (chk) chk.onchange = (e)=>{ state.agreePreorder = !!e.target.checked; updatePayButtonState(); };
+  }else{
+    mount.innerHTML = '';
+  }
+
   const sub=subtotal(), ship=state.cart.length?calcShipping():0;
   const subtotalEl = $('#subtotal'); if(subtotalEl) subtotalEl.textContent=fmt(sub);
   const shippingEl = $('#shipping'); if(shippingEl) shippingEl.textContent=fmt(ship);
   const grandEl    = $('#grand');    if(grandEl)    grandEl.textContent=fmt(sub+ship);
+
+  updatePayButtonState();
 }
+
 function updateBadge(){
   const n=state.cart.reduce((s,i)=>s+(i.qty||1),0);
   const cc=$('#cartCount'); if(cc) cc.textContent=String(n);
+}
+
+function canCheckout(){
+  if(!state.cart.length) return false;
+  if(PREORDER_MODE && REQUIRE_PREORDER_CHECKBOX && !state.agreePreorder) return false;
+  return true;
+}
+
+function updatePayButtonState(){
+  const btn = $('#checkout');
+  if(!btn) return;
+  const ok = canCheckout();
+  btn.disabled = !ok;
+  btn.title = ok ? '前往綠界付款' : (PREORDER_MODE && REQUIRE_PREORDER_CHECKBOX ? '請先勾選預購同意' : '請先加入商品');
 }
 
 // 清空購物車（thankyou 通知 + localStorage 備援）
@@ -284,7 +412,7 @@ function clearCart(){
 
 // ===== 選店（Safari 安全版：先預開命名視窗，再送表單）=====
 async function openCvsMap(logisticsSubType){
-  const preWin = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…"); // 先於點擊時開
+  const preWin = openNamedWindow(CVS_WIN_NAME, "即將開啟官方門市地圖…");
   try{
     const {endpoint, fields} = await fetchJSON(
       `${API_BASE}/api/ecpay/map/sign`,
@@ -326,12 +454,11 @@ document.addEventListener('click',(e)=>{
 // 地圖彈窗回傳（安全檢查：來源白名單）
 window.addEventListener('message',(ev)=>{
   try{
-    if(!TRUSTED_ORIGINS.includes(ev.origin)) return; // 安全性：只接受白名單
+    if(!TRUSTED_ORIGINS.includes(ev.origin)) return;
     const data=ev.data||{};
     if(data.type!=='EC_LOGISTICS_PICKED') return;
     const p=data.payload||{};
 
-    // 常見欄位別名做防呆
     const id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
     const name = p.CVSStoreName || p.StName || p.StoreName || '';
     const address = p.CVSAddress || p.StAddr || p.Address || '';
@@ -380,7 +507,7 @@ window.addEventListener('message',(ev)=>{
 // thankyou／cashier 回傳（安全檢查 + 多分頁同步清空）
 window.addEventListener('message',(ev)=>{
   try{
-    if(!TRUSTED_ORIGINS.includes(ev.origin)) return; // 安全性：只接受白名單
+    if(!TRUSTED_ORIGINS.includes(ev.origin)) return;
     const data = ev.data || {};
     if (data && data.type === 'EC_PAY_DONE') {
       try { localStorage.setItem('EC_CLEAR_CART','1'); } catch(_) {}
@@ -430,6 +557,9 @@ const checkoutBtn = $('#checkout');
 if (checkoutBtn) {
   checkoutBtn.addEventListener('click', async ()=>{
     if(!state.cart.length) return alert('購物車是空的');
+    if(PREORDER_MODE && REQUIRE_PREORDER_CHECKBOX && !state.agreePreorder){
+      return alert('請先勾選預購同意，再進行付款。');
+    }
 
     const name=$('#name')?.value.trim() || '';
     const email=$('#email')?.value.trim() || '';
@@ -461,7 +591,6 @@ if (checkoutBtn) {
     const shipFee = state.cart.length ? (sub>=FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)) : 0;
     const amount = sub + shipFee;
 
-    // ECPay 實務：限制字串長度（保守 200 內）
     const itemNameRaw = items.map(i=>`${i.name}x${i.qty}`).join('#');
     const itemName = itemNameRaw.slice(0, 200);
     const tradeDesc = 'Linfaya Shop Order'.slice(0, 100);
@@ -504,4 +633,6 @@ if (checkoutBtn) {
 }
 
 const year = $('#year'); if(year) year.textContent = new Date().getFullYear();
-updateBadge(); renderProducts(); onShipChange();
+
+// 初始渲染
+updateBadge(); renderProducts(); onShipChange(); updatePayButtonState();
