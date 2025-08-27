@@ -103,8 +103,8 @@ window.PRODUCTS = [
     cat:'accessories',        // 放在 Accessories 分類
     name:'專屬客製化修改',
     price:10,                 // 基本單價 = 10 元 / 份
-    colors:['客製'],           // 固定選項
-    sizes:['一份'],            // 固定選項
+    colors:['X'],           // 固定選項
+    sizes:['X'],            // 固定選項
     imgs:['Photo/客製修改.jpg'],// 你可以放一張示意圖
     stockMap:{}               // 不限庫存
   }
