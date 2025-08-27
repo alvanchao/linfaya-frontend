@@ -1,7 +1,8 @@
 // shop-core.js — LINFAYA
 // - 分類含 customerize（客製化）；FLOW 只在該分頁顯示（由 #customFlow 控制）
 // - 一般商品：顏色/尺寸/數量 chips；缺貨規格（disabled）；同規格加入時合併
-// - CUSTOM01：需輸入認證碼(LFY###) + 份數；不一致不得加入；購物車內改到不一致會禁用結帳
+// - CUSTOM01：需輸入認證碼(LFY###) + 份數；不一致不得加入；即時驗證＋紅字提示＋鎖定按鈕
+// - 購物車內若改到不一致，結帳按鈕會被禁用；checkout 再次把關
 // - 運費：宅配 80、超取 60、滿額免運（與 checkout-and-shipping.js 一致）
 // - 不自動開購物車，只有按右上角才開
 
@@ -32,10 +33,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var MAX_QTY_PER_ITEM = w.MAX_QTY_PER_ITEM || 5;
   var products = Array.isArray(w.PRODUCTS) ? w.PRODUCTS : [];
 
-  // 分類顯示名稱與排序
+  // 分類顯示名稱與排序（你可自行改文字）
   var CAT_LABELS = {
     all: '全部',
-    tops: '上著˙',
+    tops: '上著',
     bottoms: '下著',
     accessories: '飾品',
     shoes: '鞋',
@@ -70,10 +71,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function saveCart(){ try { sessionStorage.setItem('cart', JSON.stringify(cart)); } catch(_) {} updateBadge(); }
 
   function getShipOpt(){
-    // 優先讀抽屜內的單選
     var chk = document.querySelector('input[name="ship"]:checked');
     if (chk && chk.value) return chk.value;
-    // 退而求其次讀 session
     try{ var s = sessionStorage.getItem('SHIP_OPT'); if (s) return s; }catch(_){}
     return 'home';
   }
@@ -194,6 +193,41 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshQtyChips(card, p);
   }
 
+  // ====== custom 即時驗證（新增） ======
+  function validateCustomCard(card){
+    if (!card) return { ok:false, message:'請輸入認證碼與份數' };
+    var codeInput  = card.querySelector('.code-input');
+    var unitsInput = card.querySelector('.units-input');
+    var addBtn     = card.querySelector('.btn.add');
+    var help       = card.querySelector('[data-role="custom-help"]');
+
+    var code  = codeInput ? String(codeInput.value||'').trim() : '';
+    var units = Math.max(1, Number(unitsInput ? unitsInput.value : 1) || 1);
+
+    var parsed = parseCustomCode(code);
+    var msg = '';
+    var ok  = false;
+
+    if (!parsed){
+      msg = '請輸入正確的認證碼（格式：LFY後接金額，如 LFY550）。';
+    }else if (units !== parsed.unitsExpected){
+      msg = '認證碼金額對應份數應為 ' + parsed.unitsExpected + ' 份，請修正。';
+    }else{
+      ok = true;
+    }
+
+    // 顯示/隱藏紅字、鎖定按鈕
+    if (help){
+      help.textContent = ok ? '' : ('⚠ ' + msg);
+      help.style.display = ok ? 'none' : 'block';
+    }
+    if (addBtn){
+      addBtn.disabled = !ok;
+      addBtn.style.opacity = ok ? '' : '0.6';
+    }
+    return { ok:ok, message:msg, code:parsed ? parsed.code : '', units:units };
+  }
+
   // ===== 商品渲染 =====
   function renderProducts(cat, page){
     grid.innerHTML = '';
@@ -274,10 +308,11 @@ document.addEventListener('DOMContentLoaded', function () {
                   '<div class="muted" style="font-size:12px;margin-bottom:6px">份數（每份 NT$'+(p.price||10)+'）</div>' +
                   '<input class="input units-input" type="number" min="1" step="1" value="55" inputmode="numeric" pattern="\\d*">' +
                 '</div>' +
+                '<div class="muted" data-role="custom-help" style="display:none;color:#f87171;font-size:12px"></div>' +
               '</div>' +
 
               '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">' +
-                '<button class="btn pri add">加入購物車</button>' +
+                '<button class="btn pri add" disabled style="opacity:.6">加入購物車</button>' +
               '</div>' +
             '</div>' +
           '</div>';
@@ -289,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function () {
     infoText && (infoText.textContent = '共 ' + list.length + ' 件');
     renderPager(pager, list.length, page);
 
-    // 渲染後：縮圖預設第一張；一般商品刷新尺寸/數量 chips
+    // 渲染後：縮圖預設第一張；一般商品刷新尺寸/數量 chips；客製化欄位綁定即時驗證
     var cards = grid.querySelectorAll('.product');
     for (var i=0;i<cards.length;i++){
       var card = cards[i];
@@ -301,7 +336,18 @@ document.addEventListener('DOMContentLoaded', function () {
         main.src = thumbs[0].dataset.main || thumbs[0].src;
         for (var j=0;j<thumbs.length;j++) thumbs[j].classList.toggle('active', j===0);
       }
-      if (p && !isCustomId(p.id)) refreshSizeChips(card, p);
+      if (p && !isCustomId(p.id)) {
+        refreshSizeChips(card, p);
+      } else {
+        // 綁定即時驗證
+        var codeInput  = card.querySelector('.code-input');
+        var unitsInput = card.querySelector('.units-input');
+        var handler = function(){ validateCustomCard(card); };
+        if (codeInput)  codeInput.addEventListener('input', handler);
+        if (unitsInput) unitsInput.addEventListener('input', handler);
+        // 初始檢查（預設值可能不符）
+        validateCustomCard(card);
+      }
     }
   }
 
@@ -372,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
               '<span>' + (item.qty||1) + '</span>' +
               '<button class="btn small inc" data-idx="'+i+'">＋</button>' +
               '<button class="link-danger del" data-idx="'+i+'">刪除</button>' +
-            '</div>' +
+            </div>' +
             warn +
           '</div>' +
           '<div class="cart-right">' + fmt((item.price||0)*(item.qty||1)) + '</div>' +
@@ -428,21 +474,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // 加入購物車
     if (t.classList.contains('add')){
       if (p && isCustomId(p.id)){
-        var codeInput  = card.querySelector('.code-input');
-        var unitsInput = card.querySelector('.units-input');
-        var code  = codeInput ? String(codeInput.value||'').trim() : '';
-        var units = Math.max(1, Number(unitsInput ? unitsInput.value : 1) || 1);
-        var parsed = parseCustomCode(code);
-        if (!parsed){ toast('請輸入正確的認證碼（例：LFY550）'); return; }
-        if (units !== parsed.unitsExpected){ toast('認證碼與份數不一致，請修正後再加入。'); return; }
+        // 先做即時驗證（會顯示紅字 & 鎖按鈕）
+        var check = validateCustomCard(card);
+        if (!check.ok){ toast(check.message); return; }
 
         var item = {
           id: p.id,
           name: p.name || '客製化修改（每份 10 元）',
           img: (p.imgs && p.imgs[0]) || '',
           price: p.price || 10,
-          qty: units,
-          customCode: parsed.code,
+          qty: check.units,
+          customCode: check.code,
           customMismatch: false
         };
 
