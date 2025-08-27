@@ -274,11 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
               '<div style="margin-top:8px">' +
                 '<div class="muted" style="font-size:12px;margin-bottom:6px">尺寸</div>' +
-                '<div class="chips size-group">' +
-                  (p.sizes||[]).map(function(s,i){' +
-                    'var cap = (' + 'function(){return ' + '1' + ';}' + ')();' + // dummy to keep concat alignment
-                  '}).join("")' + // this line will be replaced below: see safer version
-                '</div>' +
+                '<div class="chips size-group"></div>' +
               '</div>' +
 
               '<div style="margin-top:8px">' +
@@ -378,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', function(){
           currentPage = i0;
           renderProducts(currentCat, currentPage);
-          try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){}
+          try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){ }
         });
       })(i);
       mount.appendChild(btn);
