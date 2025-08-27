@@ -130,7 +130,7 @@
         '</div>' +
         '<div class="body">' +
           '<b>'+p.name+'</b>' +
-          '<div class="muted">分類：'+p.cat+'｜可選：顏色、尺寸</div>' +
+          '<div class="muted">分類：'+p.cat +
           '<div class="price">'+fmt(p.price)+'</div>' +
 
           '<div style="margin-top:4px">' +
