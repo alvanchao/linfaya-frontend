@@ -21,7 +21,6 @@
     .btn{background:var(--panel-2);border:1px solid #222834;color:var(--text);padding:8px 12px;border-radius:12px;cursor:pointer}
     .btn.small{padding:4px 8px;border-radius:8px;font-size:12px}
     .btn.pri{background:var(--pri);border-color:transparent;color:#0b0c10;font-weight:700}
-    .link-danger{background:transparent;border:none;color:var(--danger);cursor:pointer}
     .badge{display:inline-flex;min-width:20px;height:20px;align-items:center;justify-content:center;background:var(--accent);color:#0b0c10;border-radius:999px;padding:0 6px;font-size:12px;font-weight:700;margin-left:6px}
 
     main .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
@@ -49,6 +48,13 @@
     .chip.small{padding:4px 8px;font-size:12px}
     .chip.disabled{opacity:.4;pointer-events:none}
 
+    /* 流程說明盒 */
+    .infobox{background:#0f131a;border:1px solid #222a3a;border-radius:14px;padding:12px;margin:8px 0 14px}
+    .infobox .title{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .infobox .title strong{font-size:15px}
+    .infobox ol{margin:0;padding-left:18px;color:#cfd3dc;font-size:13px;line-height:1.7}
+    .infobox .warn{margin-top:6px;color:#cfd3dc;font-size:12px}
+
     /* 分頁器 */
     #pager{display:flex;gap:8px;justify-content:center;margin:16px 0}
     .page-btn{background:transparent;border:1px solid #2a3142;color:var(--text);padding:6px 10px;border-radius:8px;cursor:pointer}
@@ -72,9 +78,13 @@
     .qty{display:flex;gap:12px;flex-wrap:wrap}
     .empty{padding:20px;text-align:center;color:var(--muted)}
 
-    /* Toast */
-    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:40;background:#111827;border:1px solid #243044;color:#e5e7eb;padding:10px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s}
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+    /* Footer */
+    footer.site-footer{background:#0e1117;border-top:1px solid #1f2430;margin-top:24px}
+    .site-footer .inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+    .site-footer .muted{font-size:13px}
+
+    /* 頁面底部留白，避免被 footer 貼住 */
+    main.container{padding-bottom:24px}
   </style>
 </head>
 <body>
@@ -98,15 +108,29 @@
       <div id="infoText" class="muted">共 0 件</div>
     </div>
 
-    <!-- ※ 重要：不再放 #preorderPanel，避免和 utils-and-ui.js 的小提醒重複 -->
+    <!-- 注意：小提醒(預購)由 utils-and-ui.js 自動插入，這裡不再手動放 -->
 
     <!-- 分類分頁 -->
     <div id="cats"></div>
 
+    <!-- （只有在 custom 分類會顯示）客製化流程說明 -->
+    <div id="customFlow" class="infobox" style="display:none">
+      <div class="title">
+        <strong>🔧 客製化修改流程</strong>
+      </div>
+      <ol>
+        <li>加入官方 Line，與師傅討論修改需求。</li>
+        <li>確認後，您將獲得一組認證碼（例：LFY550）。</li>
+        <li>回到本頁輸入認證碼，並填寫份數（例：55 份 = NT$550）。</li>
+        <li>確認無誤後，加入購物車結帳（客製化不適用七日鑑賞期）。</li>
+      </ol>
+      <div class="warn">⚠ 客製化屬客製商品，恕不適用七日鑑賞期，無法退換貨。</div>
+    </div>
+
     <!-- 商品清單 -->
     <div id="grid"></div>
 
-    <!-- 單一分頁器 -->
+    <!-- 分頁器 -->
     <div id="pager"></div>
   </main>
 
@@ -149,10 +173,19 @@
     </div>
   </aside>
 
-  <!-- Toast -->
-  <div id="toast" class="toast"></div>
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container inner">
+      <div>© <span id="year"></span> LINFAYA COUTURE</div>
+      <div class="muted">客服：Mon–Fri 10:00–18:00 ｜ Email：linfaya251@gmail.com</div>
+    </div>
+  </footer>
 
   <!-- Scripts：順序很重要 -->
+  <script>
+    // Footer 年份
+    (function(){ var y=document.getElementById('year'); if(y) y.textContent = new Date().getFullYear(); })();
+  </script>
   <script src="config-and-data.js"></script>
   <script src="utils-and-ui.js"></script>
   <script src="shop-core.js"></script>
