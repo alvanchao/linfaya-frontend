@@ -1,163 +1,140 @@
-// 工具、UI 共用
-window.App = window.App || {};
-var App = window.App;
+/* utils-and-ui.js — 共用工具 + UI 注入（不依賴其他檔案） */
+(function (w, d) {
+  // 簡易選擇器
+  w.$  = function (s) { return d.querySelector(s); };
+  w.$$ = function (s) { return d.querySelectorAll(s); };
+  w.fmt = function (n) { return 'NT$' + Number(n || 0).toLocaleString('zh-Hant-TW'); };
 
-// 基本工具
-App.$  = function(s){ return document.querySelector(s); };
-App.$$ = function(s){ return document.querySelectorAll(s); };
-App.fmt = function(n){ return 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW'); };
+  // Toast
+  w.toast = function (msg, ms) {
+    var t = $('#toast'); if (!t) return;
+    t.textContent = msg || '完成';
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, ms || 1200);
+  };
 
-// 逾時+重試 fetch
-App.fetchJSON = async function(url, fetchOpts, retryOpts){
-  fetchOpts = fetchOpts || {};
-  retryOpts = retryOpts || {};
-  var timeoutMs = retryOpts.timeoutMs || 20000;
-  var retries = retryOpts.retries || 2;
-  var retryDelayBaseMs = retryOpts.retryDelayBaseMs || 800;
-  var lastErr;
-  for (var attempt=0; attempt<=retries; attempt++){
-    var ac = new AbortController();
-    var t = setTimeout(function(){ try{ ac.abort(new Error('Timeout')); }catch(_){ } }, timeoutMs);
-    try{
-      var r = await fetch(url, Object.assign({}, fetchOpts, { signal: ac.signal }));
-      clearTimeout(t);
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return await r.json();
-    }catch(e){
-      clearTimeout(t);
-      lastErr = e;
-      if (/HTTP\s4\d\d/.test(String(e && e.message))) break;
-      if (attempt === retries) break;
-      await new Promise(function(res){ setTimeout(res, retryDelayBaseMs * Math.pow(2, attempt)); });
+  // fetch（含逾時 & 重試）
+  w.fetchJSON = async function (url, fetchOpts, retryOpts) {
+    var opts = retryOpts || {};
+    var timeoutMs = opts.timeoutMs || 20000;
+    var retries = typeof opts.retries === 'number' ? opts.retries : 2;
+    var retryDelayBaseMs = opts.retryDelayBaseMs || 800;
+    var lastErr;
+    for (var attempt = 0; attempt <= retries; attempt++) {
+      var ac = new AbortController();
+      var t = setTimeout(function(){ ac.abort(new Error('Timeout')); }, timeoutMs);
+      try {
+        var r = await fetch(url, Object.assign({}, fetchOpts || {}, { signal: ac.signal }));
+        clearTimeout(t);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return await r.json();
+      } catch (e) {
+        clearTimeout(t);
+        lastErr = e;
+        if ((e && e.message || '').indexOf('HTTP 4') === 0) break;
+        if (attempt === retries) break;
+        await new Promise(function(res){ setTimeout(res, retryDelayBaseMs * Math.pow(2, attempt)); });
+      }
     }
-  }
-  throw lastErr;
-};
+    throw lastErr;
+  };
 
-// Toast
-App.toast = function(msg, ms){
-  if(!msg) msg='已加入購物車';
-  if(!ms) ms=1200;
-  var t = App.$('#toast'); if(!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, ms);
-};
+  // 新視窗（Safari 安全）
+  w.openNamedWindow = function (name, html) {
+    var wdw = null;
+    try { wdw = window.open('', name); } catch (_) {}
+    if (!wdw || wdw.closed || typeof wdw.closed === 'undefined') return null;
+    try {
+      wdw.document.open();
+      wdw.document.write('<!doctype html><meta charset="utf-8"><title>Loading</title><body style="font:14px/1.6 -apple-system,blinkmacsystemfont,Segoe UI,Roboto,Helvetica,Arial">'
+        + (html || '載入中…') + '</body>');
+      wdw.document.close();
+    } catch (_) {}
+    return wdw;
+  };
 
-// 預購交期（工作天）計算 + 小提醒
-App.addWorkingDays = function(fromDate, n){
-  var d = new Date(fromDate);
-  var added = 0;
-  while(added < n){
-    d.setDate(d.getDate()+1);
-    var day = d.getDay();
-    if(day !== 0 && day !== 6) added += 1;
-  }
-  return d;
-};
-App.ymd = function(d){
-  var y = d.getFullYear();
-  var m = ('0'+(d.getMonth()+1)).slice(-2);
-  var dd= ('0'+d.getDate()).slice(-2);
-  return y+'/'+m+'/'+dd;
-};
-App.preorderRangeToday = function(min,max){
-  var now = new Date();
-  return App.ymd(App.addWorkingDays(now,min))+' ～ '+App.ymd(App.addWorkingDays(now,max));
-};
-App.attachPreorderBanner = function(){
-  var mount = document.createElement('section');
-  mount.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px;color:#e6e9ef;line-height:1.6';
-  var eta = App.PREORDER_MODE ? '預計出貨區間：'+App.preorderRangeToday(App.LEAD_DAYS_MIN, App.LEAD_DAYS_MAX) : '';
-  mount.innerHTML =
-    '<strong style="color:#fff;font-size:15px">小提醒</strong>'+
-    '<div style="font-size:13px;color:#cfd3dc;line-height:1.6;margin-top:4px">'+
-    (
-      App.PREORDER_MODE
-      ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 '+App.LEAD_DAYS_MIN+'–'+App.LEAD_DAYS_MAX+' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>'+
-        '<div style="margin-top:4px;color:#fff">'+eta+'</div>'
-      : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
-    )+
-    '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>'+
-    '</div>';
-  var header = document.querySelector('header');
-  if(header && header.parentNode) header.parentNode.insertBefore(mount, header.nextSibling);
-  else document.body.insertBefore(mount, document.body.firstChild);
-};
+  // 送 POST form
+  w.postForm = function (endpoint, fields, target) {
+    var form = d.createElement('form');
+    form.method = 'POST';
+    form.action = endpoint;
+    form.target = target || '_self';
+    Object.keys(fields || {}).forEach(function (k) {
+      var i = d.createElement('input');
+      i.type = 'hidden'; i.name = k; i.value = fields[k];
+      form.appendChild(i);
+    });
+    d.body.appendChild(form);
+    form.submit();
+    setTimeout(function(){ form.remove(); }, 3000);
+  };
 
-// Chips CSS（一次注入）
-(function(){
-  var css = [
-    '.chips{display:flex;gap:8px;flex-wrap:wrap}',
-    '.chip{min-width:40px;padding:8px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer;text-align:center;user-select:none}',
-    '.chip:hover{transform:translateY(-1px);border-color:#3b4252}',
-    '.chip.active{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b0c10;border:none}',
-    '.chip.small{min-width:32px;padding:6px 8px;border-radius:8px}',
-    '.chip.disabled{opacity:.4;cursor:not-allowed;filter:grayscale(20%);text-decoration:line-through}',
-    '.oos-note{color:#fca5a5;font-size:12px;margin-top:6px}'
-  ].join('\n');
-  var style=document.createElement('style');
-  style.textContent=css;
-  document.head.appendChild(style);
-})();
-
-// Chips/分頁/庫存工具
-App.chipHTML = function(label, value, active, disabled, extraClass){
-  var cls = ['chip', extraClass, active?'active':'', disabled?'disabled':''].filter(Boolean).join(' ');
-  var disAttr = disabled ? 'aria-disabled="true" data-disabled="1"' : '';
-  return '<button type="button" class="'+cls+'" data-value="'+String(value)+'" '+disAttr+'>'+label+'</button>';
-};
-App.renderChips = function(values, activeValue, opts){
-  values = values || [];
-  opts = opts || {};
-  return '<div class="chips">'+values.map(function(v){
-    var disabled = typeof opts.disableCheck==='function' ? !!opts.disableCheck(v) : false;
-    return App.chipHTML(v, v, String(v)===String(activeValue), disabled, opts.small?'small':'');
-  }).join('') + '</div>';
-};
-App.buildPager = function(total){
-  var pageSize = App.PAGE_SIZE;
-  var pages = Math.max(1, Math.ceil(total / pageSize));
-  function draw(mount){
-    if(!mount) return;
-    mount.innerHTML='';
-    for(var p=1;p<=pages;p++){
-      var b=document.createElement('button');
-      b.type='button';
-      b.className='page-btn'+(p===App.state.page?' active':'');
-      b.textContent=String(p);
-      b.onclick=function(pp){ return function(){ App.state.page=pp; App.renderProducts(); }; }(p);
-      mount.appendChild(b);
+  // 預購交期工具
+  w.addWorkingDays = function (fromDate, n) {
+    var d0 = new Date(fromDate);
+    var added = 0;
+    while (added < n) {
+      d0.setDate(d0.getDate() + 1);
+      var day = d0.getDay();
+      if (day !== 0 && day !== 6) added += 1;
     }
-  }
-  draw(App.$('#pager')); draw(App.$('#pagerBottom'));
-};
+    return d0;
+  };
+  w.ymd = function (d1) {
+    var y = d1.getFullYear(), m = String(d1.getMonth() + 1).padStart(2, '0'), dd = String(d1.getDate()).padStart(2, '0');
+    return y + '/' + m + '/' + dd;
+  };
+  w.preorderRangeToday = function (min, max) {
+    var now = new Date();
+    return w.ymd(w.addWorkingDays(now, min)) + ' ～ ' + w.ymd(w.addWorkingDays(now, max));
+  };
 
-// 庫存工具
-App.getStock = function(product, color, size){
-  var k = color + '-' + size;
-  if (!product.stockMap) return Infinity;
-  if (!(k in product.stockMap)) return Infinity;
-  var n = Number(product.stockMap[k]);
-  return isFinite(n) ? n : Infinity;
-};
-App.isOOS = function(product, color, size){ return App.getStock(product,color,size) <= 0; };
-App.maxQtyFor = function(product, color, size){
-  var stock = App.getStock(product, color, size);
-  var cap = App.MAX_QTY_PER_ITEM;
-  return Math.min(cap, stock===Infinity?cap:stock);
-};
-App.anySizeAvailable = function(product, color){
-  var sizes = product.sizes || [];
-  for(var i=0;i<sizes.length;i++){ if(!App.isOOS(product, color, sizes[i])) return true; }
-  return false;
-};
-App.firstAvailableSize = function(product, color){
-  var sizes = product.sizes || [];
-  for(var i=0;i<sizes.length;i++){ if(!App.isOOS(product, color, sizes[i])) return sizes[i]; }
-  return null;
-};
-App.productById = function(id){
-  for(var i=0;i<App.PRODUCTS.length;i++){ if(App.PRODUCTS[i].id===id) return App.PRODUCTS[i]; }
-  return null;
-};
+  // 注入 chips / cart 樣式（補充）
+  (function injectStyle() {
+    var css = [
+      '.chips{display:flex;gap:8px;flex-wrap:wrap}',
+      '.chip{min-width:40px;padding:8px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer;text-align:center;user-select:none}',
+      '.chip:hover{transform:translateY(-1px);border-color:#3b4252}',
+      '.chip.active{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b0c10;border:none}',
+      '.chip.small{min-width:32px;padding:6px 8px;border-radius:8px}',
+      '.chip.disabled{opacity:.4;cursor:not-allowed;filter:grayscale(20%);text-decoration:line-through}',
+      '.oos-note{color:#fca5a5;font-size:12px;margin-top:6px}',
+      '.cart-card{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;border:1px solid #212736;border-radius:14px;background:#0e121b;padding:10px}',
+      '.cart-right{text-align:right}',
+      '.cart-attr{color:#8a94a7;font-size:12px}',
+      '.cart-actions{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}',
+      '.link-danger{border:1px solid #3a2230;color:#fca5a5;background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}'
+    ].join('');
+    var style = d.createElement('style');
+    style.textContent = css;
+    d.head.appendChild(style);
+  })();
+
+  // 頁首「小提醒」IIFE
+  (function attachPreorderBanner(){
+    if (!w.PREORDER_MODE && !w.REQUIRE_PREORDER_CHECKBOX) return; // 沒啟用就跳過
+    var mount = d.createElement('section');
+    mount.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px;color:#e6e9ef;line-height:1.6';
+    var eta = w.PREORDER_MODE ? ('預計出貨區間：' + w.preorderRangeToday(w.LEAD_DAYS_MIN, w.LEAD_DAYS_MAX)) : '';
+    mount.innerHTML =
+      '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
+      '<div style="font-size:13px;color:#cfd3dc;line-height:1.6;margin-top:4px">' +
+      (w.PREORDER_MODE
+        ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + w.LEAD_DAYS_MIN + '–' + w.LEAD_DAYS_MAX + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>' +
+          '<div style="margin-top:4px;color:#fff">' + eta + '</div>'
+        : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
+      ) +
+      '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
+      '</div>';
+    var header = d.querySelector('header');
+    if (header && header.parentNode) {
+      header.parentNode.insertBefore(mount, header.nextSibling);
+    } else {
+      d.body.insertBefore(mount, d.body.firstChild);
+    }
+  })();
+
+  // 年份
+  (function(){ var y = $('#year'); if (y) y.textContent = new Date().getFullYear(); })();
+
+})(window, document);
