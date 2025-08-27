@@ -1,44 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
   <title>感謝您的訂購</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    :root{ --bg:#0b0c10;--panel:#111319;--muted:#8a94a7;--pri:#5eead4;--accent:#a78bfa;--text:#e6e9ef }
-    body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans",sans-serif;background:linear-gradient(180deg,#0b0c10,#0e1117);color:var(--text);text-align:center;display:flex;align-items:center;justify-content:center;min-height:100vh}
-    .card{background:#141821;padding:24px;border-radius:16px;max-width:460px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
-    h1{margin:0 0 12px;font-size:22px}
-    p{margin:8px 0;color:var(--muted);line-height:1.6}
-    .highlight{color:#fff;font-weight:600}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","PingFang TC","Hiragino Sans",sans-serif;
+      background:#0b0c10;color:#e6e9ef;
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;margin:0;padding:0;
+    }
+    .card{
+      max-width:560px;padding:24px 28px;border-radius:14px;
+      background:#141821;box-shadow:0 8px 28px rgba(0,0,0,.35);
+      text-align:center;
+    }
+    h1{margin:0 0 10px}
+    p.muted{color:#98a2b3;margin:6px 0}
+    .btn{
+      margin-top:16px;padding:10px 16px;border:0;border-radius:10px;
+      cursor:pointer;background:linear-gradient(135deg,#5eead4,#a78bfa);
+      color:#0b0c10;font-weight:700
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>付款成功</h1>
-    <p>感謝您的訂購，我們已收到您的款項。</p>
-    <p id="preorder" style="display:none"></p>
-    <p class="highlight">訂單明細與後續通知，將寄送至您的 Email。</p>
-    <p style="margin-top:16px"><a href="index.html" style="color:var(--pri)">返回商店</a></p>
+    <h1>謝謝您的訂購</h1>
+    <p class="muted">我們已收到付款或訂單資訊，若信件延遲，請檢查垃圾信或「促銷」分類。</p>
+    <button class="btn" onclick="goHome()">回到商店</button>
   </div>
-
   <script>
-    (async function(){
-      try{
-        const r = await fetch("https://linfaya-ecpay-backend.onrender.com/api/health");
-        const j = await r.json();
-        // 確認 server.js 的環境變數 PREORDER_MODE
-        if (j && j.env && j.env.PREORDER_MODE === "true") {
-          const leadMin = j.env.LEAD_DAYS_MIN || 7;
-          const leadMax = j.env.LEAD_DAYS_MAX || 14;
-          const el = document.getElementById("preorder");
-          el.textContent = `※ 本訂單為預購，出貨需約 ${leadMin}–${leadMax} 個工作天；若遇延遲我們會主動通知。`;
-          el.style.display = "block";
-        }
-      }catch(e){
-        console.error("health check error", e);
-      }
-    })();
+    // 通知 opener/同域頁面清空購物車
+    try{ window.opener && window.opener.postMessage({type:'EC_PAY_DONE'}, '*'); }catch(e){}
+    // 備援：用 localStorage 讓同網域其它分頁同步清空
+    try{ localStorage.setItem('EC_CLEAR_CART','1'); }catch(e){}
+    function goHome(){ location.href = './'; }
   </script>
 </body>
 </html>
