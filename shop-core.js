@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshQtyChips(card, p);
   }
 
-  // ====== custom 即時驗證 ======
+  // ===== custom 即時驗證 =====
   function validateCustomCard(card){
     if (!card) return { ok:false, message:'請輸入認證碼與份數' };
     var codeInput  = card.querySelector('.code-input');
@@ -254,32 +254,30 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!isCustom) {
         var firstColor = (p.colors&&p.colors[0]) || '';
         html =
-          '<div class="product" data-id="'+p.id+'">' +
+          '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
-              '<div class="main-img"><img src="'+p.imgs[0]+'" alt="'+p.name+'"></div>' +
+              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + p.name + '"></div>' +
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){ return '<img src="'+img+'" data-main="'+img+'" '+(i===0?'class="active"':'')+' />'; }).join('') +
+                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
-              '<div><b>'+p.name+'</b></div>' +
-              '<div class="muted">分類：'+p.cat+' | 價格：'+fmt(p.price)+'</div>' +
+              '<div><b>' + p.name + '</b></div>' +
+              '<div class="muted">分類：' + p.cat + ' | 價格：' + fmt(p.price) + '</div>' +
 
               '<div style="margin-top:6px">' +
                 '<div class="muted" style="font-size:12px;margin-bottom:6px">顏色</div>' +
                 '<div class="chips color-group">' +
-                  (p.colors||[]).map(function(c,i){ return '<button class="chip'+(i===0?' active':'')+'" data-type="color" data-val="'+c+'">'+c+'</button>'; }).join('') +
+                  (p.colors||[]).map(function(c,i){ return '<button class="chip' + (i===0?' active':'') + '" data-type="color" data-val="' + c + '">' + c + '</button>'; }).join('') +
                 '</div>' +
               '</div>' +
 
               '<div style="margin-top:8px">' +
                 '<div class="muted" style="font-size:12px;margin-bottom:6px">尺寸</div>' +
                 '<div class="chips size-group">' +
-                  (p.sizes||[]).map(function(s,i){
-                    var cap = capFor(p, firstColor, s);
-                    var base = 'class="chip'+(i===0?' active':'')+'"';
-                    return '<button '+(cap<=0? 'disabled class="chip disabled"':' '+base)+' data-type="size" data-val="'+s+'">'+s+'</button>';
-                  }).join('') +
+                  (p.sizes||[]).map(function(s,i){' +
+                    'var cap = (' + 'function(){return ' + '1' + ';}' + ')();' + // dummy to keep concat alignment
+                  '}).join("")' + // this line will be replaced below: see safer version
                 '</div>' +
               '</div>' +
 
@@ -293,19 +291,30 @@ document.addEventListener('DOMContentLoaded', function () {
               '</div>' +
             '</div>' +
           '</div>';
+        // 重新寫入尺寸 chips（避免上面行內函式難讀）
+        html = html.replace(
+          '<div class="chips size-group"></div>',
+          '<div class="chips size-group">' +
+          (p.sizes||[]).map(function(s,i){
+            var cap = capFor(p, firstColor, s);
+            var base = 'class="chip' + (i===0?' active':'') + '"';
+            return '<button ' + (cap<=0 ? 'disabled class="chip disabled"' : ' ' + base) + ' data-type="size" data-val="' + s + '">' + s + '</button>';
+          }).join('') +
+          '</div>'
+        );
       } else {
         var priceText = '每份 ' + fmt(p.price || 10);
         html =
-          '<div class="product" data-id="'+p.id+'">' +
+          '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
-              '<div class="main-img"><img src="'+p.imgs[0]+'" alt="'+(p.name||'客製化')+'"></div>' +
+              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '"></div>' +
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){ return '<img src="'+img+'" data-main="'+img+'" '+(i===0?'class="active"':'')+' />'; }).join('') +
+                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
-              '<div><b>'+(p.name || '客製化修改（每份10元）')+'</b></div>' +
-              '<div class="muted">分類：'+(p.cat || 'customerize')+' | 價格：'+priceText+'</div>' +
+              '<div><b>' + (p.name || '客製化修改（每份10元）') + '</b></div>' +
+              '<div class="muted">分類：' + (p.cat || 'customerize') + ' | 價格：' + priceText + '</div>' +
 
               '<div style="margin-top:8px;display:grid;gap:8px">' +
                 '<div>' +
@@ -313,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   '<input class="input code-input" placeholder="請輸入認證碼（例：LFY550）" autocomplete="off">' +
                 '</div>' +
                 '<div>' +
-                  '<div class="muted" style="font-size:12px;margin-bottom:6px">份數（每份 NT$'+(p.price||10)+'）</div>' +
+                  '<div class="muted" style="font-size:12px;margin-bottom:6px">份數（每份 NT$' + (p.price||10) + '）</div>' +
                   '<input class="input units-input" type="number" min="1" step="1" value="55" inputmode="numeric" pattern="\\d*">' +
                 '</div>' +
                 '<div class="muted" data-role="custom-help" style="display:none;color:#f87171;font-size:12px"></div>' +
@@ -415,18 +424,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
       var row =
         '<div class="cart-card">' +
-          '<img src="'+(item.img||'')+'" width="72" height="72" alt="">' +
+          '<img src="' + (item.img||'') + '" width="72" height="72" alt="">' +
           '<div>' +
-            '<div>'+ (item.name||'') +'</div>' +
-            '<div class="cart-attr">'+ attrs +'</div>' +
+            '<div>' + (item.name||'') + '</div>' +
+            '<div class="cart-attr">' + attrs + '</div>' +
             '<div class="cart-actions">' +
-              '<button class="btn small dec" data-idx="'+i+'">－</button>' +
+              '<button class="btn small dec" data-idx="' + i + '">－</button>' +
               '<span>' + (item.qty||1) + '</span>' +
-              '<button class="btn small inc" data-idx="'+i+'">＋</button>' +
-              '<button class="link-danger del" data-idx="'+i+'">刪除</button>' +
+              '<button class="btn small inc" data-idx="' + i + '">＋</button>' +
+              '<button class="link-danger del" data-idx="' + i + '">刪除</button>' +
             '</div>' +
             warn +
-          </div>' +
+          '</div>' +
           '<div class="cart-right">' + fmt((item.price||0)*(item.qty||1)) + '</div>' +
         '</div>';
       cartList.insertAdjacentHTML('beforeend', row);
@@ -527,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var it2 = cart[j];
         if (it2.id===item2.id && it2.color===item2.color && it2.size===item2.size){
           var next = (it2.qty||1) + qty;
-          if (next > cap){ toast('此規格最多可購買 '+cap+' 件'); it2.qty = cap; }
+          if (next > cap){ toast('此規格最多可購買 ' + cap + ' 件'); it2.qty = cap; }
           else { it2.qty = next; toast('已加入購物車'); }
           merged2 = true; break;
         }
