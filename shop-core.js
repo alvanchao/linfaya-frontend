@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '</div>' +
                 '<div>' +
                   '<div class="muted" style="font-size:12px;margin-bottom:6px">份數（每份 NT$' + (p.price||10) + '）</div>' +
-                  '<input class="input units-input" type="number" min="1" step="1" value="55" inputmode="numeric" pattern="\\d*">' +
+                  '<input class="input units-input" type="number" min="1" step="1 placeholder="請輸入份數" inputmode="numeric" pattern="\d*">' +
                 '</div>' +
                 '<div class="muted" data-role="custom-help" style="display:none;color:#f87171;font-size:12px"></div>' +
               '</div>' +
