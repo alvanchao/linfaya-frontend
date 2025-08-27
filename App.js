@@ -1,4 +1,4 @@
-// App.js － LINFAYA COUTURE（預購模式 + 深色小提醒）
+// App.js － LINFAYA COUTURE（預購模式 + 深色小提醒，已移除付款文字）
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
 // 強化：預購模式（頁首提醒、商品卡小字、購物車必勾同意、交期區間）、單品數量上限
 // 保留：postMessage 安全性、Safari 視窗命名、多分頁清空、fetchJSON 重試
@@ -168,16 +168,14 @@ function buildPager(total, pageSize = PAGE_SIZE) {
   render(mountTop); render(mountBottom);
 }
 
-// ====== ✅ 頁首「小提醒」（深色 + 跟下方卡片一致）======
+// ====== ✅ 頁首「小提醒」（深色 + 不含付款文字）======
 (function attachPreorderBanner(){
   const mount = document.createElement('section');
-  // 深色卡片：和你下方卡片一致的色系/圓角
   mount.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px;color:#e6e9ef;line-height:1.6';
   const eta = PREORDER_MODE ? `預計出貨區間：${preorderRangeToday(LEAD_DAYS_MIN, LEAD_DAYS_MAX)}` : '';
   mount.innerHTML = `
     <strong style="color:#fff;font-size:15px">小提醒</strong>
     <div style="font-size:13px;color:#cfd3dc;line-height:1.6;margin-top:4px">
-      <div>付款：綠界 ECPay（信用卡／ATM／超商代碼）。滿 NT$1,000 免運（本島）。</div>
       ${
         PREORDER_MODE
         ? `<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>
@@ -187,7 +185,6 @@ function buildPager(total, pageSize = PAGE_SIZE) {
       <div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>
     </div>
   `;
-  // 儘量掛在 header 後面；找不到就插在 body 最前
   const header = document.querySelector('header');
   if(header && header.parentNode){
     header.parentNode.insertBefore(mount, header.nextSibling);
@@ -485,7 +482,7 @@ window.addEventListener('message',(ev)=>{
     const p = JSON.parse(raw);
     const id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
     const name = p.CVSStoreName || p.StName || p.StoreName || '';
-    const address = p.CVSAddress || p.StAddr || p.Address || '';
+    const address = p.CVSAddress || p.CVSAddr || p.Address || '';
     const type = sessionStorage.getItem('CVS_TYPE') || state.currentMapType;
     if(type==='family'){
       const label = document.querySelector('#familyPicked');
