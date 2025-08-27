@@ -1,6 +1,8 @@
-// App.js － LINFAYA COUTURE（Chips + 庫存禁用 + 新版購物車）
-// - 商品卡：顏色/尺寸/數量 chips；依 stockMap 灰掉不可售（只需標「售完=0」，未標視為可售）
-// - 購物車：卡片樣式 + 數量 chips（1～MAX）
+// App.js － LINFAYA COUTURE（Chips + 數量受庫存限制 + 新版購物車）
+// - stockMap 數字＝庫存數（0=售完；>0=剩餘數量）
+// - 數量 chips 依組合庫存動態生成（1 ~ min(MAX_QTY_PER_ITEM, 庫存數)）
+// - 商品卡：顏色/尺寸/數量 chips；售完灰掉禁用
+// - 購物車：卡片樣式 + 數量 chips（同樣受庫存限制）
 // - 保留：預購提醒（不含付款文字）、ECPay、全家/7-11 選店、逾時重試、多分頁清空
 
 // ====== 常數 ======
@@ -12,6 +14,7 @@ const CASHIER_WIN_NAME = 'ECPAY_CASHIER';
 
 const FREE_SHIP_THRESHOLD = 1000;
 const PAGE_SIZE = 6;
+const MAX_QTY_PER_ITEM = 5;
 
 // 允許的 postMessage 來源（正式/測試）
 const TRUSTED_ORIGINS = [
@@ -27,9 +30,9 @@ const PREORDER_MODE = true;
 const LEAD_DAYS_MIN = 7;
 const LEAD_DAYS_MAX = 14;
 const REQUIRE_PREORDER_CHECKBOX = true;
-const MAX_QTY_PER_ITEM = 5;
 
-// ====== 商品資料（依你現有 7 件；僅標示「售完」的組合，沒標=可售）======
+// ====== 商品資料（依你現有 7 件；示範幾個組合有限/售完）======
+// stockMap：key = '<顏色>-<尺寸>'，value = 庫存數（0=售完；不填=視為充足）
 const PRODUCTS = [
   {
     id:'top01',cat:'tops',name:'無縫高彈背心',price:399,
@@ -37,7 +40,8 @@ const PRODUCTS = [
     imgs:['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg'],
     stockMap:{
       '黑-M':0,   // 售完
-      '膚-S':0    // 售完
+      '膚-S':0,   // 售完
+      '膚-M':2    // 最多只能買 2 件
     }
   },
   {
@@ -45,7 +49,7 @@ const PRODUCTS = [
     colors:['黑','粉'],sizes:['S','M','L'],
     imgs:['Photo/鏤空美背短袖.jpg'],
     stockMap:{
-      '粉-L':0    // 售完
+      '粉-L':3    // 最多 3 件
     }
   },
   {
@@ -54,7 +58,8 @@ const PRODUCTS = [
     imgs:['Photo/高腰緊身褲.jpg'],
     stockMap:{
       '黑-XL':0,  // 售完
-      '深灰-S':0  // 售完
+      '深灰-S':0, // 售完
+      '深灰-M':1  // 最多 1 件
     }
   },
   {
@@ -62,7 +67,7 @@ const PRODUCTS = [
     colors:['黑'],sizes:['S','M','L'],
     imgs:['Photo/魚尾練習裙.jpg'],
     stockMap:{
-      // 全可售（不填即代表可售）
+      // 全可售（不填=庫存充足）
     }
   },
   {
@@ -95,7 +100,6 @@ const PRODUCTS = [
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const fmt = n => 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW');
-const qtyValues = Array.from({length:MAX_QTY_PER_ITEM},(_,i)=>i+1);
 
 // 注入 chips 樣式
 (function injectChipStyle(){
@@ -194,12 +198,21 @@ function postForm(endpoint, fields, target = '_self') {
   setTimeout(()=>form.remove(), 3000);
 }
 
-// ====== 庫存判斷 ======
-function isOOS(product, color, size){
+// ====== 庫存判斷（數字＝庫存；不列＝充足）======
+const QTY_VALUES = Array.from({length:MAX_QTY_PER_ITEM},(_,i)=>i+1);
+function getStock(product, color, size){
   const k = `${color}-${size}`;
-  if (!product.stockMap) return false;      // 沒提供 map → 視為可售
-  if (!(k in product.stockMap)) return false; // 沒列出 → 視為可售
-  return Number(product.stockMap[k]) <= 0;
+  if (!product.stockMap) return Infinity;          // 沒有 stockMap → 充足
+  if (!(k in product.stockMap)) return Infinity;   // 沒列出 → 充足
+  const n = Number(product.stockMap[k]);
+  return Number.isFinite(n) ? n : Infinity;
+}
+function isOOS(product, color, size){
+  return getStock(product, color, size) <= 0;
+}
+function maxQtyFor(product, color, size){
+  const stock = getStock(product, color, size);
+  return Math.min(MAX_QTY_PER_ITEM, stock===Infinity?MAX_QTY_PER_ITEM:stock);
 }
 function anySizeAvailable(product, color){
   return (product.sizes||[]).some(sz=>!isOOS(product, color, sz));
@@ -207,6 +220,9 @@ function anySizeAvailable(product, color){
 function firstAvailableSize(product, color){
   const sz = (product.sizes||[]).find(s=>!isOOS(product, color, s));
   return sz || null;
+}
+function productById(id){
+  return PRODUCTS.find(p=>p.id===id) || null;
 }
 
 // ====== 狀態 ======
@@ -290,7 +306,7 @@ function renderChips(values=[], activeValue, { small=false, disableCheck=null }=
   }</div>`;
 }
 
-// ====== 商品列表（chips：顏色/尺寸/數量 + 庫存禁用）======
+// ====== 商品列表（chips：顏色/尺寸/數量 + 庫存限制）======
 function renderProducts(){
   const list = state.cat==='all' ? PRODUCTS : PRODUCTS.filter(p=>p.cat===state.cat);
   const total=list.length, from=(state.page-1)*PAGE_SIZE;
@@ -308,6 +324,7 @@ function renderProducts(){
     // 預設：第一個有貨的顏色/尺寸
     const defColor = (p.colors||[]).find(c=>anySizeAvailable(p,c)) || (p.colors?.[0]||'');
     const defSize  = firstAvailableSize(p, defColor) || (p.sizes?.[0]||'');
+    const defMax   = defSize ? maxQtyFor(p, defColor, defSize) : MAX_QTY_PER_ITEM;
     const defQty   = 1;
 
     el.innerHTML=`
@@ -342,7 +359,7 @@ function renderProducts(){
         <div style="margin-top:6px">
           <div class="muted" style="font-size:12px;margin-bottom:6px">數量</div>
           <div class="qty-group">
-            ${renderChips(qtyValues, defQty, { small:true })}
+            ${renderChips(Array.from({length:defMax},(_,i)=>i+1), defQty, { small:true })}
           </div>
         </div>
 
@@ -382,7 +399,6 @@ function renderProducts(){
       };
 
       if (isColor){
-        // 顏色切換 → 尺寸依此顏色重新渲染（灰掉售完），並自動選第一個可售尺寸；如全售完，顯示提示
         pick('.color-group', chip);
         const color = chip.dataset.value;
         const sizeWrap = el.querySelector('.size-group');
@@ -391,14 +407,23 @@ function renderProducts(){
         if (!firstOk){
           sizeWrap.innerHTML = renderChips(p.sizes, '', { disableCheck:(s)=>true });
           if (oosNote) oosNote.style.display = 'block';
+          // 數量清成 1 顆（不可選）
+          el.querySelector('.qty-group').innerHTML = renderChips([1], 1, { small:true, disableCheck:()=>true });
         }else{
           sizeWrap.innerHTML = renderChips(p.sizes, firstOk, { disableCheck:(s)=>isOOS(p, color, s) });
           if (oosNote) oosNote.style.display = 'none';
+          // 更新數量 chips
+          const max = maxQtyFor(p, color, firstOk);
+          el.querySelector('.qty-group').innerHTML = renderChips(Array.from({length:max},(_,i)=>i+1), 1, { small:true });
         }
       }
 
       if (isSize){
         pick('.size-group', chip);
+        const color = el.querySelector('.color-group .chip.active')?.dataset.value;
+        const size = chip.dataset.value;
+        const max = maxQtyFor(p, color, size);
+        el.querySelector('.qty-group').innerHTML = renderChips(Array.from({length:max},(_,i)=>i+1), 1, { small:true });
       }
 
       if (isQty){
@@ -416,6 +441,9 @@ function renderProducts(){
       if (!size){ return alert('此顏色目前已售完，請改選其他顏色'); }
       if (isOOS(p, color, size)){ return alert('此尺寸目前已售完'); }
 
+      const max = maxQtyFor(p, color, size);
+      if (qty > max) return alert(`此組合最多可購買 ${max} 件`);
+
       addToCart({...p,color,size,qty,img:first});
     });
 
@@ -425,24 +453,30 @@ function renderProducts(){
 
 function addToCart(item){
   const found=state.cart.find(i=>i.id===item.id&&i.color===item.color&&i.size===item.size);
+  const prod = productById(item.id);
+  const max = maxQtyFor(prod || item, item.color, item.size);
+
   if(found){
-    const next = Math.min(MAX_QTY_PER_ITEM, (found.qty||1) + item.qty);
+    const next = Math.min(max, (found.qty||1) + item.qty);
     found.qty = next;
-    if(next === MAX_QTY_PER_ITEM) toast(`單一商品每筆最多 ${MAX_QTY_PER_ITEM} 件`);
+    if(next === max) toast(`本組合最多 ${max} 件`);
     else toast('已加入購物車');
   }else{
-    item.qty = Math.max(1, Math.min(MAX_QTY_PER_ITEM, item.qty||1));
+    item.qty = Math.max(1, Math.min(max, item.qty||1));
     state.cart.push(item);
     toast('已加入購物車');
   }
   persist(); updateBadge();
 }
 
-// ====== 購物車（卡片樣式 + chips 改數量）======
+// ====== 購物車（卡片樣式 + chips 改數量，受庫存限制）======
 function removeItem(idx){ state.cart.splice(idx,1); persist(); renderCart(); updateBadge(); }
 function setQty(idx, qty){
   const cur = state.cart[idx]; if(!cur) return;
-  cur.qty = Math.max(1, Math.min(MAX_QTY_PER_ITEM, parseInt(qty,10)||1));
+  const prod = productById(cur.id);
+  const max = maxQtyFor(prod || cur, cur.color, cur.size);
+  const next = Math.max(1, Math.min(max, parseInt(qty,10)||1));
+  cur.qty = next;
   persist(); renderCart(); updateBadge();
 }
 window.removeItem = removeItem;
@@ -491,6 +525,11 @@ function renderCart(){
 
   state.cart.forEach((it,idx)=>{
     const pic = (it.imgs?.[0] ?? it.img) || '';
+    const prod = productById(it.id) || it;
+    const max = maxQtyFor(prod, it.color, it.size);
+    // 若現有數量超過 max，自動下修
+    if ((it.qty||1) > max) it.qty = max;
+
     const row = document.createElement('div');
     row.className = 'cart-card';
     row.innerHTML = `
@@ -500,10 +539,12 @@ function renderCart(){
         <div class="cart-attr">顏色：${it.color||''}｜尺寸：${it.size||''}｜單價：${fmt(it.price||0)}</div>
         <div class="cart-actions">
           <div class="chips">
-            ${qtyValues.map(v=>{
-              const a = v===(it.qty||1)?' active':'';
-              return `<button type="button" class="chip small${a}" data-qty="${v}" data-idx="${idx}">${v}</button>`;
-            }).join('')}
+            ${
+              Array.from({length:max},(_,i)=>i+1).map(v=>{
+                const a = v===(it.qty||1)?' active':'';
+                return `<button type="button" class="chip small${a}" data-qty="${v}" data-idx="${idx}">${v}</button>`;
+              }).join('')
+            }
           </div>
           <button class="link-danger" onclick="removeItem(${idx})">移除</button>
         </div>
@@ -759,6 +800,15 @@ if (checkoutBtn) {
     if(shipOpt==='seven'){
       if(!state.cvs||state.cvs.type!=='seven')  return alert('請先選擇 7-11 門市');
       shippingInfo=`7-11 店到店｜${state.cvs.name}（${state.cvs.id}）${state.cvs.address}`;
+    }
+
+    // 付款前再次檢查每個品項是否仍符合庫存上限
+    for (const it of state.cart){
+      const prod = productById(it.id);
+      const max = maxQtyFor(prod||it, it.color, it.size);
+      if (it.qty > max){
+        return alert(`「${it.name}（${it.color}/${it.size}）」目前最多可購買 ${max} 件，請調整數量再結帳。`);
+      }
     }
 
     const orderId = 'LF' + Date.now();
