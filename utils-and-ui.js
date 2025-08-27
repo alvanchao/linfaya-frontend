@@ -31,7 +31,7 @@
       } catch (e) {
         clearTimeout(t);
         lastErr = e;
-        if ((e && e.message || '').indexOf('HTTP 4') === 0) break;
+        if ((e && e.message || '').indexOf('HTTP 4') === 0) break; // 4xx 不重試
         if (attempt === retries) break;
         await new Promise(function(res){ setTimeout(res, retryDelayBaseMs * Math.pow(2, attempt)); });
       }
@@ -89,9 +89,10 @@
     return w.ymd(w.addWorkingDays(now, min)) + ' ～ ' + w.ymd(w.addWorkingDays(now, max));
   };
 
-  // 注入 chips / cart 樣式（補充）
+  // 注入 chips / cart / 抽屜表單 樣式（集中覆蓋）
   (function injectStyle() {
     var css = [
+      /* ---- 通用 chip 與購物車卡片 ---- */
       '.chips{display:flex;gap:8px;flex-wrap:wrap}',
       '.chip{min-width:40px;padding:8px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer;text-align:center;user-select:none}',
       '.chip:hover{transform:translateY(-1px);border-color:#3b4252}',
@@ -103,14 +104,45 @@
       '.cart-right{text-align:right}',
       '.cart-attr{color:#8a94a7;font-size:12px}',
       '.cart-actions{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}',
-      '.link-danger{border:1px solid #3a2230;color:#fca5a5;background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}'
+      '.link-danger{border:1px solid #3a2230;color:#fca5a5;background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}',
+
+      /* ---- 購物車抽屜：標題與清單 ---- */
+      '.drawer header.container{padding:12px 16px}',
+      '.drawer .brand b{font-size:16px}',
+      '.drawer .list{padding:12px;display:flex;flex-direction:column;gap:12px;overflow:auto}',
+
+      /* ---- 金額小計區 ---- */
+      '.summary{margin-top:auto;padding:16px;border-top:1px solid #1f2430;background:#0b0f17}',
+      '.summary .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px;color:#cfd3dc}',
+      '.summary .row b{font-size:15px;color:#e6e9ef}',
+      '.summary .row.total{border-top:1px dashed #283042;margin-top:6px;padding-top:10px;font-weight:700;color:#fff}',
+
+      /* ---- 表單 ---- */
+      '.form{display:grid;gap:12px;margin-top:12px}',
+      '.field{display:grid;gap:6px}',
+      '.field label{font-size:12px;color:#8a94a7}',
+      '.input{width:100%;padding:10px 12px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#e6e9ef}',
+      '.input::placeholder{color:#6b7280}',
+      '.input:focus{outline:none;border-color:#5eead4;box-shadow:0 0 0 3px rgba(94,234,212,.12)}',
+
+      /* ---- 配送方式單選、選店 ---- */
+      '.qty{display:flex;gap:12px;align-items:center;flex-wrap:wrap}',
+      '.qty label{display:inline-flex;align-items:center;gap:6px;color:#c7cede;font-size:13px}',
+      '.summary #familyFields .btn, .summary #sevenFields .btn{padding:8px 12px;border-radius:10px}',
+
+      /* ---- 結帳主按鈕 ---- */
+      '#checkout{width:100%;padding:12px 16px;border-radius:12px;font-weight:700}',
+      '#checkout:disabled{opacity:.5;cursor:not-allowed}',
+
+      /* ---- 空車提示對齊 ---- */
+      '#cartList p.muted{margin:4px 0 8px}'
     ].join('');
     var style = d.createElement('style');
     style.textContent = css;
     d.head.appendChild(style);
   })();
 
-  // 頁首「小提醒」IIFE（與 LOGO 對齊：外層套 .container，內層直向排版）
+  // 頁首「小提醒」IIFE（與 LOGO 對齊：外層套 .container，內層直向排版＋eta chip）
   (function attachPreorderBanner(){
     if (!w.PREORDER_MODE && !w.REQUIRE_PREORDER_CHECKBOX) return; // 沒啟用就跳過
 
