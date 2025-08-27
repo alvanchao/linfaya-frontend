@@ -35,10 +35,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // 分類顯示名稱與排序
   var CAT_LABELS = {
     all: '全部',
-    tops: 'tops',
-    bottoms: 'bottoms',
-    accessories: 'accessories',
-    shoes: 'shoes',
+    tops: '上著˙',
+    bottoms: '下著',
+    accessories: '飾品',
+    shoes: '鞋',
     customerize: '客製化'
   };
   var CAT_ORDER = ['all','tops','bottoms','accessories','shoes','customerize'];
