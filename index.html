@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LINFAYA COUTURE</title>
+  <title>LINFAYA COUTURE｜服飾・配件・舞鞋</title>
   <meta name="description" content="舒適實穿的服飾、配件與舞鞋，快速出貨與貼心服務。" />
   <style>
     :root{
@@ -15,7 +15,8 @@
     a{color:inherit;text-decoration:none}
     .container{max-width:1080px;margin:0 auto;padding:16px}
     header.site{position:sticky;top:0;z-index:20;background:rgba(11,12,16,.6);backdrop-filter:blur(8px);border-bottom:1px solid #1f2430}
-    .brand{font-weight:700;letter-spacing:.2em}
+    .brand{font-weight:700;letter-spacing:.2em;display:flex;align-items:center;gap:10px}
+    .brand img.logo{height:24px;width:auto;display:block}
     .muted{color:var(--muted)}
     .btn{background:var(--panel-2);border:1px solid #222834;color:var(--text);padding:8px 12px;border-radius:12px;cursor:pointer}
     .btn.small{padding:4px 8px;border-radius:8px;font-size:12px}
@@ -23,10 +24,7 @@
     .link-danger{background:transparent;border:none;color:var(--danger);cursor:pointer}
     .badge{display:inline-flex;min-width:20px;height:20px;align-items:center;justify-content:center;background:var(--accent);color:#0b0c10;border-radius:999px;padding:0 6px;font-size:12px;font-weight:700;margin-left:6px}
 
-    main .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-
-    /* 小提醒容器 */
-    #preorderPanel{margin:0 0 12px 0}
+    main .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
 
     /* 分類分頁 */
     #cats{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
@@ -48,8 +46,8 @@
     .chips{display:flex;flex-wrap:wrap;gap:8px}
     .chip{padding:6px 10px;border-radius:999px;border:1px solid #2a3142;background:#0e1117;color:var(--text);cursor:pointer}
     .chip.active{border-color:var(--pri);box-shadow:0 0 0 1px rgba(94,234,212,.2) inset}
-    .chip.small{padding:4px 8px;font-size:12px}        /* 「預計出貨」小膠囊 */
-    .chip.disabled{opacity:.4;pointer-events:none}     /* 庫存 0 反灰不可選 */
+    .chip.small{padding:4px 8px;font-size:12px}
+    .chip.disabled{opacity:.4;pointer-events:none}
 
     /* 分頁器 */
     #pager{display:flex;gap:8px;justify-content:center;margin:16px 0}
@@ -83,7 +81,10 @@
   <!-- 頁首 -->
   <header class="site">
     <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div class="brand">LINFAYA COUTURE</div>
+      <div class="brand">
+        <img class="logo" src="Photo/logo.png" alt="LOGO" onerror="this.style.display='none'">
+        <span>LINFAYA COUTURE</span>
+      </div>
       <div>
         <button id="openCart" class="btn">購物車 <span id="cartCount" class="badge">0</span></button>
       </div>
@@ -97,8 +98,7 @@
       <div id="infoText" class="muted">共 0 件</div>
     </div>
 
-    <!-- 小提醒面板（預購訊息會插入這裡） -->
-    <div id="preorderPanel"></div>
+    <!-- ※ 重要：不再放 #preorderPanel，避免和 utils-and-ui.js 的小提醒重複 -->
 
     <!-- 分類分頁 -->
     <div id="cats"></div>
@@ -125,18 +125,9 @@
       <div class="row total"><span>合計</span><b id="grand">NT$0</b></div>
 
       <div class="form">
-        <div class="field">
-          <label>收件姓名</label>
-          <input id="name" class="input" placeholder="王小明" />
-        </div>
-        <div class="field">
-          <label>Email</label>
-          <input id="email" class="input" placeholder="you@example.com" />
-        </div>
-        <div class="field">
-          <label>手機</label>
-          <input id="phone" class="input" placeholder="0912xxxxxx" />
-        </div>
+        <div class="field"><label>收件姓名</label><input id="name" class="input" placeholder="王小明" /></div>
+        <div class="field"><label>Email</label><input id="email" class="input" placeholder="you@example.com" /></div>
+        <div class="field"><label>手機</label><input id="phone" class="input" placeholder="0912xxxxxx" /></div>
 
         <div class="field">
           <label>配送方式</label>
@@ -147,24 +138,11 @@
           </div>
         </div>
 
-        <div id="homeFields" class="field">
-          <label>宅配地址</label>
-          <input id="addr" class="input" placeholder="地址" />
-        </div>
+        <div id="homeFields" class="field"><label>宅配地址</label><input id="addr" class="input" placeholder="地址" /></div>
+        <div id="familyFields" class="field" style="display:none"><button type="button" id="btnPickFamily" class="btn">選擇全家門市</button><div id="familyPicked" class="muted">尚未選擇</div></div>
+        <div id="sevenFields" class="field" style="display:none"><button type="button" id="btnPickSeven" class="btn">選擇 7-11 門市</button><div id="sevenPicked" class="muted">尚未選擇</div></div>
 
-        <div id="familyFields" class="field" style="display:none">
-          <button type="button" id="btnPickFamily" class="btn">選擇全家門市</button>
-          <div id="familyPicked" class="muted">尚未選擇</div>
-        </div>
-
-        <div id="sevenFields" class="field" style="display:none">
-          <button type="button" id="btnPickSeven" class="btn">選擇 7-11 門市</button>
-          <div id="sevenPicked" class="muted">尚未選擇</div>
-        </div>
-
-        <div class="field" id="preorderField">
-          <label><input type="checkbox" id="agreePreorder" /> 我已了解此為預購，願意等待出貨。</label>
-        </div>
+        <div class="field" id="preorderField"><label><input type="checkbox" id="agreePreorder" /> 我已了解此為預購，願意等待出貨。</label></div>
       </div>
 
       <button id="checkout" class="btn pri">前往付款</button>
