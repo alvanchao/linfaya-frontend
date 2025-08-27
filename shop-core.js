@@ -31,9 +31,17 @@ document.addEventListener('DOMContentLoaded', function () {
   var PAGE_SIZE = w.PAGE_SIZE || 6;
   var FREE_SHIP_THRESHOLD = w.FREE_SHIP_THRESHOLD || 1000;
   var MAX_QTY_PER_ITEM = w.MAX_QTY_PER_ITEM || 5;
-  var products = Array.isArray(w.PRODUCTS) ? w.PRODUCTS : [];
 
-  // 分類顯示名稱與排序（你可自行改文字）
+  // 兼容 window.PRODUCTS 或檔案內宣告的 PRODUCTS
+  var products = (function () {
+    try {
+      if (Array.isArray(window.PRODUCTS)) return window.PRODUCTS;
+      if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) return PRODUCTS;
+    } catch (e) {}
+    return [];
+  })();
+
+  // 分類顯示名稱與排序（中文）
   var CAT_LABELS = {
     all: '全部',
     tops: '上著',
@@ -159,7 +167,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var wrap  = card.querySelector('.qty-group');
     if (!wrap) return;
 
-    var current = Number((wrap.querySelector('.chip.active')||{}).dataset && (wrap.querySelector('.chip.active')||{}).dataset.val) || 1;
+    var act = wrap.querySelector('.chip.active');
+    var current = act ? Number(act.dataset.val) : 1;
     var maxShow = Math.max(1, Math.min(MAX_QTY_PER_ITEM, cap));
     var html = '';
     for (var i=1;i<=maxShow;i++){
@@ -193,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshQtyChips(card, p);
   }
 
-  // ====== custom 即時驗證（新增） ======
+  // ====== custom 即時驗證 ======
   function validateCustomCard(card){
     if (!card) return { ok:false, message:'請輸入認證碼與份數' };
     var codeInput  = card.querySelector('.code-input');
@@ -216,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function () {
       ok = true;
     }
 
-    // 顯示/隱藏紅字、鎖定按鈕
     if (help){
       help.textContent = ok ? '' : ('⚠ ' + msg);
       help.style.display = ok ? 'none' : 'block';
@@ -339,13 +347,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (p && !isCustomId(p.id)) {
         refreshSizeChips(card, p);
       } else {
-        // 綁定即時驗證
         var codeInput  = card.querySelector('.code-input');
         var unitsInput = card.querySelector('.units-input');
         var handler = function(){ validateCustomCard(card); };
         if (codeInput)  codeInput.addEventListener('input', handler);
         if (unitsInput) unitsInput.addEventListener('input', handler);
-        // 初始檢查（預設值可能不符）
         validateCustomCard(card);
       }
     }
@@ -418,9 +424,9 @@ document.addEventListener('DOMContentLoaded', function () {
               '<span>' + (item.qty||1) + '</span>' +
               '<button class="btn small inc" data-idx="'+i+'">＋</button>' +
               '<button class="link-danger del" data-idx="'+i+'">刪除</button>' +
-            </div>' +
+            '</div>' +
             warn +
-          '</div>' +
+          </div>' +
           '<div class="cart-right">' + fmt((item.price||0)*(item.qty||1)) + '</div>' +
         '</div>';
       cartList.insertAdjacentHTML('beforeend', row);
@@ -474,7 +480,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // 加入購物車
     if (t.classList.contains('add')){
       if (p && isCustomId(p.id)){
-        // 先做即時驗證（會顯示紅字 & 鎖按鈕）
         var check = validateCustomCard(card);
         if (!check.ok){ toast(check.message); return; }
 
