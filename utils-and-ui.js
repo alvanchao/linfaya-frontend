@@ -167,7 +167,7 @@
             ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + w.LEAD_DAYS_MIN + '–' + w.LEAD_DAYS_MAX + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>'
             : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
           ) +
-          '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
+          '<div style="margin-top:4px">※ 完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
         '</div>' +
       '</div>';
 
