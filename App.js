@@ -1,10 +1,7 @@
-// App.js － LINFAYA COUTURE（預購模式整合版）
+// App.js － LINFAYA COUTURE（預購模式 + 深色小提醒）
 // 功能：商品列表、購物車、全家/7-11 選店、綠界收銀台
-// 強化：
-// - 預購模式（頁首提醒、商品卡小字、購物車必勾同意、交期區間）
-// - 數量上限：單筆單品 MAX_QTY_PER_ITEM（避免一次大量）
-// - postMessage 安全性、Safari 視窗命名、付款完成多分頁清空（沿用）
-// - fetchJSON 逾時與重試（沿用）
+// 強化：預購模式（頁首提醒、商品卡小字、購物車必勾同意、交期區間）、單品數量上限
+// 保留：postMessage 安全性、Safari 視窗命名、多分頁清空、fetchJSON 重試
 
 // ====== 你原本的常數（保留）======
 const API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
@@ -25,13 +22,12 @@ const TRUSTED_ORIGINS = [
   'https://payment-stage.ecpay.com.tw'
 ];
 
-// ====== ✅ 新增：預購設定（可調整）======
+// ====== ✅ 預購設定（可調整）======
 const PREORDER_MODE = true;              // 官網採預購
 const LEAD_DAYS_MIN = 7;                 // 最短工作天
 const LEAD_DAYS_MAX = 14;                // 最長工作天
 const REQUIRE_PREORDER_CHECKBOX = true;  // 結帳前必須勾同意
 const MAX_QTY_PER_ITEM = 5;              // 單筆單品上限
-// 若未連動庫存，這裡暫不使用 SAFE_STOCK_FACTOR；維持你的數量輸入框，但會套上限
 
 // ====== 商品資料（保留）======
 const PRODUCTS = [
@@ -172,19 +168,20 @@ function buildPager(total, pageSize = PAGE_SIZE) {
   render(mountTop); render(mountBottom);
 }
 
-// ====== ✅ 頁首「小提醒」自動掛載 ======
+// ====== ✅ 頁首「小提醒」（深色 + 跟下方卡片一致）======
 (function attachPreorderBanner(){
   const mount = document.createElement('section');
-  mount.style.cssText = 'background:#f7f7f7;padding:8px 12px;border-radius:8px;margin:8px 12px';
-  const eta = PREORDER_MODE ? `預計出貨區間（工作天）：${preorderRangeToday(LEAD_DAYS_MIN, LEAD_DAYS_MAX)}` : '';
+  // 深色卡片：和你下方卡片一致的色系/圓角
+  mount.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px;color:#e6e9ef;line-height:1.6';
+  const eta = PREORDER_MODE ? `預計出貨區間：${preorderRangeToday(LEAD_DAYS_MIN, LEAD_DAYS_MAX)}` : '';
   mount.innerHTML = `
-    <strong>小提醒</strong>
-    <div style="font-size:13px;color:#666;line-height:1.6">
+    <strong style="color:#fff;font-size:15px">小提醒</strong>
+    <div style="font-size:13px;color:#cfd3dc;line-height:1.6;margin-top:4px">
       <div>付款：綠界 ECPay（信用卡／ATM／超商代碼）。滿 NT$1,000 免運（本島）。</div>
       ${
         PREORDER_MODE
-        ? `<div>※ 本官網採 <b>預購</b> 模式，下單後約需 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 個<b>工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>
-           <div style="margin-top:4px;color:#333">${eta}</div>`
+        ? `<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ${LEAD_DAYS_MIN}–${LEAD_DAYS_MAX} 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>
+           <div style="margin-top:4px;color:#fff">${eta}</div>`
         : `<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>`
       }
       <div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>
