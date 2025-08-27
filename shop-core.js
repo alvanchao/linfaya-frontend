@@ -1,9 +1,4 @@
-// shop-core.js — 一般商品 + CUSTOM01(客製化)：認證碼+份數；不符則【不能加入購物車】且【禁止結帳】
-// - 不自動開購物車（只有按右上角才開）
-// - 分類切換時，圖片/縮圖會正確重設
-// - 運費：宅配 80、超取 60、滿額免運（與 checkout-and-shipping.js 一致）
-// - CUSTOM01：認證碼(LFY###) + 份數；不符不得加入；購物車內改成不符會禁用結帳
-
+// shop-core.js — 一般商品 + CUSTOM01(客製化)：認證碼+份數；不符不得加入；custom 分類顯示流程說明
 document.addEventListener('DOMContentLoaded', function () {
   var w = window;
   var fmt   = w.fmt   ? w.fmt   : function(n){ return 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW'); };
@@ -20,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var shippingEl = document.getElementById('shipping');
   var grandEl    = document.getElementById('grand');
   var drawer     = document.getElementById('drawer');
+  var flowBox    = document.getElementById('customFlow');
   if (!grid) return;
 
   // 設定
@@ -85,7 +81,6 @@ document.addEventListener('DOMContentLoaded', function () {
       btn.style.opacity = blocked ? '0.6' : '';
       btn.title = blocked ? '客製化認證碼與份數不一致，請於購物車修正後才能結帳。' : '';
     }
-    // 顯示總結處的阻擋提示
     var noteId = 'custom-mismatch-note';
     var wrap = document.querySelector('.summary');
     var exist = document.getElementById(noteId);
@@ -104,11 +99,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ====== 分類分頁 ======
   function renderCats(){
-    var ctn = document.getElementById('cats');
-    if (!ctn) return;
+    if (!cats) return;
     var set = new Set(products.map(p=>p.cat));
     var arr = ['all', ...Array.from(set)];
-    ctn.innerHTML = '';
+    cats.innerHTML = '';
     arr.forEach(function(c){
       var b = document.createElement('button');
       b.className = 'tab' + (c===currentCat?' active':'');
@@ -116,11 +110,11 @@ document.addEventListener('DOMContentLoaded', function () {
       b.textContent = (c==='all'?'全部':c);
       b.addEventListener('click', function(){
         currentCat = c; currentPage = 1;
-        ctn.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.dataset.cat===c); });
+        cats.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.dataset.cat===c); });
         renderProducts(currentCat, currentPage);
         try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){}
       });
-      ctn.appendChild(b);
+      cats.appendChild(b);
     });
   }
 
@@ -164,6 +158,12 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshQtyChips(card, p);
   }
 
+  // ====== custom FLOW 顯示控制 ======
+  function updateCustomFlowVisibility(show){
+    if (!flowBox) return;
+    flowBox.style.display = show ? 'block' : 'none';
+  }
+
   // ====== 商品渲染 ======
   function renderProducts(cat, page) {
     grid.innerHTML = '';
@@ -171,6 +171,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var list = (cat === 'all') ? products : products.filter(function(p){ return p.cat === cat; });
     var start = (page - 1) * PAGE_SIZE;
     var slice = list.slice(start, start + PAGE_SIZE);
+
+    // custom 分類時顯示流程說明
+    updateCustomFlowVisibility(cat === 'custom' || slice.some(function(p){return isCustomId(p.id);})); 
 
     slice.forEach(function (p) {
       var isCustom = isCustomId(p.id);
@@ -239,7 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
               '<div><b>' + (p.name || '客製化修改（每份10元）') + '</b></div>' +
               '<div class="muted">分類：' + (p.cat || 'custom') + ' | 價格：' + priceText + '</div>' +
 
-              // 認證碼 + 份數
               '<div style="margin-top:8px;display:grid;gap:8px">' +
                 '<div>' +
                   '<div class="muted" style="font-size:12px;margin-bottom:6px">認證碼</div>' +
@@ -317,7 +319,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
       var attrs = '';
       if (isCustomId(item.id) && item.customCode) {
-        // 重新評估是否不一致（如果在購物車中改了數量）
         var parsed = parseCustomCode(item.customCode);
         var mismatch = parsed ? (Number(item.qty||0) !== Number(parsed.unitsExpected||0)) : true;
         item.customMismatch = mismatch;
@@ -358,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function () {
     saveCart();
 
     if (w.updatePayButtonState) w.updatePayButtonState();
-    if (openDrawer) drawer && drawer.classList.add('open'); // 僅在指定時才會開
+    if (openDrawer) drawer && drawer.classList.add('open');
   }
 
   // ====== 清單點擊（縮圖 / chips / 加入購物車） ======
@@ -380,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var id = card.dataset.id;
     var p  = products.find(function(x){ return x.id===id; });
 
-    // chips（一般商品的顏色/尺寸/數量）
+    // chips
     var chip = t.closest('.chip[data-type]');
     if (chip && !chip.classList.contains('disabled')) {
       var type = chip.dataset.type;
@@ -397,31 +398,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // 加入購物車
     if (t.classList.contains('add')) {
       if (p && isCustomId(p.id)) {
-        // ---- CUSTOM01 特規：不符不得加入 ----
+        // CUSTOM01：不符不得加入
         var codeInput  = card.querySelector('.code-input');
         var unitsInput = card.querySelector('.units-input');
         var code = codeInput ? String(codeInput.value || '').trim() : '';
         var units = Math.max(1, Number(unitsInput ? unitsInput.value : 1) || 1);
-
         var parsed = parseCustomCode(code);
         if (!parsed) { toast('請輸入正確的認證碼（例：LFY550）'); return; }
-
         if (units !== parsed.unitsExpected){
           toast('認證碼與份數不一致，請修正後再加入。');
-          return; // 阻擋加入
+          return;
         }
-
         var item = {
           id: p.id,
           name: p.name || '客製化修改（每份 10 元）',
           img: (p.imgs && p.imgs[0]) || '',
-          price: p.price || 10,   // 每份 10 元
-          qty: units,             // 份數
+          price: p.price || 10,
+          qty: units,
           customCode: parsed.code,
           customMismatch: false
         };
-
-        // 相同認證碼才合併
         var merged = false;
         for (var i=0;i<cart.length;i++){
           var it = cart[i];
@@ -431,27 +427,22 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
         if (!merged) cart.push(item);
-
         toast('已加入購物車');
-        updateCart(false); // 不開抽屜
+        updateCart(false);
         return;
       }
 
-      // ---- 一般商品 ----
+      // 一般商品
       var colorSel = card.querySelector('.color-group .chip.active');
       var sizeSel  = card.querySelector('.size-group  .chip.active');
       var qtySel   = card.querySelector('.qty-group   .chip.active');
       var color = colorSel ? colorSel.dataset.val : ((p.colors && p.colors[0]) || '');
       var size  = sizeSel  ? sizeSel.dataset.val  : ((p.sizes  && p.sizes[0])  || '');
       var qty   = Math.max(1, Number(qtySel ? qtySel.dataset.val : '1')||1);
-
       var cap = capFor(p, color, size);
       if (cap <= 0){ toast('此規格目前缺貨'); return; }
       qty = Math.min(qty, cap);
-
       var item2 = { id:p.id, name:p.name, img:(p.imgs&&p.imgs[0])||'', price:p.price||0, color:color, size:size, qty:qty };
-
-      // 相同規格合併
       var merged2 = false;
       for (var j=0;j<cart.length;j++){
         var it2 = cart[j];
@@ -463,8 +454,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
       if (!merged2){ cart.push(item2); toast('已加入購物車'); }
-
-      updateCart(false); // 不開抽屜
+      updateCart(false);
       return;
     }
   });
@@ -477,13 +467,10 @@ document.addEventListener('DOMContentLoaded', function () {
       if (t.classList.contains('inc')) {
         var i1 = Number(t.dataset.idx); var it = cart[i1]; if (!it) return;
         if (isCustomId(it.id)){
-          // 客製化：加一份
           it.qty = (it.qty||1) + 1;
-          // 更新 mismatch
           var p1 = parseCustomCode(it.customCode);
           it.customMismatch = p1 ? (Number(it.qty||0) !== Number(p1.unitsExpected||0)) : true;
         } else {
-          // 一般商品：檢查上限
           var p  = products.find(function(x){return x.id===it.id;}) || {};
           var cap = capFor(p, it.color, it.size);
           it.qty = Math.min(cap, (it.qty||1) + 1);
@@ -505,17 +492,18 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 開關購物車按鈕（只有你按了才會開）
+  // 開關購物車按鈕
   var openBtn  = document.getElementById('openCart');
   var closeBtn = document.getElementById('closeCart');
   if (openBtn)  openBtn.addEventListener('click', function(){ drawer && drawer.classList.add('open'); updateCart(false); });
   if (closeBtn) closeBtn.addEventListener('click', function(){ drawer && drawer.classList.remove('open'); });
 
-  // 暴露給外部（checkout-and-shipping.js）
-  w.renderCart  = function(){ updateCart(false); }; // 不自動開抽屜
+  // 暴露給外部
+  w.renderCart  = function(){ updateCart(false); };
+  w.updateBadge = updateBadge;
 
   // 初始化
   renderCats();
   renderProducts('all', 1);
-  updateCart(false); // 初始化不開抽屜
+  updateCart(false);
 });
