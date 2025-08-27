@@ -38,7 +38,7 @@
     .chips{display:flex;flex-wrap:wrap;gap:8px}
     .chip{padding:6px 10px;border-radius:999px;border:1px solid #2a3142;background:#0e1117;color:var(--text);cursor:pointer}
     .chip.active{border-color:var(--pri);box-shadow:0 0 0 1px rgba(94,234,212,.2) inset}
-    #pager,#pagerBottom{display:flex;gap:8px;justify-content:center;margin:16px 0}
+    #pager{display:flex;gap:8px;justify-content:center;margin:16px 0}
     .page-btn{background:transparent;border:1px solid #2a3142;color:var(--text);padding:6px 10px;border-radius:8px;cursor:pointer}
     .page-btn.active{border-color:var(--pri)}
     /* Drawer */
@@ -84,9 +84,8 @@
     <!-- 商品清單 -->
     <div id="grid"></div>
 
-    <!-- 分頁 -->
+    <!-- 單一分頁器 -->
     <div id="pager"></div>
-    <div id="pagerBottom"></div>
   </main>
 
   <!-- === Cart Drawer（購物車抽屜）=== -->
@@ -141,7 +140,7 @@
           <div id="sevenPicked" class="muted">尚未選擇</div>
         </div>
 
-        <!-- 預購同意（若啟用預購用得到） -->
+        <!-- 預購同意 -->
         <div class="field" id="preorderField">
           <label><input type="checkbox" id="agreePreorder" /> 我已了解此為預購，願意等待出貨。</label>
         </div>
@@ -151,10 +150,10 @@
     </div>
   </aside>
 
-  <!-- Toast：加入購物車等提示 -->
+  <!-- Toast -->
   <div id="toast" class="toast"></div>
 
-  <!-- Scripts：順序很重要，請勿調換 -->
+  <!-- Scripts：順序很重要 -->
   <script src="config-and-data.js"></script>
   <script src="utils-and-ui.js"></script>
   <script src="shop-core.js"></script>
