@@ -1,275 +1,252 @@
-// 配送/選店/結帳（與後端串接）
-window.App = window.App || {};
-var App = window.App;
+/* checkout-and-shipping.js — 選店、同步清空、付款流程 */
+(function (w, d) {
 
-// 清空購物車（thankyou 訊號）
-App.clearCart = function(){
-  App.state.cart = [];
-  try{ sessionStorage.removeItem('cart'); }catch(_){}
-  App.renderCart();
-  App.updateBadge();
-  App.toast('付款完成，已清空購物車');
-};
+  // 配送區塊顯示切換
+  function onShipChange(){
+    var checked = d.querySelector('input[name="ship"]:checked');
+    var ship = checked ? checked.value : 'home';
+    var home  = d.getElementById('homeFields');
+    var fam   = d.getElementById('familyFields');
+    var seven = d.getElementById('sevenFields');
+    if(home)  home.style.display  = ship==='home'  ?'block':'none';
+    if(fam)   fam.style.display   = ship==='family'?'block':'none';
+    if(seven) seven.style.display = ship==='seven' ?'block':'none';
+    if (w.renderCart) w.renderCart();
+    try{ sessionStorage.setItem('SHIP_OPT', ship); }catch(_){}
+  }
+  $$('.form input[name="ship"]').forEach(function(r){ r.addEventListener('change', onShipChange); });
+  onShipChange();
 
-// 配送方式切換
-App.setShipOption = function(opt){
-  var r = document.querySelector('input[name="ship"][value="'+opt+'"]');
-  if (r) r.checked = true;
-  App.onShipChange();
-  try{ sessionStorage.setItem('SHIP_OPT', opt); }catch(_){}
-};
-App.onShipChange = function(){
-  var el = document.querySelector('input[name="ship"]:checked');
-  var ship = el ? el.value : 'home';
-  var home  = App.$('#homeFields');
-  var fam   = App.$('#familyFields');
-  var seven = App.$('#sevenFields');
-  if(home)  home.style.display  = ship==='home'  ? 'block':'none';
-  if(fam)   fam.style.display   = ship==='family'? 'block':'none';
-  if(seven) seven.style.display = ship==='seven' ? 'block':'none';
-  App.renderCart();
-  try{ sessionStorage.setItem('SHIP_OPT', ship); }catch(_){}
-};
-App.$$('input[name="ship"]').forEach(function(r){ r.addEventListener('change', App.onShipChange); });
-
-// 打開官方門市地圖
-App.openCvsMap = async function(logisticsSubType){
-  var preWin = (function(name, html){
-    var w = null;
-    try{ w = window.open('', name); }catch(_){ w = null; }
-    if (!w || w.closed || typeof w.closed === 'undefined') return null;
+  // —— 選店（官方地圖）——
+  async function openCvsMap(logisticsSubType){
+    var preWin = w.openNamedWindow(w.CVS_WIN_NAME, '即將開啟官方門市地圖…');
     try{
-      w.document.open();
-      w.document.write('<!doctype html><meta charset="utf-8"><title>Loading</title><body style="font:14px/1.6 -apple-system,blinkmacsystemfont,Segoe UI,Roboto,Helvetica,Arial">'+(html||'即將開啟官方門市地圖…')+'</body>');
-      w.document.close();
-    }catch(_){}
-    return w;
-  })(App.CVS_WIN_NAME);
-  try{
-    var data = await App.fetchJSON(App.API_BASE+'/api/ecpay/map/sign', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ LogisticsSubType: logisticsSubType })
-    }, { timeoutMs:20000, retries:2 });
-    var target = preWin ? App.CVS_WIN_NAME : '_self';
-    // POST form
-    var f = document.createElement('form');
-    f.method='POST'; f.action = data.endpoint; f.target = target;
-    Object.keys(data.fields||{}).forEach(function(k){
-      var i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=data.fields[k]; f.appendChild(i);
-    });
-    document.body.appendChild(f); f.submit(); setTimeout(function(){ f.remove(); }, 3000);
-  }catch(e){
-    if(preWin) try{ preWin.close(); }catch(_){}
-    alert('目前未能開啟門市地圖，請稍後再試。');
-  }
-};
-
-// 選店按鈕
-document.addEventListener('click', function(e){
-  var t = e.target;
-  if(!(t instanceof HTMLElement)) return;
-  if(t.id==='btnPickFamily'){
-    e.preventDefault();
-    App.state.currentMapType='family';
-    try{ sessionStorage.setItem('CVS_TYPE','family'); }catch(_){}
-    App.setShipOption('family');
-    App.openCvsMap('FAMIC2C');
-  }
-  if(t.id==='btnPickSeven'){
-    e.preventDefault();
-    App.state.currentMapType='seven';
-    try{ sessionStorage.setItem('CVS_TYPE','seven'); }catch(_){}
-    App.setShipOption('seven');
-    App.openCvsMap('UNIMARTC2C');
-  }
-});
-
-// 地圖回傳
-window.addEventListener('message', function(ev){
-  try{
-    if(App.TRUSTED_ORIGINS.indexOf(ev.origin)===-1) return;
-    var data = ev.data || {};
-    if(data.type!=='EC_LOGISTICS_PICKED') return;
-    var p = data.payload || {};
-    var id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
-    var name = p.CVSStoreName || p.StName || p.StoreName || '';
-    var address = p.CVSAddress || p.CVSAddr || p.Address || '';
-    if(App.state.currentMapType==='family'){
-      var label1 = App.$('#familyPicked'); if(label1) label1.textContent = name+'（'+id+'）｜'+address;
-      App.state.cvs = { type:'family', id:id, name:name, address:address };
-    }else if(App.state.currentMapType==='seven'){
-      var label2 = App.$('#sevenPicked'); if(label2) label2.textContent = name+'（'+id+'）｜'+address;
-      App.state.cvs = { type:'seven', id:id, name:name, address:address };
+      var signed = await w.fetchJSON(
+        w.API_BASE + '/api/ecpay/map/sign',
+        { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ LogisticsSubType: logisticsSubType }) },
+        { timeoutMs: 20000, retries: 2 }
+      );
+      if(!signed || !signed.endpoint || !signed.fields) throw new Error('sign failed');
+      var target = preWin ? w.CVS_WIN_NAME : '_self';
+      w.postForm(signed.endpoint, signed.fields, target);
+    }catch(e){
+      console.error(e);
+      if (preWin) try{ preWin.close(); }catch(_){}
+      alert('目前未能開啟門市地圖，請稍後再試。');
     }
-  }catch(e){}
-});
+  }
 
-// 本頁回來還原
-(function(){
-  try{
-    var raw = localStorage.getItem('EC_LOGISTICS_PICKED');
-    if(!raw){
-      var saved = sessionStorage.getItem('SHIP_OPT');
-      if (saved) App.setShipOption(saved);
-      return;
+  d.addEventListener('click', function(e){
+    var t = e.target;
+    if(!(t instanceof HTMLElement)) return;
+    if(t.id==='btnPickFamily'){
+      e.preventDefault();
+      try{ sessionStorage.setItem('CVS_TYPE','family'); }catch(_){}
+      onShipChange();
+      openCvsMap('FAMIC2C');
     }
-    localStorage.removeItem('EC_LOGISTICS_PICKED');
-    var p = JSON.parse(raw);
-    var id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
-    var name = p.CVSStoreName || p.StName || p.StoreName || '';
-    var address = p.CVSAddress || p.CVSAddr || p.Address || '';
-    var type = sessionStorage.getItem('CVS_TYPE') || App.state.currentMapType;
-    if(type==='family'){
-      var label1 = document.querySelector('#familyPicked'); if(label1) label1.textContent = name+'（'+id+'）｜'+address;
-      App.state.cvs = { type:'family', id:id, name:name, address:address };
-      App.setShipOption('family');
-    }else if(type==='seven'){
-      var label2 = document.querySelector('#sevenPicked'); if(label2) label2.textContent = name+'（'+id+'）｜'+address;
-      App.state.cvs = { type:'seven', id:id, name:name, address:address };
-      App.setShipOption('seven');
+    if(t.id==='btnPickSeven'){
+      e.preventDefault();
+      try{ sessionStorage.setItem('CVS_TYPE','seven'); }catch(_){}
+      onShipChange();
+      openCvsMap('UNIMARTC2C');
     }
-  }catch(e){}
-})();
+  });
 
-// 分頁同步清空
-window.addEventListener('message', function(ev){
-  try{
-    if(App.TRUSTED_ORIGINS.indexOf(ev.origin)===-1) return;
-    var data = ev.data || {};
-    if (data && data.type === 'EC_PAY_DONE') {
-      try { localStorage.setItem('EC_CLEAR_CART','1'); } catch(_) {}
-      App.clearCart();
+  // 地圖回傳
+  window.addEventListener('message', function(ev){
+    try{
+      if(w.TRUSTED_ORIGINS.indexOf(ev.origin) === -1) return;
+      var data=ev.data||{};
+      if(data.type!=='EC_LOGISTICS_PICKED') return;
+      var p=data.payload||{};
+
+      var id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
+      var name = p.CVSStoreName || p.StName || p.StoreName || '';
+      var address = p.CVSAddress || p.CVSAddr || p.Address || '';
+
+      var savedType = sessionStorage.getItem('CVS_TYPE');
+      if(savedType==='family'){
+        var label1 = d.getElementById('familyPicked'); if(label1) label1.textContent = name+'（'+id+'）｜'+address;
+      }else if(savedType==='seven'){
+        var label2 = d.getElementById('sevenPicked'); if(label2) label2.textContent = name+'（'+id+'）｜'+address;
+      }
+    }catch(e){ console.error(e); }
+  });
+
+  // 本頁回來（localStorage 傳遞）
+  (function(){
+    try{
+      var raw = localStorage.getItem('EC_LOGISTICS_PICKED');
+      if(!raw){
+        var saved = sessionStorage.getItem('SHIP_OPT');
+        if (saved) onShipChange();
+        return;
+      }
+      localStorage.removeItem('EC_LOGISTICS_PICKED');
+      var p = JSON.parse(raw);
+      var id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
+      var name = p.CVSStoreName || p.StName || p.StoreName || '';
+      var address = p.CVSAddress || p.CVSAddr || p.Address || '';
+      var type = sessionStorage.getItem('CVS_TYPE');
+      if(type==='family'){
+        var l1 = d.getElementById('familyPicked'); if(l1) l1.textContent = name+'（'+id+'）｜'+address;
+        onShipChange();
+      }else if(type==='seven'){
+        var l2 = d.getElementById('sevenPicked'); if(l2) l2.textContent = name+'（'+id+'）｜'+address;
+        onShipChange();
+      }
+    }catch(e){}
+  })();
+
+  // thankyou／cashier 回傳（多分頁同步清空）
+  window.addEventListener('message', function(ev){
+    try{
+      if(w.TRUSTED_ORIGINS.indexOf(ev.origin) === -1) return;
+      var data = ev.data || {};
+      if (data && data.type === 'EC_PAY_DONE') {
+        try { localStorage.setItem('EC_CLEAR_CART','1'); } catch(_) {}
+        clearCart();
+        try { localStorage.removeItem('EC_CLEAR_CART'); } catch(_){}
+      }
+    }catch(e){ console.error(e); }
+  });
+
+  // 備援：不同分頁同步清空
+  window.addEventListener('storage', function(e){
+    if (e.key === 'EC_CLEAR_CART' && e.newValue === '1') {
+      clearCart();
       try { localStorage.removeItem('EC_CLEAR_CART'); } catch(_){}
     }
-  }catch(e){}
-});
-window.addEventListener('storage', function(e){
-  if (e.key === 'EC_CLEAR_CART' && e.newValue === '1') {
-    App.clearCart();
-    try { localStorage.removeItem('EC_CLEAR_CART'); } catch(_){}
+  });
+  function clearCart(){
+    try{ sessionStorage.removeItem('cart'); }catch(_){}
+    // 由 shop-core 的 renderCart/updateBadge 處理畫面
+    if (window.renderCart) window.renderCart();
+    if (window.updateBadge) window.updateBadge();
+    toast('付款完成，已清空購物車');
   }
-});
-function checkClearFlag(){
-  try{
-    if (localStorage.getItem('EC_CLEAR_CART') === '1') {
-      localStorage.removeItem('EC_CLEAR_CART');
-      App.clearCart();
-    }
-  }catch(e){}
-}
-checkClearFlag();
-window.addEventListener('focus', checkClearFlag);
-document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkClearFlag(); });
-window.addEventListener('pageshow', function(e){
-  if (e.persisted) {
-    checkClearFlag();
-    try {
-      App.state.cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
-      App.renderCart(); App.updateBadge();
-    } catch(_) {}
+
+  // 快取回來也檢查一次旗標
+  function checkClearFlag(){
+    try{
+      if (localStorage.getItem('EC_CLEAR_CART') === '1') {
+        localStorage.removeItem('EC_CLEAR_CART');
+        clearCart();
+      }
+    }catch(e){}
   }
-});
-
-// 結帳
-function validPhone(v){ return /^09\d{8}$/.test(v); }
-function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
-var checkoutBtn = App.$('#checkout');
-if (checkoutBtn) {
-  checkoutBtn.addEventListener('click', async function(){
-    if(!App.state.cart.length) return alert('購物車是空的');
-    if(App.PREORDER_MODE && App.REQUIRE_PREORDER_CHECKBOX && !App.state.agreePreorder){
-      return alert('請先勾選預購同意，再進行付款。');
+  checkClearFlag();
+  window.addEventListener('focus', checkClearFlag);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkClearFlag(); });
+  window.addEventListener('pageshow', function(e){
+    if (e.persisted) {
+      checkClearFlag();
+      try {
+        var raw = sessionStorage.getItem('cart');
+        window.__cart_cache__ = raw ? JSON.parse(raw) : [];
+        if (window.renderCart) window.renderCart();
+        if (window.updateBadge) window.updateBadge();
+      } catch(_) {}
     }
-    var name = (App.$('#name') && App.$('#name').value || '').trim();
-    var email= (App.$('#email')&& App.$('#email').value|| '').trim();
-    var phone= (App.$('#phone')&& App.$('#phone').value|| '').trim();
-    var shipEl = document.querySelector('input[name="ship"]:checked');
-    var shipOpt = shipEl ? shipEl.value : 'home';
-    var addr = (App.$('#addr') && App.$('#addr').value || '').trim();
+  });
+
+  // ===== 付款 =====
+  function validPhone(v){ return /^09\d{8}$/.test(v); }
+  function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+  $('#checkout') && $('#checkout').addEventListener('click', async function (){
+    // 這兩個函式在 shop-core.js 內
+    if (!window.updatePayButtonState || !window.renderCart) {}
+
+    // 取購物車
+    var cart = [];
+    try{
+      cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+    }catch(_){ cart = []; }
+    if(!cart.length) return alert('購物車是空的');
+
+    if(w.PREORDER_MODE && w.REQUIRE_PREORDER_CHECKBOX){
+      var agree = document.getElementById('agreePreorder');
+      if (!agree || !agree.checked) return alert('請先勾選預購同意，再進行付款。');
+    }
+
+    var name = ($('#name')||{}).value || '';
+    var email = ($('#email')||{}).value || '';
+    var phone = ($('#phone')||{}).value || '';
+    var checked = d.querySelector('input[name="ship"]:checked');
+    var shipOpt = checked ? checked.value : 'home';
+    var addr = ($('#addr')||{}).value || '';
 
     if(!name) return alert('請填寫收件姓名');
     if(!validEmail(email)) return alert('請輸入正確 Email');
     if(!validPhone(phone)) return alert('手機需為 09 開頭 10 碼');
 
-    var shippingInfo='';
+    var shippingInfo = '';
     if(shipOpt==='home'){
       if(!addr) return alert('請填寫收件地址');
       shippingInfo='自家宅配｜'+addr;
     }
     if(shipOpt==='family'){
-      if(!App.state.cvs || App.state.cvs.type!=='family') return alert('請先選擇全家門市');
-      shippingInfo='全家店到店｜'+App.state.cvs.name+'（'+App.state.cvs.id+'）'+App.state.cvs.address;
+      var famText = ($('#familyPicked')||{}).textContent || '';
+      if(!famText || famText.indexOf('尚未選擇')>=0) return alert('請先選擇全家門市');
+      shippingInfo='全家店到店｜'+famText;
     }
     if(shipOpt==='seven'){
-      if(!App.state.cvs || App.state.cvs.type!=='seven') return alert('請先選擇 7-11 門市');
-      shippingInfo='7-11 店到店｜'+App.state.cvs.name+'（'+App.state.cvs.id+'）'+App.state.cvs.address;
+      var sevText = ($('#sevenPicked')||{}).textContent || '';
+      if(!sevText || sevText.indexOf('尚未選擇')>=0) return alert('請先選擇 7-11 門市');
+      shippingInfo='7-11 店到店｜'+sevText;
     }
 
-    // 再檢查庫存上限
-    for (var k=0; k<App.state.cart.length; k++){
-      var it = App.state.cart[k];
-      var prod = App.productById(it.id) || it;
-      var max = App.maxQtyFor(prod, it.color, it.size);
-      if (it.qty > max){
-        return alert('「'+it.name+'（'+it.color+'/'+it.size+'）」目前最多可購買 '+max+' 件，請調整數量再結帳。');
+    // 付款前再次檢查庫存上限
+    for (var i=0;i<cart.length;i++){
+      var it = cart[i];
+      var prod = (window.PRODUCTS || []).find(function(p){ return p.id===it.id; }) || it;
+      var k = (it.color||'')+'-'+(it.size||'');
+      var n = (prod.stockMap && (k in prod.stockMap)) ? Number(prod.stockMap[k]) : Infinity;
+      var cap = Math.min(window.MAX_QTY_PER_ITEM||5, isFinite(n)?n:(window.MAX_QTY_PER_ITEM||5));
+      if ((it.qty||1) > cap){
+        return alert('「'+it.name+'（'+it.color+'/'+it.size+'）」目前最多可購買 '+cap+' 件，請調整數量再結帳。');
       }
     }
 
-    var orderId = 'LF' + Date.now();
-    var sub = App.subtotal();
-    var shipFee = App.state.cart.length ? (sub>=App.FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)) : 0;
+    var sub = cart.reduce(function(s,i){ return s + (i.price||0)*(i.qty||1); }, 0);
+    var shipFee = cart.length ? (sub>=w.FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)) : 0;
     var amount = sub + shipFee;
-    var itemNameRaw = App.state.cart.map(function(i){ return i.name+'('+i.color+'/'+i.size+')x'+i.qty; }).join('#');
+
+    var itemNameRaw = cart.map(function(i){ return i.name+'('+i.color+'/'+i.size+')x'+i.qty; }).join('#');
     var itemName = itemNameRaw.slice(0, 200);
     var tradeDesc = 'Linfaya Shop Order'.slice(0, 100);
 
     var payload = {
-      orderId: orderId, amount: amount,
+      orderId: 'LF'+Date.now(),
+      amount: amount,
       itemName: itemName,
       tradeDesc: tradeDesc,
       name: name, email: email, phone: phone,
       shippingInfo: shippingInfo,
       subtotal: sub,
       shipFee: shipFee,
-      returnURL: App.API_BASE + '/api/ecpay/return'
+      returnURL: w.API_BASE + '/api/ecpay/return'
     };
 
-    var win = (function(name, html){
-      var w = null;
-      try{ w = window.open('', name); }catch(_){ w = null; }
-      if (!w || w.closed || typeof w.closed === 'undefined') return null;
-      try{
-        w.document.open();
-        w.document.write('<!doctype html><meta charset="utf-8"><title>Loading</title><body style="font:14px/1.6 -apple-system,blinkmacsystemfont,Segoe UI,Roboto,Helvetica,Arial">'+(html||'正在前往綠界收銀台…')+'</body>');
-        w.document.close();
-      }catch(_){}
-      return w;
-    })(App.CASHIER_WIN_NAME);
+    var win = w.openNamedWindow(w.CASHIER_WIN_NAME, '正在前往綠界收銀台…');
 
     try{
-      var data = await App.fetchJSON(App.API_BASE+'/api/ecpay/create', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      }, { timeoutMs:20000, retries:2 });
+      var data = await w.fetchJSON(
+        w.API_BASE + '/api/ecpay/create',
+        { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) },
+        { timeoutMs: 20000, retries: 2 }
+      );
       if(!data || !data.endpoint || !data.fields) throw new Error('missing fields');
-      var target = win ? App.CASHIER_WIN_NAME : '_self';
-      var f = document.createElement('form');
-      f.method='POST'; f.action=data.endpoint; f.target=target;
-      Object.keys(data.fields||{}).forEach(function(k){
-        var i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=data.fields[k]; f.appendChild(i);
-      });
-      document.body.appendChild(f); f.submit(); setTimeout(function(){ f.remove(); }, 3000);
-      if(!win) App.toast('已在本頁開啟綠界付款');
+      var target = win ? w.CASHIER_WIN_NAME : '_self';
+      w.postForm(data.endpoint, data.fields, target);
+      if(!win){ toast('已在本頁開啟綠界付款'); }
     }catch(e){
+      console.error(e);
       if(win) try{ win.close(); }catch(_){}
       alert('目前尚未連上後端，請稍後再試。');
     }
   });
-}
 
-// 初始顯示配送區塊、購物車匯總
-App.onShipChange();
-App.renderCart();
+})(window, document);
