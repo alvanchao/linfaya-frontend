@@ -1,4 +1,4 @@
-// shop-core.js — Chips數量選擇＋不自動開購物車＋分類切換重設縮圖
+// shop-core.js — chips 數量選擇 + 分類切換正確換圖 + 不自動開購物車 + 與結帳一致運費
 document.addEventListener('DOMContentLoaded', function () {
   var w = window;
   var fmt   = w.fmt   ? w.fmt   : function(n){ return 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW'); };
@@ -46,22 +46,34 @@ document.addEventListener('DOMContentLoaded', function () {
     return (opt === 'home') ? 80 : 60; // 與 checkout-and-shipping.js 一致
   }
   function ymd(d){ var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'); return y+'/'+m+'/'+dd; }
-  function buildPreorderPanelHTML(){
-    var eta=''; try{ var t=new Date(), min=new Date(t), max=new Date(t); min.setDate(min.getDate()+(w.LEAD_DAYS_MIN||7)); max.setDate(max.getDate()+(w.LEAD_DAYS_MAX||14)); eta=ymd(min)+' ～ '+ymd(max);}catch(_){}
-    return ''+
+
+  // 小提醒（預購）面板
+  function renderPreorderPanel() {
+    var wrap = document.getElementById('preorderPanel');
+    if (!wrap) return;
+    var eta='';
+    try{
+      var t=new Date(), min=new Date(t), max=new Date(t);
+      min.setDate(min.getDate()+(w.LEAD_DAYS_MIN||7));
+      max.setDate(max.getDate()+(w.LEAD_DAYS_MAX||14));
+      eta = ymd(min) + ' ～ ' + ymd(max); // 全形波浪符
+    }catch(_){}
+    const panel = document.createElement('div');
+    panel.innerHTML =
       '<div style="display:flex;flex-direction:column;gap:8px">' +
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
           '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
-          (w.PREORDER_MODE ? '<span class="chip small active" style="pointer-events:none">預計出貨： '+eta+'</span>' : '') +
+          (w.PREORDER_MODE ? '<span class="chip small active" style="pointer-events:none">預計出貨： ' + eta + '</span>' : '') +
         '</div>' +
         '<div style="font-size:13px;color:#cfd3dc;line-height:1.7">' +
           (w.PREORDER_MODE
-            ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 '+w.LEAD_DAYS_MIN+'–'+w.LEAD_DAYS_MAX+' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>'
+            ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + (w.LEAD_DAYS_MIN||7) + '–' + (w.LEAD_DAYS_MAX||14) + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>'
             : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
           ) +
-          '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
+          '<div style="margin-top:4px">※ 完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
         '</div>' +
       '</div>';
+    wrap.replaceChildren(panel); // 避免重複堆疊
   }
 
   // 暴露給 checkout 使用
@@ -81,11 +93,8 @@ document.addEventListener('DOMContentLoaded', function () {
       b.textContent = (c==='all'?'全部':c);
       b.addEventListener('click', function(){
         currentCat = c; currentPage = 1;
-        // 更新 tab 樣式
         cats.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.dataset.cat===c); });
-        // 重新渲染清單
         renderProducts(currentCat, currentPage);
-        // 捲回清單頂端，視覺更明顯
         try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){}
       });
       cats.appendChild(b);
@@ -101,6 +110,20 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ====== chips 依顏色/尺寸刷新（尺寸與數量） ======
+  function refreshQtyChips(card, p){
+    var color = (card.querySelector('.color-group .chip.active')||{}).dataset?.val || (p.colors&&p.colors[0]) || '';
+    var size  = (card.querySelector('.size-group  .chip.active')||{}).dataset?.val  || (p.sizes && p.sizes[0]) || '';
+    var cap   = capFor(p, color, size);
+    var qtyWrap = card.querySelector('.qty-group');
+    if (!qtyWrap) return;
+    var current = Number((qtyWrap.querySelector('.chip.active')||{}).dataset?.val || 1);
+    var maxShow = Math.max(1, Math.min(MAX_QTY_PER_ITEM, cap));
+    var html = '';
+    for (var i=1; i<=maxShow; i++){
+      html += '<button class="chip'+(i===Math.min(current,maxShow)?' active':'')+'" data-type="qty" data-val="'+i+'">'+i+'</button>';
+    }
+    qtyWrap.innerHTML = html;
+  }
   function refreshSizeChips(card, p){
     var color = (card.querySelector('.color-group .chip.active')||{}).dataset?.val || (p.colors&&p.colors[0]) || '';
     card.querySelectorAll('.size-group .chip').forEach(function(btn){
@@ -109,52 +132,26 @@ document.addEventListener('DOMContentLoaded', function () {
       if (cap <= 0){ btn.classList.add('disabled'); btn.setAttribute('disabled','disabled'); }
       else { btn.classList.remove('disabled'); btn.removeAttribute('disabled'); }
     });
-    // 若目前 active 被關閉，轉到第一個可用
     var act = card.querySelector('.size-group .chip.active');
     if (act && act.classList.contains('disabled')){
       act.classList.remove('active');
       var firstOk = card.querySelector('.size-group .chip:not(.disabled)');
       if (firstOk) firstOk.classList.add('active');
     }
-    // 尺寸確定後刷新數量 chips
     refreshQtyChips(card, p);
-  }
-
-  function refreshQtyChips(card, p){
-    var color = (card.querySelector('.color-group .chip.active')||{}).dataset?.val || (p.colors&&p.colors[0]) || '';
-    var size  = (card.querySelector('.size-group  .chip.active')||{}).dataset?.val  || (p.sizes && p.sizes[0]) || '';
-    var cap   = capFor(p, color, size);
-    var qtyWrap = card.querySelector('.qty-group');
-    if (!qtyWrap) return;
-    // 目前選到的數量
-    var current = (qtyWrap.querySelector('.chip.active')||{}).dataset?.val;
-    current = Number(current||1);
-    // 重新渲染 1..min(MAX, cap)
-    var maxShow = Math.max(1, Math.min(MAX_QTY_PER_ITEM, cap));
-    var html = '';
-    for (var i=1; i<=maxShow; i++){
-      html += '<button class="chip'+(i===Math.min(current,maxShow)?' active':'')+'" data-type="qty" data-val="'+i+'">'+i+'</button>';
-    }
-    qtyWrap.innerHTML = html;
   }
 
   // ====== 商品渲染 ======
   function renderProducts(cat, page) {
+    renderPreorderPanel();
     grid.innerHTML = '';
 
-    // 小提醒面板（若頁面有容器）
-    var panel = document.getElementById('preorderPanel');
-    if (panel) panel.innerHTML = buildPreorderPanelHTML();
-
-    // 篩選＋分頁
     var list = (cat === 'all') ? products : products.filter(function(p){ return p.cat === cat; });
     var start = (page - 1) * PAGE_SIZE;
     var slice = list.slice(start, start + PAGE_SIZE);
 
     slice.forEach(function (p) {
       var firstColor = (p.colors&&p.colors[0]) || '';
-      var firstSize  = (p.sizes&&p.sizes[0])  || '';
-
       var html =
         '<div class="product" data-id="' + p.id + '">' +
           '<div class="imgbox">' +
@@ -182,7 +179,6 @@ document.addEventListener('DOMContentLoaded', function () {
               '<div class="muted" style="font-size:12px;margin-bottom:6px">尺寸</div>' +
               '<div class="chips size-group">' +
                 (p.sizes||[]).map(function (s, i) {
-                  // 先用第一個顏色檢查可用性
                   var cap = capFor(p, firstColor, s);
                   var dis = (cap<=0) ? ' disabled class="chip disabled' : ' class="chip';
                   return '<button'+dis + (i===0?' active':'') + '" data-type="size" data-val="' + s + '">' + s + '</button>';
@@ -206,11 +202,11 @@ document.addEventListener('DOMContentLoaded', function () {
     infoText && (infoText.textContent = '共 ' + list.length + ' 件');
     renderPager(pager, list.length, page);
 
-    // 渲染後，依首次顏色刷新尺寸與數量；縮圖第一張帶 active
+    // 渲染後：刷新尺寸/數量 chips、縮圖預設第一張
     grid.querySelectorAll('.product').forEach(function(card){
       var id = card.dataset.id;
       var p  = products.find(function(x){return x.id===id;});
-      if (p) refreshSizeChips(card, p); // 這也會帶動 refreshQtyChips
+      if (p) refreshSizeChips(card, p);
       var thumbs = card.querySelectorAll('.thumbs img');
       thumbs.forEach(function(img,i){ img.classList.toggle('active', i===0); });
       var main = card.querySelector('.main-img img');
@@ -237,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // ====== 購物車渲染（從不自動開抽屜） ======
+  // ====== 購物車渲染（不自動開抽屜） ======
   function updateCart(openDrawer) {
     if (!cartList) return;
     cartList.innerHTML = '';
@@ -280,10 +276,10 @@ document.addEventListener('DOMContentLoaded', function () {
     updateBadge();
     saveCart();
 
-    if (openDrawer) drawer && drawer.classList.add('open'); // 我們只在你指定時才開
+    if (openDrawer) drawer && drawer.classList.add('open'); // 只有你指定時（例如加入後要開）才會開
   }
 
-  // ====== 事件：清單點擊（縮圖 / chips） ======
+  // ====== 清單點擊（縮圖 / chips / 加入購物車） ======
   grid.addEventListener('click', function (e) {
     var t = e.target;
     if (!(t instanceof HTMLElement)) return;
@@ -311,10 +307,11 @@ document.addEventListener('DOMContentLoaded', function () {
       chip.classList.add('active');
       if (p && type === 'color') refreshSizeChips(card, p);
       if (p && type === 'size')  refreshQtyChips(card, p);
+      // 數量 chip 不需刷新其他區塊
       return;
     }
 
-    // 加入購物車
+    // 加入購物車（不自動開購物車）
     if (t.classList.contains('add')) {
       var colorSel = card.querySelector('.color-group .chip.active');
       var sizeSel  = card.querySelector('.size-group  .chip.active');
@@ -323,14 +320,12 @@ document.addEventListener('DOMContentLoaded', function () {
       var size  = sizeSel  ? sizeSel.dataset.val  : ((p.sizes  && p.sizes[0])  || '');
       var qty   = Math.max(1, Number(qtySel ? qtySel.dataset.val : '1')||1);
 
-      // 庫存上限
       var cap = capFor(p, color, size);
       if (cap <= 0){ toast('此規格目前缺貨'); return; }
       qty = Math.min(qty, cap);
 
       var item = { id:p.id, name:p.name, img:(p.imgs&&p.imgs[0])||'', price:p.price||0, color:color, size:size, qty:qty };
 
-      // 相同規格合併
       var merged = false;
       for (var i=0;i<cart.length;i++){
         var it = cart[i];
@@ -371,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 開關購物車按鈕（只有你按了才會打開）
+  // 開關購物車按鈕（只有你按了才會開）
   var openBtn  = document.getElementById('openCart');
   var closeBtn = document.getElementById('closeCart');
   if (openBtn)  openBtn.addEventListener('click', function(){ drawer && drawer.classList.add('open'); updateCart(false); });
