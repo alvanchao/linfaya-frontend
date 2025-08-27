@@ -1,5 +1,26 @@
-/* checkout-and-shipping.js — 選店、同步清空、付款流程 */
+/* checkout-and-shipping.js — 選店、同步清空、付款流程（含客製化不符強制阻擋） */
 (function (w, d) {
+
+  // ===== 客製化檢查（CUSTOM01）=====
+  function isCustomId(id){ return String(id||'').toLowerCase() === 'custom01'; }
+  function parseCustomCode(code){
+    if(!code) return null;
+    var m = String(code).trim().toUpperCase().match(/^LFY(\d{1,6})$/);
+    if(!m) return null;
+    var amount = parseInt(m[1],10);
+    var unitsExpected = Math.round(amount / 10);
+    return { code:'LFY'+m[1], unitsExpected: unitsExpected };
+  }
+  function hasCustomMismatch(cart){
+    for (var i=0;i<cart.length;i++){
+      var it = cart[i];
+      if(isCustomId(it.id) && it.customCode){
+        var p = parseCustomCode(it.customCode);
+        if(!p || Number(it.qty||0) !== Number(p.unitsExpected||0)) return true;
+      }
+    }
+    return false;
+  }
 
   // 配送區塊顯示切換
   function onShipChange(){
@@ -26,16 +47,14 @@
         { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ LogisticsSubType: logisticsSubType }) },
         { timeoutMs: 20000, retries: 2 }
       );
-      if(!signed || !signed.endpoint || !signed.fields) throw new Error('sign failed');
-      var target = preWin ? w.CVS_WIN_NAME : '_self';
-      w.postForm(signed.endpoint, signed.fields, target);
+      if(!signed || !signed.endpoint || !signed.fields) throw new Error('missing map sign');
+      w.postForm(signed.endpoint, signed.fields, w.CVS_WIN_NAME);
     }catch(e){
       console.error(e);
-      if (preWin) try{ preWin.close(); }catch(_){}
-      alert('目前未能開啟門市地圖，請稍後再試。');
+      try{ preWin && preWin.close(); }catch(_){}
+      alert('開啟門市地圖失敗，請稍後再試。');
     }
   }
-
   d.addEventListener('click', function(e){
     var t = e.target;
     if(!(t instanceof HTMLElement)) return;
@@ -53,7 +72,7 @@
     }
   });
 
-  // 地圖回傳
+  // —— 地圖回傳處理（略，與原本相同）——
   window.addEventListener('message', function(ev){
     try{
       if(w.TRUSTED_ORIGINS.indexOf(ev.origin) === -1) return;
@@ -65,30 +84,7 @@
       var name = p.CVSStoreName || p.StName || p.StoreName || '';
       var address = p.CVSAddress || p.CVSAddr || p.Address || '';
 
-      var savedType = sessionStorage.getItem('CVS_TYPE');
-      if(savedType==='family'){
-        var label1 = d.getElementById('familyPicked'); if(label1) label1.textContent = name+'（'+id+'）｜'+address;
-      }else if(savedType==='seven'){
-        var label2 = d.getElementById('sevenPicked'); if(label2) label2.textContent = name+'（'+id+'）｜'+address;
-      }
-    }catch(e){ console.error(e); }
-  });
-
-  // 本頁回來（localStorage 傳遞）
-  (function(){
-    try{
-      var raw = localStorage.getItem('EC_LOGISTICS_PICKED');
-      if(!raw){
-        var saved = sessionStorage.getItem('SHIP_OPT');
-        if (saved) onShipChange();
-        return;
-      }
-      localStorage.removeItem('EC_LOGISTICS_PICKED');
-      var p = JSON.parse(raw);
-      var id = p.CVSStoreID || p.CVSStoreID1 || p.StCode || p.StoreID || '';
-      var name = p.CVSStoreName || p.StName || p.StoreName || '';
-      var address = p.CVSAddress || p.CVSAddr || p.Address || '';
-      var type = sessionStorage.getItem('CVS_TYPE');
+      var type = (sessionStorage.getItem('CVS_TYPE')||'').toLowerCase();
       if(type==='family'){
         var l1 = d.getElementById('familyPicked'); if(l1) l1.textContent = name+'（'+id+'）｜'+address;
         onShipChange();
@@ -121,16 +117,13 @@
   });
   function clearCart(){
     try{ sessionStorage.removeItem('cart'); }catch(_){}
-    // 由 shop-core 的 renderCart/updateBadge 處理畫面
     if (window.renderCart) window.renderCart();
     if (window.updateBadge) window.updateBadge();
-    toast('付款完成，已清空購物車');
   }
-
-  // 快取回來也檢查一次旗標
   function checkClearFlag(){
     try{
-      if (localStorage.getItem('EC_CLEAR_CART') === '1') {
+      var cleared = localStorage.getItem('EC_CLEAR_CART');
+      if (cleared === '1') {
         localStorage.removeItem('EC_CLEAR_CART');
         clearCart();
       }
@@ -156,15 +149,17 @@
   function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
   $('#checkout') && $('#checkout').addEventListener('click', async function (){
-    // 這兩個函式在 shop-core.js 內
-    if (!window.updatePayButtonState || !window.renderCart) {}
-
     // 取購物車
     var cart = [];
     try{
       cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
     }catch(_){ cart = []; }
     if(!cart.length) return alert('購物車是空的');
+
+    // 客製化認證碼＋份數不符 ⇒ 禁止結帳
+    if (hasCustomMismatch(cart)) {
+      return alert('客製化認證碼與份數不一致，請修正後才能結帳。');
+    }
 
     if(w.PREORDER_MODE && w.REQUIRE_PREORDER_CHECKBOX){
       var agree = document.getElementById('agreePreorder');
@@ -211,10 +206,19 @@
     }
 
     var sub = cart.reduce(function(s,i){ return s + (i.price||0)*(i.qty||1); }, 0);
-    var shipFee = cart.length ? (sub>=w.FREE_SHIP_THRESHOLD?0:(shipOpt==='home'?80:60)) : 0;
+    var shipFee = (function(){
+      if (sub <= 0) return 0;
+      if (sub >= (window.FREE_SHIP_THRESHOLD||1000)) return 0;
+      return (shipOpt === 'home') ? 80 : 60;
+    })();
     var amount = sub + shipFee;
 
-    var itemNameRaw = cart.map(function(i){ return i.name+'('+i.color+'/'+i.size+')x'+i.qty; }).join('#');
+    // 綠界規範：商品名以 # 分隔
+    var itemNameRaw = cart.map(function(i){
+      if (isCustomId(i.id)) return (i.name || '客製化') + 'x' + i.qty;
+      var attrs = (i.color?i.color:'-') + '/' + (i.size?i.size:'-');
+      return (i.name||'商品') + '('+attrs+')x' + i.qty;
+    }).join('#');
     var itemName = itemNameRaw.slice(0, 200);
     var tradeDesc = 'Linfaya Shop Order'.slice(0, 100);
 
@@ -230,7 +234,11 @@
       returnURL: w.API_BASE + '/api/ecpay/return'
     };
 
-    var win = w.openNamedWindow(w.CASHIER_WIN_NAME, '正在前往綠界收銀台…');
+    // 選擇是否另開視窗
+    var win = null;
+    if (window.OPEN_CASHIER_IN_POPUP){
+      try{ win = w.openNamedWindow(w.CASHIER_WIN_NAME, '即將前往付款…'); }catch(_){}
+    }
 
     try{
       var data = await w.fetchJSON(
