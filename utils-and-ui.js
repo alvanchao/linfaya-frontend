@@ -95,7 +95,8 @@
       '.chips{display:flex;gap:8px;flex-wrap:wrap}',
       '.chip{min-width:40px;padding:8px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer;text-align:center;user-select:none}',
       '.chip:hover{transform:translateY(-1px);border-color:#3b4252}',
-      '.chip.active{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b0c10;border:none}',
+      /* ⬇︎ 修改：選中的分類 → 黑底白字 + 白框，風格與頁籤一致 */
+      '.chip.active{background:#000;color:#fff;border:1px solid #fff}',
       '.chip.small{min-width:32px;padding:6px 8px;border-radius:8px}',
       '.chip.disabled{opacity:.4;cursor:not-allowed;filter:grayscale(20%);text-decoration:line-through}',
       '.oos-note{color:#fca5a5;font-size:12px;margin-top:6px}',
@@ -115,17 +116,25 @@
     if (!w.PREORDER_MODE && !w.REQUIRE_PREORDER_CHECKBOX) return; // 沒啟用就跳過
     var mount = d.createElement('section');
     mount.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px;color:#e6e9ef;line-height:1.6';
+
     var eta = w.PREORDER_MODE ? ('預計出貨區間：' + w.preorderRangeToday(w.LEAD_DAYS_MIN, w.LEAD_DAYS_MAX)) : '';
-    mount.innerHTML =
-      '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
-      '<div style="font-size:13px;color:#cfd3dc;line-height:1.6;margin-top:4px">' +
-      (w.PREORDER_MODE
-        ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + w.LEAD_DAYS_MIN + '–' + w.LEAD_DAYS_MAX + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>' +
-          '<div style="margin-top:4px;color:#fff">' + eta + '</div>'
-        : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
-      ) +
-      '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
+
+    /* ⬇︎ 修改：以垂直 flex 容器包裹，固定上下間距，字型對齊更一致 */
+    var inner =
+      '<div style="display:flex;flex-direction:column;gap:6px">' +
+        '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
+        '<div style="font-size:13px;color:#cfd3dc;line-height:1.6">' +
+          (w.PREORDER_MODE
+            ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + w.LEAD_DAYS_MIN + '–' + w.LEAD_DAYS_MAX + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>' +
+              '<div style="margin-top:4px;color:#fff">' + eta + '</div>'
+            : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
+          ) +
+          '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
+        '</div>' +
       '</div>';
+
+    mount.innerHTML = inner;
+
     var header = d.querySelector('header');
     if (header && header.parentNode) {
       header.parentNode.insertBefore(mount, header.nextSibling);
