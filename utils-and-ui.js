@@ -95,7 +95,6 @@
       '.chips{display:flex;gap:8px;flex-wrap:wrap}',
       '.chip{min-width:40px;padding:8px 10px;border:1px solid #2b3342;border-radius:10px;background:#0f1320;color:#c7cede;cursor:pointer;text-align:center;user-select:none}',
       '.chip:hover{transform:translateY(-1px);border-color:#3b4252}',
-      /* 顏色／尺寸 chip 的選中態維持彩色漸層 */
       '.chip.active{background:linear-gradient(135deg,#5eead4,#a78bfa);color:#0b0c10;border:none}',
       '.chip.small{min-width:32px;padding:6px 8px;border-radius:8px}',
       '.chip.disabled{opacity:.4;cursor:not-allowed;filter:grayscale(20%);text-decoration:line-through}',
@@ -111,32 +110,43 @@
     d.head.appendChild(style);
   })();
 
-  // 頁首「小提醒」IIFE（改為上下對齊）
+  // 頁首「小提醒」IIFE（與 LOGO 對齊：外層套 .container，內層直向排版）
   (function attachPreorderBanner(){
     if (!w.PREORDER_MODE && !w.REQUIRE_PREORDER_CHECKBOX) return; // 沒啟用就跳過
-    var mount = d.createElement('section');
-    mount.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px;color:#e6e9ef;line-height:1.6';
-    var eta = w.PREORDER_MODE ? ('預計出貨區間：' + w.preorderRangeToday(w.LEAD_DAYS_MIN, w.LEAD_DAYS_MAX)) : '';
 
-    // ⬇︎ 用直向 flex 包住標題與內文，固定間距，上下對齊
-    mount.innerHTML =
-      '<div style="display:flex;flex-direction:column;gap:6px">' +
-        '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
-        '<div style="font-size:13px;color:#cfd3dc;line-height:1.6">' +
+    // 外層：與 LOGO 一樣寬度對齊
+    var wrap = d.createElement('div');
+    wrap.className = 'container';
+
+    // 內層：視覺面板
+    var panel = d.createElement('section');
+    panel.style.cssText = 'background:#141821;padding:14px 16px;border-radius:14px;margin:12px 0;color:#e6e9ef;line-height:1.6';
+
+    var eta = w.PREORDER_MODE ? (w.preorderRangeToday(w.LEAD_DAYS_MIN, w.LEAD_DAYS_MAX)) : '';
+
+    panel.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+          '<strong style="color:#fff;font-size:15px">小提醒</strong>' +
+          (w.PREORDER_MODE ? '<span class="chip small active" style="pointer-events:none">預計出貨：' + eta + '</span>' : '') +
+        '</div>' +
+        '<div style="font-size:13px;color:#cfd3dc;line-height:1.7">' +
           (w.PREORDER_MODE
-            ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + w.LEAD_DAYS_MIN + '–' + w.LEAD_DAYS_MAX + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>' +
-              '<div style="margin-top:4px;color:#fff">' + eta + '</div>'
+            ? '<div>※ 本官網採 <b style="color:#fff">預購</b> 模式，下單後約需 ' + w.LEAD_DAYS_MIN + '–' + w.LEAD_DAYS_MAX + ' 個<b style="color:#fff">工作天</b>出貨；若遇延遲將主動通知，並可退款或更換。</div>'
             : '<div>※ 本店商品同步於多平台販售，庫存以實際出貨為準。</div>'
           ) +
           '<div style="margin-top:4px">完成付款後信件可能延遲，請檢查垃圾信或「促銷」分類。</div>' +
         '</div>' +
       '</div>';
 
+    wrap.appendChild(panel);
+
+    // 插入位置：緊接在 header 後面
     var header = d.querySelector('header');
     if (header && header.parentNode) {
-      header.parentNode.insertBefore(mount, header.nextSibling);
+      header.parentNode.insertBefore(wrap, header.nextSibling);
     } else {
-      d.body.insertBefore(mount, d.body.firstChild);
+      d.body.insertBefore(wrap, d.body.firstChild);
     }
   })();
 
