@@ -1,9 +1,4 @@
-// shop-core.js — LINFAYA (optimized first-image eager, others on-demand)
-
-// - 第一張主圖：馬上載入（eager + fetchpriority=high）
-// - 其他卡片主圖：lazy
-// - 縮圖：先不載（透明佔位 data URI），進入視口才載 data-src；點擊後才切主圖至 data-main
-// - 其餘購物流程/驗證/分頁維持不變
+// shop-core.js — LINFAYA (first image eager; thumbnails lazy with webp fallback; big images load on click)
 
 document.addEventListener('DOMContentLoaded', function () {
   var w = window;
@@ -54,19 +49,13 @@ document.addEventListener('DOMContentLoaded', function () {
   // ===== 工具 =====
   function isCustomId(id){ return String(id||'').toLowerCase() === 'custom01'; }
 
-  // 透明 1x1 佔位圖（避免先發請求）
+  // 透明 1x1 佔位圖（避免一開始就請求）
   var BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
-  // 嘗試從原圖推測縮圖命名（若你有準備 -thumb-256.webp 的話）
+  // 取得縮圖路徑：同名 .webp 優先，否則用原圖
   function thumbSrc(original){
     if (!original) return BLANK_IMG;
-    // 優先嘗試 webp 小檔命名：xxx-thumb-256.webp
-    var m = original.match(/^(.*?)(\.[a-zA-Z0-9]+)$/);
-    if (m) {
-      var base = m[1];
-      return base + '-thumb-256.webp';
-    }
-    return original; // fallback
+    return original.replace(/\.[a-zA-Z0-9]+$/, '.webp');
   }
 
   function parseCustomCode(code){
@@ -113,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return cap;
   }
 
-  // 讓結帳按鈕在客製化不符時自動禁用（給結帳頁也可共用）
+  // 讓結帳按鈕在客製化不符時自動禁用
   w.updatePayButtonState = function(){
     var list = [];
     try{ list = JSON.parse(sessionStorage.getItem('cart')||'[]'); }catch(_){}
@@ -266,56 +255,60 @@ document.addEventListener('DOMContentLoaded', function () {
       var eager = (page === 1 && idxInPage === 0); // 第一頁第一個 → 立即載
       var html = '';
 
-      // 產主圖 <img> 的屬性字串
+      // 主圖 <img> 的屬性
       var mainImgAttrs =
-        (eager
-          ? 'loading="eager" fetchpriority="high"'
-          : 'loading="lazy"') +
+        (eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"') +
         ' decoding="async" width="1200" height="900" style="width:100%;height:100%;object-fit:cover"';
+
+      // 共用：縮圖 IMG 的 onerror fallback 屬性字串
+      function thumbImgTag(img, i) {
+        var tsrc = thumbSrc(img);  // 同名 .webp
+        var extra = (i===0 ? ' class="active"' : '');
+        return (
+          '<img ' +
+          'src="' + BLANK_IMG + '" ' +                              // 先用佔位圖，不發請求
+          'data-src="' + tsrc + '" ' +                              // 進入視口才把 data-src 填到 src
+          'data-main="' + img + '" ' +                              // 對應的大圖（原圖）
+          'data-fallback="' + img + '" ' +                          // 如果 webp 不存在就換成原圖
+          'onerror="if(this.dataset.fallback && this.src!==this.dataset.fallback){ this.src=this.dataset.fallback }" ' +
+          'alt="' + (p.name||'') + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156"' + extra + ' />'
+        );
+      }
 
       if (!isCustom) {
         var firstColor = (p.colors&&p.colors[0]) || '';
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
-              // 主圖：第一個商品 eager，其餘 lazy
               '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + p.name + '" ' + mainImgAttrs + '></div>' +
-              // 縮圖：不先載，用透明佔位；實際縮圖放 data-src，主圖對應大圖放 data-main
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){
-                  var tsrc = thumbSrc(img);
-                  var extra = (i===0 ? ' class="active"' : '');
-                  return '<img src="' + BLANK_IMG + '" data-src="' + tsrc + '" data-main="' + img + '" alt="' + p.name + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156"' + extra + ' />';
-                }).join('') +
+                (p.imgs||[]).map(function(img,i){ return thumbImgTag(img, i); }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
               '<div><b>' + p.name + '</b></div>' +
               '<div class="muted">分類：' + p.cat + ' | 價格：' + fmt(p.price) + '</div>' +
-
               '<div style="margin-top:6px">' +
                 '<div class="muted" style="font-size:12px;margin-bottom:6px">顏色</div>' +
                 '<div class="chips color-group">' +
                   (p.colors||[]).map(function(c,i){ return '<button class="chip' + (i===0?' active':'') + '" data-type="color" data-val="' + c + '">' + c + '</button>'; }).join('') +
                 '</div>' +
               '</div>' +
-
               '<div style="margin-top:8px">' +
                 '<div class="muted" style="font-size:12px;margin-bottom:6px">尺寸</div>' +
                 '<div class="chips size-group"></div>' +
               '</div>' +
-
               '<div style="margin-top:8px">' +
                 '<div class="muted" style="font-size:12px;margin-bottom:6px">數量</div>' +
                 '<div class="chips qty-group"></div>' +
               '</div>' +
-
               '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">' +
                 '<button class="btn pri add">加入購物車</button>' +
               '</div>' +
             '</div>' +
           '</div>';
-        // 重新寫入尺寸 chips（避免上面行內函式難讀）
+
+        // 尺寸 chips（帶缺貨狀態）
         html = html.replace(
           '<div class="chips size-group"></div>',
           '<div class="chips size-group">' +
@@ -326,6 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }).join('') +
           '</div>'
         );
+
       } else {
         var priceText = '每份 ' + fmt(p.price || 10);
         html =
@@ -333,17 +327,12 @@ document.addEventListener('DOMContentLoaded', function () {
             '<div class="imgbox">' +
               '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '" ' + mainImgAttrs + '></div>' +
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){
-                  var tsrc = thumbSrc(img);
-                  var extra = (i===0 ? ' class="active"' : '');
-                  return '<img src="' + BLANK_IMG + '" data-src="' + tsrc + '" data-main="' + img + '" alt="' + (p.name||'客製化') + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156"' + extra + ' />';
-                }).join('') +
+                (p.imgs||[]).map(function(img,i){ return thumbImgTag(img, i); }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
               '<div><b>' + (p.name || '客製化修改（每份10元）') + '</b></div>' +
               '<div class="muted">分類：' + (p.cat || 'customerize') + ' | 價格：' + priceText + '</div>' +
-
               '<div style="margin-top:8px;display:grid;gap:8px">' +
                 '<div>' +
                   '<div class="muted" style="font-size:12px;margin-bottom:6px">認證碼</div>' +
@@ -355,7 +344,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 '</div>' +
                 '<div class="muted" data-role="custom-help" style="display:none;color:#f87171;font-size:12px"></div>' +
               '</div>' +
-
               '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">' +
                 '<button class="btn pri add" disabled style="opacity:.6">加入購物車</button>' +
               '</div>' +
@@ -369,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function () {
     infoText && (infoText.textContent = '共 ' + list.length + ' 件');
     renderPager(pager, list.length, page);
 
-    // === 渲染後處理：設定第一張主圖 / 延遲載入縮圖 ===
+    // 渲染後：第一張主圖、chips、客製化驗證
     var cards = grid.querySelectorAll('.product');
     for (var i=0;i<cards.length;i++){
       var card = cards[i];
@@ -379,9 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (thumbs && thumbs[0]){
         var main = card.querySelector('.main-img img');
         main.src = p && p.imgs ? p.imgs[0] : (thumbs[0].dataset.main || main.src);
-        for (var j=0;j<thumbs.length;j++){
-          thumbs[j].classList.toggle('active', j===0);
-        }
+        for (var j=0;j<thumbs.length;j++) thumbs[j].classList.toggle('active', j===0);
       }
       if (p && !isCustomId(p.id)) {
         refreshSizeChips(card, p);
@@ -395,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    // IntersectionObserver：縮圖進入視口才把 data-src 填到 src
+    // IntersectionObserver：縮圖進入視口才把 data-src → src
     var io;
     if ('IntersectionObserver' in window){
       io = new IntersectionObserver(function(entries, obs){
@@ -409,10 +395,10 @@ document.addEventListener('DOMContentLoaded', function () {
             obs.unobserve(img);
           }
         });
-      }, { root: null, rootMargin: '100px', threshold: 0.01 });
+      }, { root: null, rootMargin: '120px', threshold: 0.01 });
       grid.querySelectorAll('.thumbs img[data-src]').forEach(function(img){ io.observe(img); });
     } else {
-      // 瀏覽器不支援時：一次性 fallback（可改成 onscroll 判斷）
+      // 不支援 IO 的舊瀏覽器：直接把 data-src 填上
       grid.querySelectorAll('.thumbs img[data-src]').forEach(function(img){
         var ds = img.getAttribute('data-src');
         if (ds) img.setAttribute('src', ds);
