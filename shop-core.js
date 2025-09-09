@@ -256,9 +256,11 @@ document.addEventListener('DOMContentLoaded', function () {
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
-              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + p.name + '"></div>' +
+              // 主圖：加入 lazy / async / 固定寬高避免 CLS
+              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + p.name + '" loading="lazy" decoding="async" width="1200" height="900" style="width:100%;height:100%;object-fit:cover"></div>' +
+              // 縮圖：加入 lazy / async / 固定寬高
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
+                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" alt="' + p.name + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
@@ -303,9 +305,10 @@ document.addEventListener('DOMContentLoaded', function () {
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
-              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '"></div>' +
+              // 客製化主圖同樣加速
+              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '" loading="lazy" decoding="async" width="1200" height="900" style="width:100%;height:100%;object-fit:cover"></div>' +
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
+                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" alt="' + (p.name||"客製化") + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
@@ -319,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '</div>' +
                 '<div>' +
                   '<div class="muted" style="font-size:12px;margin-bottom:6px">份數（每份 NT$' + (p.price||10) + '）</div>' +
-                  '<input class="input units-input" type="number" min="1" step="1 placeholder="請輸入份數" inputmode="numeric" pattern="\d*">' +
+                  '<input class="input units-input" type="number" min="1" step="1" placeholder="請輸入份數" inputmode="numeric" pattern="\\d*">' +
                 '</div>' +
                 '<div class="muted" data-role="custom-help" style="display:none;color:#f87171;font-size:12px"></div>' +
               '</div>' +
