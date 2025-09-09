@@ -1,10 +1,9 @@
-// shop-core.js — LINFAYA
-// - 分類含 customerize（客製化）；FLOW 只在該分頁顯示（由 #customFlow 控制）
-// - 一般商品：顏色/尺寸/數量 chips；缺貨規格（disabled）；同規格加入時合併
-// - CUSTOM01：需輸入認證碼(LFY###) + 份數；不一致不得加入；即時驗證＋紅字提示＋鎖定按鈕
-// - 購物車內若改到不一致，結帳按鈕會被禁用；checkout 再次把關
-// - 運費：宅配 80、超取 60、滿額免運（與 checkout-and-shipping.js 一致）
-// - 不自動開購物車，只有按右上角才開
+// shop-core.js — LINFAYA (optimized first-image eager, others on-demand)
+
+// - 第一張主圖：馬上載入（eager + fetchpriority=high）
+// - 其他卡片主圖：lazy
+// - 縮圖：先不載（透明佔位 data URI），進入視口才載 data-src；點擊後才切主圖至 data-main
+// - 其餘購物流程/驗證/分頁維持不變
 
 document.addEventListener('DOMContentLoaded', function () {
   var w = window;
@@ -54,6 +53,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ===== 工具 =====
   function isCustomId(id){ return String(id||'').toLowerCase() === 'custom01'; }
+
+  // 透明 1x1 佔位圖（避免先發請求）
+  var BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+
+  // 嘗試從原圖推測縮圖命名（若你有準備 -thumb-256.webp 的話）
+  function thumbSrc(original){
+    if (!original) return BLANK_IMG;
+    // 優先嘗試 webp 小檔命名：xxx-thumb-256.webp
+    var m = original.match(/^(.*?)(\.[a-zA-Z0-9]+)$/);
+    if (m) {
+      var base = m[1];
+      return base + '-thumb-256.webp';
+    }
+    return original; // fallback
+  }
 
   function parseCustomCode(code){
     if (!code) return null;
@@ -247,20 +261,32 @@ document.addEventListener('DOMContentLoaded', function () {
     // 只在 customerize 分頁顯示 FLOW
     updateCustomFlowVisibility(cat === 'customerize');
 
-    slice.forEach(function(p){
+    slice.forEach(function(p, idxInPage){
       var isCustom = isCustomId(p.id);
+      var eager = (page === 1 && idxInPage === 0); // 第一頁第一個 → 立即載
       var html = '';
+
+      // 產主圖 <img> 的屬性字串
+      var mainImgAttrs =
+        (eager
+          ? 'loading="eager" fetchpriority="high"'
+          : 'loading="lazy"') +
+        ' decoding="async" width="1200" height="900" style="width:100%;height:100%;object-fit:cover"';
 
       if (!isCustom) {
         var firstColor = (p.colors&&p.colors[0]) || '';
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
-              // 主圖：加入 lazy / async / 固定寬高避免 CLS
-              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + p.name + '" loading="lazy" decoding="async" width="1200" height="900" style="width:100%;height:100%;object-fit:cover"></div>' +
-              // 縮圖：加入 lazy / async / 固定寬高
+              // 主圖：第一個商品 eager，其餘 lazy
+              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + p.name + '" ' + mainImgAttrs + '></div>' +
+              // 縮圖：不先載，用透明佔位；實際縮圖放 data-src，主圖對應大圖放 data-main
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" alt="' + p.name + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
+                (p.imgs||[]).map(function(img,i){
+                  var tsrc = thumbSrc(img);
+                  var extra = (i===0 ? ' class="active"' : '');
+                  return '<img src="' + BLANK_IMG + '" data-src="' + tsrc + '" data-main="' + img + '" alt="' + p.name + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156"' + extra + ' />';
+                }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
@@ -305,10 +331,13 @@ document.addEventListener('DOMContentLoaded', function () {
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
-              // 客製化主圖同樣加速
-              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '" loading="lazy" decoding="async" width="1200" height="900" style="width:100%;height:100%;object-fit:cover"></div>' +
+              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '" ' + mainImgAttrs + '></div>' +
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" alt="' + (p.name||"客製化") + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
+                (p.imgs||[]).map(function(img,i){
+                  var tsrc = thumbSrc(img);
+                  var extra = (i===0 ? ' class="active"' : '');
+                  return '<img src="' + BLANK_IMG + '" data-src="' + tsrc + '" data-main="' + img + '" alt="' + (p.name||'客製化') + ' 縮圖' + (i+1) + '" loading="lazy" decoding="async" width="156" height="156"' + extra + ' />';
+                }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
@@ -340,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function () {
     infoText && (infoText.textContent = '共 ' + list.length + ' 件');
     renderPager(pager, list.length, page);
 
-    // 渲染後：縮圖預設第一張；一般商品刷新尺寸/數量 chips；客製化欄位綁定即時驗證
+    // === 渲染後處理：設定第一張主圖 / 延遲載入縮圖 ===
     var cards = grid.querySelectorAll('.product');
     for (var i=0;i<cards.length;i++){
       var card = cards[i];
@@ -349,8 +378,10 @@ document.addEventListener('DOMContentLoaded', function () {
       var thumbs = card.querySelectorAll('.thumbs img');
       if (thumbs && thumbs[0]){
         var main = card.querySelector('.main-img img');
-        main.src = thumbs[0].dataset.main || thumbs[0].src;
-        for (var j=0;j<thumbs.length;j++) thumbs[j].classList.toggle('active', j===0);
+        main.src = p && p.imgs ? p.imgs[0] : (thumbs[0].dataset.main || main.src);
+        for (var j=0;j<thumbs.length;j++){
+          thumbs[j].classList.toggle('active', j===0);
+        }
       }
       if (p && !isCustomId(p.id)) {
         refreshSizeChips(card, p);
@@ -362,6 +393,30 @@ document.addEventListener('DOMContentLoaded', function () {
         if (unitsInput) unitsInput.addEventListener('input', handler);
         validateCustomCard(card);
       }
+    }
+
+    // IntersectionObserver：縮圖進入視口才把 data-src 填到 src
+    var io;
+    if ('IntersectionObserver' in window){
+      io = new IntersectionObserver(function(entries, obs){
+        entries.forEach(function(entry){
+          if (entry.isIntersecting){
+            var img = entry.target;
+            var ds = img.getAttribute('data-src');
+            if (ds && img.getAttribute('src') !== ds){
+              img.setAttribute('src', ds);
+            }
+            obs.unobserve(img);
+          }
+        });
+      }, { root: null, rootMargin: '100px', threshold: 0.01 });
+      grid.querySelectorAll('.thumbs img[data-src]').forEach(function(img){ io.observe(img); });
+    } else {
+      // 瀏覽器不支援時：一次性 fallback（可改成 onscroll 判斷）
+      grid.querySelectorAll('.thumbs img[data-src]').forEach(function(img){
+        var ds = img.getAttribute('data-src');
+        if (ds) img.setAttribute('src', ds);
+      });
     }
   }
 
@@ -456,13 +511,17 @@ document.addEventListener('DOMContentLoaded', function () {
     var t = e.target;
     if (!(t instanceof HTMLElement)) return;
 
-    // 縮圖切換
+    // 縮圖切換：點到才把主圖換成 data-main（不會預先載入其他大圖）
     if (t.matches('.thumbs img')){
       var main = t.closest('.imgbox').querySelector('.main-img img');
       var all = t.parentElement.querySelectorAll('img');
       for (var i=0;i<all.length;i++) all[i].classList.remove('active');
       t.classList.add('active');
-      main.src = t.dataset.main || t.src;
+
+      var toMain = t.getAttribute('data-main') || t.getAttribute('src');
+      if (toMain && main.getAttribute('src') !== toMain){
+        main.setAttribute('src', toMain);
+      }
       return;
     }
 
