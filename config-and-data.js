@@ -27,85 +27,106 @@ window.REQUIRE_PREORDER_CHECKBOX = true;
 // ---- 商品資料 ----
 // 注意：圖片路徑大小寫要和 /Photo 資料夾完全一致
 window.PRODUCTS = [
-  {
-    id: 'top01',
-    cat: 'tops',
-    name: '無縫高彈背心',
-    price: 399,
-    colors: ['黑','膚'],
-    sizes: ['S','M','L'],
-    imgs: ['Photo/無縫高彈背心.jpg','Photo/鏤空美背短袖.jpg'],
-    stockMap: { '黑-M': 0, '膚-S': 0, '膚-M': 2 }
-  },
-  {
-    id: 'top02',
-    cat: 'tops',
-    name: '鏤空美背短袖',
-    price: 429,
-    colors: ['黑','粉'],
-    sizes: ['S','M','L'],
-    imgs: ['Photo/鏤空美背短袖.jpg'],
-    stockMap: { '粉-L': 3 }
-  },
-  {
-    id: 'btm01',
-    cat: 'bottoms',
-    name: '高腰緊身褲',
-    price: 499,
-    colors: ['黑','深灰'],
-    sizes: ['S','M','L','XL'],
-    imgs: ['Photo/高腰緊身褲.jpg'],
-    stockMap: { '黑-XL': 0, '深灰-S': 0, '深灰-M': 1 }
-  },
-  {
-    id: 'sk01',
-    cat: 'bottoms',
-    name: '魚尾練習裙',
-    price: 699,
-    colors: ['黑'],
-    sizes: ['S','M','L'],
-    imgs: ['Photo/魚尾練習裙.jpg'],
-    stockMap: {}
-  },
-  {
-    id: 'acc01',
-    cat: 'accessories',
-    name: '彈力護腕',
-    price: 199,
-    colors: ['黑'],
-    sizes: ['F'],
-    imgs: ['Photo/上衣＋緊身褲套組.jpg'],
-    stockMap: {}
-  },
-  {
-    id: 'sh01',
-    cat: 'shoes',
-    name: '舞鞋（軟底）',
-    price: 990,
-    colors: ['黑'],
-    sizes: ['35','36','37','38','39','40'],
-    imgs: ['Photo/上衣＋緊身褲套組.jpg'],
-    stockMap: { '黑-39': 0 }
-  },
-  {
-    id: 'set01',
-    cat: 'tops',
-    name: '上衣＋緊身褲套組',
-    price: 849,
-    colors: ['多色'],
-    sizes: ['S','M','L'],
-    imgs: ['Photo/上衣＋緊身褲套組.jpg'],
-    stockMap: { '多色-L': 0 }
-  },
-  // ====== 新增：專屬客製化修改 ======
+
+// ====== 專屬客製化修改(特別的收費方式) ======
   {
     id:'custom01',
-    cat:'customerize',        // 放在 Accessories 分類
+    cat:'accessories',        // 放在 Accessories 分類
     name:'專屬客製化修改',
     price:10,                 // 基本單價 = 10 元 / 份
     colors:['X'],           // 固定選項
     sizes:['X'],            // 固定選項
     imgs:['Photo/客製修改.jpg'],// 你可以放一張示意圖
     stockMap:{}               // 不限庫存
+  },
+  {
+    id: 'top01',
+    cat: 'tops',
+    name: '美背短版上衣',
+    price: 390,
+    colors: ['黑'],
+    sizes: ['XS','S','M','L','XL'],
+    imgs: ['Photo/美背短版上衣1.jpg','Photo/美背短版上衣2.jpg'],
+    stockMap: { '黑-M': 1, '黑-L': 1' }
+  },
+  {
+    id: 'top02',
+    cat: 'tops',
+    name: '不規則造型長袖',
+    price: 425,
+    colors: ['黑'],
+    sizes: ['XS','S','M','L','XL'],
+    imgs: ['Photo/不規則造型長袖1.jpg','Photo/不規則造型長袖2.jpg','Photo/不規則造型長袖3.jpg','Photo/不規則造型長袖4.jpg'],
+    stockMap: { '黑-M': 1, '黑-L': 1' }
+  },
+  {
+    id: 'top03',
+    cat: 'tops',
+    name: '男生不規則長袖',
+    price: 435,
+    colors: ['黑','白'],
+    sizes: ['S','M','L','XL','XXL'],
+    imgs: ['Photo/男生不規則長袖1.jpg','Photo/男生不規則長袖2.jpg','Photo/男生不規則長袖3.jpg'],
+    stockMap: { '黑-XL': 2, '白-XL': 2' }
+  },
+  {
+    id: 'top04',
+    cat: 'tops',
+    name: '一字領長袖連身衣',
+    price: 550,
+    colors: ['粉藍'],
+    sizes: ['M'],
+    imgs: ['Photo/一字領長袖連身衣.jpg'],
+    stockMap: { '粉藍-M': 1 }
+  },
+  {
+    id: 'top05',
+    cat: 'tops',
+    name: '皮革流蘇連身裙',
+    price: 730,
+    colors: ['黑'],
+    sizes: ['L'],
+    imgs: ['Photo/皮革流蘇連身裙1.jpg','Photo/皮革流蘇連身裙2.jpg'],
+    stockMap: { '黑-L': 1 }
+  },
+  {
+    id: 'btm01',
+    cat: 'bottoms',
+    name: '閃閃亮片綁帶流蘇裙',
+    price: 545,
+    colors: ['黑','白'],
+    sizes: ['F'],
+    imgs: ['Photo/閃閃亮片綁帶流蘇裙1.jpg','Photo/閃閃亮片綁帶流蘇裙2.jpg'],
+    stockMap: { '黑-F': 1 '}
+  },
+  {
+    id: 'btm02',
+    cat: 'bottoms',
+    name: '造型喇叭褲',
+    price: 800,
+    colors: ['黑'],
+    sizes: ['XS','S','M','L','XL'],
+    imgs: ['Photo/造型喇叭褲1.jpg','Photo/造型喇叭褲2.jpg','Photo/造型喇叭褲3.jpg','Photo/造型喇叭褲4.jpg'],
+    stockMap: {'黑-M': 1, '黑-L': 1'}
+  },
+  {
+    id: 'btm03',
+    cat: 'bottoms',
+    name: '喇叭褲',
+    price: 500,
+    colors: ['黑'],
+    sizes: ['XS','S','M','L','XL'],
+    imgs: ['Photo/喇叭褲1.jpg','Photo/喇叭褲2.jpg'],
+    stockMap: {'黑-M': 1, '黑-L': 1'}
+  },
+  {
+    id: 'btm04',
+    cat: 'bottoms',
+    name: '造型綁帶紗裙',
+    price: 420,
+    colors: ['黑'],
+    sizes: ['F'],
+    imgs: ['Photo/造型綁帶紗裙1.jpg','Photo/造型綁帶紗裙2.jpg','Photo/造型綁帶紗裙3.jpg'],
+    stockMap: {'黑-F': 1'}
   }
 ];
