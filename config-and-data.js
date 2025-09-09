@@ -1,4 +1,4 @@
-// config-and-data.js (safe)
+/// config-and-data.js (safe)
 
 // ---- 站台設定 ----
 window.API_BASE = 'https://linfaya-ecpay-backend.onrender.com';
@@ -54,7 +54,7 @@ window.PRODUCTS = [
       'Photo/不規則造型長袖3.jpg',
       'Photo/不規則造型長袖4.jpg'
     ],
-    stockMap: { '黑-M': 1, '黑-L': 1 }
+    stockMap: { }
   },
   {
     id: 'top03',
@@ -68,7 +68,7 @@ window.PRODUCTS = [
       'Photo/男生不規則長袖2.jpg',
       'Photo/男生不規則長袖3.jpg'
     ],
-    stockMap: { '黑-XL': 2, '白-XL': 2 }
+    stockMap: { }
   },
   {
     id: 'top04',
@@ -106,7 +106,7 @@ window.PRODUCTS = [
       'Photo/閃閃亮片綁帶流蘇裙1.jpg',
       'Photo/閃閃亮片綁帶流蘇裙2.jpg'
     ],
-    stockMap: { '黑-F': 1, '白-F': 1 }
+    stockMap: { }
   },
   {
     id: 'btm02',
@@ -121,7 +121,7 @@ window.PRODUCTS = [
       'Photo/造型喇叭褲3.jpg',
       'Photo/造型喇叭褲4.jpg'
     ],
-    stockMap: { '黑-M': 1, '黑-L': 1 }
+    stockMap: {  }
   },
   {
     id: 'btm03',
@@ -131,7 +131,7 @@ window.PRODUCTS = [
     colors: ['黑'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     imgs: ['Photo/喇叭褲1.jpg', 'Photo/喇叭褲2.jpg'],
-    stockMap: { '黑-M': 1, '黑-L': 1 }
+    stockMap: {  }
   },
   {
     id: 'btm04',
@@ -148,3 +148,13 @@ window.PRODUCTS = [
     stockMap: { '黑-F': 1 }
   }
 ];
+
+//remark
+//id: topxx/btmxx/accxx/shxx
+//cat: tops/bottoms/accessories/shoes
+//name: 網頁上看到的名字
+//price: 網頁上看到的價錢
+//colors: []內逗點跟單引號區隔
+//sizes: []內逗點跟單引號區隔
+//imgs: []內逗點跟單引號區隔
+//圖片建議SIZE: 主圖是 4:3 比例，縮圖是 1:1（52×52 px 顯示）。
