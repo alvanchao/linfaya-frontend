@@ -40,32 +40,30 @@
     try{ sessionStorage.setItem('SHIP_OPT', ship); }catch(_){}
   }
 
-  // 用事件委派監聽配送選擇與挑選門市按鈕（避免 $$/未定義）
+  // 用事件委派監聽配送選擇
   d.addEventListener('change', function(e){
     var t = e.target;
     if (t && t.name === 'ship') onShipChange();
-  });
-  d.addEventListener('click', function(e){
-    var t = e.target;
-    if(!(t instanceof HTMLElement)) return;
-    if(t.id==='btnPickFamily'){
-      e.preventDefault();
-      try{ sessionStorage.setItem('CVS_TYPE','family'); }catch(_){}
-      onShipChange();
-      openCvsMap('FAMIC2C');
-    }
-    if(t.id==='btnPickSeven'){
-      e.preventDefault();
-      try{ sessionStorage.setItem('CVS_TYPE','seven'); }catch(_){}
-      onShipChange();
-      openCvsMap('UNIMARTC2C');
-    }
   });
 
   // —— 官方門市地圖（需後端簽名 API）——
   async function openCvsMap(kind){
     var target = w.CVS_WIN_NAME || 'EC_CVS_MAP';
-    var win = window.open('about:blank', target, 'width=960,height=720,noopener,noreferrer');
+
+    // 先開/重用同名視窗（手機/桌機都適用），顯示載入中，避免多出空白頁
+    var win = window.open('', target, 'width=960,height=720');
+    if (win) {
+      try {
+        win.document.open();
+        win.document.write(
+          '<!doctype html><meta charset="utf-8"><title>Loading</title>' +
+          '<body style="font:14px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial;padding:16px;background:#0b0c10;color:#e6e9ef">' +
+          '正在開啟門市地圖…</body>'
+        );
+        win.document.close();
+      } catch(_) {}
+    }
+
     try{
       var signed = await w.fetchJSON(
         w.API_BASE + '/api/ecpay/map/sign',
@@ -73,11 +71,14 @@
         { timeoutMs: 15000, retries: 1 }
       );
       if(!signed || !signed.endpoint || !signed.fields) throw new Error('missing map sign');
+
+      // 把簽名表單送進同一個 target（不會再多開空白頁）
       w.postForm(signed.endpoint, signed.fields, target);
     }catch(e){
       console.error(e);
       if (win) try{ win.close(); }catch(_){}
       alert('開啟門市地圖失敗，請稍後再試。');
+      throw e; // 讓外層 finally 能復原按鈕
     }
   }
 
@@ -124,12 +125,50 @@
   if (w.renderCart) w.renderCart();
   if (w.updatePayButtonState) w.updatePayButtonState();
 
+  // ===== 事件：挑選門市（加入防連點機制）=====
+  d.addEventListener('click', function(e){
+    var t = e.target;
+    if(!(t instanceof HTMLElement)) return;
+
+    if(t.id==='btnPickFamily' || t.id==='btnPickSeven'){
+      e.preventDefault();
+
+      // 全域忙碌旗標，避免同時開多個視窗
+      if (w.__cvsBusy) return;
+      w.__cvsBusy = true;
+
+      // 暫時 disable 並顯示開啟中文字
+      var origText = t.textContent;
+      t.disabled = true;
+      t.setAttribute('aria-busy', 'true');
+      t.textContent = '開啟中…';
+
+      // 紀錄選擇的通路
+      try{ sessionStorage.setItem('CVS_TYPE', (t.id==='btnPickFamily')?'family':'seven'); }catch(_){}
+      onShipChange();
+
+      var kind = (t.id==='btnPickFamily') ? 'FAMIC2C' : 'UNIMARTC2C';
+
+      openCvsMap(kind)
+        .catch(function(){ /* 錯誤已在 openCvsMap 處理 */ })
+        .finally(function(){
+          t.disabled = false;
+          t.removeAttribute('aria-busy');
+          t.textContent = origText || (t.id==='btnPickFamily' ? '選擇全家門市' : '選擇 7-11 門市');
+          w.__cvsBusy = false;
+        });
+
+      return;
+    }
+  });
+
   // ===== 付款按鈕 =====
   var btn = $('#checkout');
   if (btn) btn.addEventListener('click', async function (){
     // 讀購物車
     var cart = [];
     try{ cart = JSON.parse(sessionStorage.getItem('cart') || '[]'); }catch(_){}
+
     if(!cart.length) return alert('購物車是空的');
 
     // 客製化不符 ⇒ 阻擋
