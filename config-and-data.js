@@ -36,7 +36,9 @@ window.PRODUCTS = [
     price: 10,                       // 基本單價 = 10 元 / 份
     colors: ['X'],
     sizes: ['X'],
-    imgs: ['Photo/客製修改.jpg'],      // 請確認 /Photo/ 內有這張圖；沒有就上傳
+    imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/客製修改.jpg'
+      
+    ],  
     stockMap: {}                     // 不限庫存
   },
 
@@ -49,10 +51,10 @@ window.PRODUCTS = [
     colors: ['黑'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     imgs: [
-      'Photo/不規則造型長袖1.jpg',
-      'Photo/不規則造型長袖2.jpg',
-      'Photo/不規則造型長袖3.jpg',
-      'Photo/不規則造型長袖4.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖1.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖2.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖3.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖4.jpg'
     ],
     stockMap: { }
   },
@@ -64,9 +66,9 @@ window.PRODUCTS = [
     colors: ['黑', '白'],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     imgs: [
-      'Photo/男生不規則長袖1.jpg',
-      'Photo/男生不規則長袖2.jpg',
-      'Photo/男生不規則長袖3.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖1.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖2.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖3.jpg'
     ],
     stockMap: { }
   },
@@ -77,7 +79,7 @@ window.PRODUCTS = [
     price: 550,
     colors: ['粉藍'],
     sizes: ['M'],
-    imgs: ['Photo/一字領長袖連身衣.jpg'],
+    imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/一字領長袖連身衣.jpg'],
     stockMap: { '粉藍-M': 1 }
   },
   {
@@ -88,8 +90,8 @@ window.PRODUCTS = [
     colors: ['黑'],
     sizes: ['L'],
     imgs: [
-      'Photo/皮革流蘇連身裙1.jpg',
-      'Photo/皮革流蘇連身裙2.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙1.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙2.jpg'
     ],
     stockMap: { '黑-L': 1 }
   },
@@ -103,8 +105,8 @@ window.PRODUCTS = [
     colors: ['黑', '白'],
     sizes: ['F'],
     imgs: [
-      'Photo/閃閃亮片綁帶流蘇裙1.jpg',
-      'Photo/閃閃亮片綁帶流蘇裙2.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙1.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙2.jpg'
     ],
     stockMap: { }
   },
@@ -116,10 +118,10 @@ window.PRODUCTS = [
     colors: ['黑'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     imgs: [
-      'Photo/造型喇叭褲1.jpg',
-      'Photo/造型喇叭褲2.jpg',
-      'Photo/造型喇叭褲3.jpg',
-      'Photo/造型喇叭褲4.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲1.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲2.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲3.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲4.jpg'
     ],
     stockMap: {  }
   },
@@ -130,7 +132,9 @@ window.PRODUCTS = [
     price: 500,
     colors: ['黑'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
-    imgs: ['Photo/喇叭褲1.jpg', 'Photo/喇叭褲2.jpg'],
+    imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲1.jpg', 
+           'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲2.jpg'
+    ],
     stockMap: {  }
   },
   {
@@ -141,9 +145,9 @@ window.PRODUCTS = [
     colors: ['黑'],
     sizes: ['F'],
     imgs: [
-      'Photo/造型綁帶紗裙1.jpg',
-      'Photo/造型綁帶紗裙2.jpg',
-      'Photo/造型綁帶紗裙3.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型綁帶紗裙1.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型綁帶紗裙2.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型綁帶紗裙3.jpg'
     ],
     stockMap: { '黑-F': 1 }
   }
