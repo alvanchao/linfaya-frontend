@@ -66,10 +66,11 @@
 
     try{
       var signed = await w.fetchJSON(
-        w.API_BASE + '/api/ecpay/map/sign',
-        { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ kind: kind||'FAMIC2C' }) },
-        { timeoutMs: 15000, retries: 1 }
+          w.API_BASE + '/api/ecpay/map/sign',
+          { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ LogisticsSubType: kind||'FAMIC2C' }) },
+          { timeoutMs: 15000, retries: 1 }
       );
+
       if(!signed || !signed.endpoint || !signed.fields) throw new Error('missing map sign');
 
       // 把簽名表單送進同一個 target（不會再多開空白頁）
