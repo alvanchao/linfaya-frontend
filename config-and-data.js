@@ -56,6 +56,8 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖3.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖4.jpg'
     ],
+    // ✅ 新增這一行：YouTube/Shorts 影片 ID
+    youtubeId: 'gBX_zl42r3c',
     stockMap: { }
   },
   {

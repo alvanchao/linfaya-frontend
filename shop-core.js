@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return { ok:ok, message:msg, code:parsed ? parsed.code : '', units:units };
   }
 
-  // ===== 商品渲染 =====
+  // ===== 商品渲染（已加入 YouTube 影片：主圖 3/4 下方、縮圖 1/1 上方）=====
   function renderProducts(cat, page){
     grid.innerHTML = '';
 
@@ -253,10 +253,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (!isCustom) {
         var firstColor = (p.colors&&p.colors[0]) || '';
+
+        // 如果有 youtubeId，插入影片區塊（主圖下方、縮圖上方）
+        var videoHTML = p.youtubeId
+          ? (
+            '<div class="video-box" style="margin-top:8px">' +
+              '<iframe width="100%" height="220" ' +
+                'src="https://www.youtube.com/embed/' + p.youtubeId + '" ' +
+                'title="試穿影片" ' +
+                'frameborder="0" ' +
+                'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+                'referrerpolicy="strict-origin-when-cross-origin" ' +
+                'allowfullscreen>' +
+              '</iframe>' +
+            '</div>'
+          )
+          : '';
+
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
               '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + p.name + '"></div>' +
+              videoHTML +
               '<div class="thumbs">' +
                 (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
               '</div>' +
@@ -287,6 +305,7 @@ document.addEventListener('DOMContentLoaded', function () {
               '</div>' +
             '</div>' +
           '</div>';
+
         // 重新寫入尺寸 chips（避免上面行內函式難讀）
         html = html.replace(
           '<div class="chips size-group"></div>',
@@ -319,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '</div>' +
                 '<div>' +
                   '<div class="muted" style="font-size:12px;margin-bottom:6px">份數（每份 NT$' + (p.price||10) + '）</div>' +
-                  '<input class="input units-input" type="number" min="1" step="1 placeholder="請輸入份數" inputmode="numeric" pattern="\d*">' +
+                  '<input class="input units-input" type="number" min="1" step="1" placeholder="請輸入份數" inputmode="numeric" pattern="\\d*">' +
                 '</div>' +
                 '<div class="muted" data-role="custom-help" style="display:none;color:#f87171;font-size:12px"></div>' +
               '</div>' +
