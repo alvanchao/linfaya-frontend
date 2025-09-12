@@ -39,11 +39,25 @@ window.PRODUCTS = [
     imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/客製修改.jpg'
       
     ], 
-    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c
     stockMap: {}                     // 不限庫存
   },
 
   // ====== Tops ======
+   {
+    id: 'top01',
+    cat: 'tops',
+    name: '美背短版上衣',
+    price: 370,
+    colors: ['黑'],
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    imgs: [
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/美背短版上衣1.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/美背短版上衣2.jpg'
+    ],
+    youtubeId: 'E5qANhO8fBk', // ✅ 新增這一行：YouTube/Shorts 影片 ID  舉例: gBX_zl42r3c 
+    stockMap: { }
+  },
   {
     id: 'top02',
     cat: 'tops',
@@ -57,7 +71,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖3.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖4.jpg'
     ],
-    youtubeId: 'gBX_zl42r3c', // ✅ 新增這一行：YouTube/Shorts 影片 ID
+    youtubeId: 'fJjJw1osqsE', // ✅ 新增這一行：YouTube/Shorts 影片 ID  舉例: gBX_zl42r3c 
     stockMap: { }
   },
   {
@@ -72,7 +86,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖2.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖3.jpg'
     ],
-    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
+    youtubeId: 'MSWPEn5E23A', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c 
     stockMap: { }
   },
   {
@@ -85,7 +99,7 @@ window.PRODUCTS = [
     imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/一字領長袖連身衣.jpg'
 
     ],
-    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
+    youtubeId: 'RicoBN4n0lk', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c 
     stockMap: { '粉藍-M': 1 }
   },
   {
@@ -99,7 +113,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙1.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙2.jpg'
     ],
-    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c
     stockMap: { '黑-L': 1 }
   },
 
@@ -113,9 +127,11 @@ window.PRODUCTS = [
     sizes: ['F'],
     imgs: [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙1.jpg',
-      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙2.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙2.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙3.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙4.jpg'
     ],
-    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
+    youtubeId: 'dF6RMJtBbQ8', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c 
     stockMap: { }
   },
   {
@@ -131,7 +147,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲3.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲4.jpg'
     ],
-    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
+    youtubeId: 'E5qANhO8fBk', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c 
     stockMap: {  }
   },
   {
@@ -144,7 +160,7 @@ window.PRODUCTS = [
     imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲1.jpg', 
            'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲2.jpg'
     ],
-    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
+    youtubeId: 'LGIytjL8cy8', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c 
     stockMap: {  }
   },
   {
@@ -159,7 +175,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型綁帶紗裙2.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型綁帶紗裙3.jpg'
     ],
-    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
+    youtubeId: 'RicoBN4n0lk', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c
     stockMap: { '黑-F': 1 }
   }
 ];
@@ -173,3 +189,4 @@ window.PRODUCTS = [
 //sizes: []內逗點跟單引號區隔
 //imgs: []內逗點跟單引號區隔
 //圖片建議SIZE: 主圖是 4:3 比例，縮圖是 1:1（52×52 px 顯示）。
+//Youtube 網址 https://www.youtube.com/shorts/gBX_zl42r3c, ID 是 gBX_zl42r3c
