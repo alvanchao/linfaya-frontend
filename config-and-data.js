@@ -72,6 +72,8 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖2.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖3.jpg'
     ],
+    // ✅ 新增這一行：YouTube/Shorts 影片 ID
+    youtubeId: 'gBX_zl42r3c',
     stockMap: { }
   },
   {
@@ -81,7 +83,9 @@ window.PRODUCTS = [
     price: 550,
     colors: ['粉藍'],
     sizes: ['M'],
-    imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/一字領長袖連身衣.jpg'],
+    imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/一字領長袖連身衣.jpg'
+
+    ],
     stockMap: { '粉藍-M': 1 }
   },
   {

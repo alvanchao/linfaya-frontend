@@ -5,6 +5,7 @@
 // - 購物車內若改到不一致，結帳按鈕會被禁用；checkout 再次把關
 // - 運費：宅配 80、超取 60、滿額免運（與 checkout-and-shipping.js 一致）
 // - 不自動開購物車，只有按右上角才開
+// - 影片縮圖：若商品有 youtubeId，會在縮圖列最後多一顆；點擊後主圖切成 iframe 播放
 
 document.addEventListener('DOMContentLoaded', function () {
   var w = window;
@@ -236,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return { ok:ok, message:msg, code:parsed ? parsed.code : '', units:units };
   }
 
-  // ===== 商品渲染（已加入 YouTube 影片：主圖 3/4 下方、縮圖 1/1 上方）=====
+  // ===== 商品渲染（主圖 3/4；縮圖 1/1；影片縮圖可切換成 iframe）=====
   function renderProducts(cat, page){
     grid.innerHTML = '';
 
@@ -254,30 +255,30 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!isCustom) {
         var firstColor = (p.colors&&p.colors[0]) || '';
 
-        // 如果有 youtubeId，插入影片區塊（主圖下方、縮圖上方）
-        var videoHTML = p.youtubeId
-          ? (
-            '<div class="video-box" style="margin-top:8px">' +
-              '<iframe width="100%" height="220" ' +
-                'src="https://www.youtube.com/embed/' + p.youtubeId + '" ' +
-                'title="試穿影片" ' +
-                'frameborder="0" ' +
-                'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
-                'referrerpolicy="strict-origin-when-cross-origin" ' +
-                'allowfullscreen>' +
-              '</iframe>' +
-            '</div>'
-          )
-          : '';
+        // 1) 主圖：預設第一張圖片（之後會被縮圖點擊覆蓋為 <img> 或 <iframe>）
+        var mainImgHTML =
+          '<div class="main-img">' +
+            '<img src="' + (p.imgs && p.imgs[0] ? p.imgs[0] : '') + '" alt="' + (p.name||'') + '">' +
+          '</div>';
+
+        // 2) 縮圖列：所有商品圖 +（可選）影片縮圖
+        var thumbsHTML =
+          '<div class="thumbs">' +
+            (p.imgs||[]).map(function(img,i){
+              return '<img src="' + img + '" data-type="img" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />';
+            }).join('') +
+            (p.youtubeId
+              ? '<img src="https://img.youtube.com/vi/' + p.youtubeId + '/hqdefault.jpg" ' +
+                  'data-type="youtube" data-main="' + p.youtubeId + '" alt="video-thumb" />'
+              : ''
+            ) +
+          '</div>';
 
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
-              '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + p.name + '"></div>' +
-              videoHTML +
-              '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
-              '</div>' +
+              mainImgHTML +
+              thumbsHTML +
             '</div>' +
             '<div class="body">' +
               '<div><b>' + p.name + '</b></div>' +
@@ -286,7 +287,9 @@ document.addEventListener('DOMContentLoaded', function () {
               '<div style="margin-top:6px">' +
                 '<div class="muted" style="font-size:12px;margin-bottom:6px">顏色</div>' +
                 '<div class="chips color-group">' +
-                  (p.colors||[]).map(function(c,i){ return '<button class="chip' + (i===0?' active':'') + '" data-type="color" data-val="' + c + '">' + c + '</button>'; }).join('') +
+                  (p.colors||[]).map(function(c,i){
+                    return '<button class="chip' + (i===0?' active':'') + '" data-type="color" data-val="' + c + '">' + c + '</button>';
+                  }).join('') +
                 '</div>' +
               '</div>' +
 
@@ -306,25 +309,30 @@ document.addEventListener('DOMContentLoaded', function () {
             '</div>' +
           '</div>';
 
-        // 重新寫入尺寸 chips（避免上面行內函式難讀）
+        // 尺寸 chips（依 cap）
         html = html.replace(
           '<div class="chips size-group"></div>',
           '<div class="chips size-group">' +
           (p.sizes||[]).map(function(s,i){
             var cap = capFor(p, firstColor, s);
-            var base = 'class="chip' + (i===0?' active':'') + '"';
-            return '<button ' + (cap<=0 ? 'disabled class="chip disabled"' : ' ' + base) + ' data-type="size" data-val="' + s + '">' + s + '</button>';
+            var enabled = cap > 0;
+            var cls = enabled ? ('class="chip' + (i===0?' active':'') + '"') : 'class="chip disabled" disabled';
+            return '<button ' + cls + ' data-type="size" data-val="' + s + '">' + s + '</button>';
           }).join('') +
           '</div>'
         );
+
       } else {
+        // 客製化卡片（無影片縮圖）
         var priceText = '每份 ' + fmt(p.price || 10);
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' +
               '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '"></div>' +
               '<div class="thumbs">' +
-                (p.imgs||[]).map(function(img,i){ return '<img src="' + img + '" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />'; }).join('') +
+                (p.imgs||[]).map(function(img,i){
+                  return '<img src="' + img + '" data-type="img" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />';
+                }).join('') +
               '</div>' +
             '</div>' +
             '<div class="body">' +
@@ -356,20 +364,26 @@ document.addEventListener('DOMContentLoaded', function () {
     infoText && (infoText.textContent = '共 ' + list.length + ' 件');
     renderPager(pager, list.length, page);
 
-    // 渲染後：縮圖預設第一張；一般商品刷新尺寸/數量 chips；客製化欄位綁定即時驗證
+    // 渲染後：縮圖預設第一張、chips 初始化、客製化驗證
     var cards = grid.querySelectorAll('.product');
     for (var i=0;i<cards.length;i++){
       var card = cards[i];
       var id = card.dataset.id;
       var p = products.find(function(x){return x.id===id;});
-      var thumbs = card.querySelectorAll('.thumbs img');
+
+      // 主圖對齊第一張圖片
+      var thumbs = card.querySelectorAll('.thumbs img[data-type="img"]');
       if (thumbs && thumbs[0]){
-        var main = card.querySelector('.main-img img');
-        main.src = thumbs[0].dataset.main || thumbs[0].src;
-        for (var j=0;j<thumbs.length;j++) thumbs[j].classList.toggle('active', j===0);
+        var mainBox = card.querySelector('.main-img');
+        mainBox.innerHTML = '<img src="' + (thumbs[0].dataset.main || thumbs[0].src) + '">';
+        // 設定 active
+        var allThumbs = card.querySelectorAll('.thumbs img');
+        for (var j=0;j<allThumbs.length;j++) allThumbs[j].classList.remove('active');
+        thumbs[0].classList.add('active');
       }
+
       if (p && !isCustomId(p.id)) {
-        refreshSizeChips(card, p);
+        refreshSizeChips(card, p); // 內部會呼叫 refreshQtyChips
       } else {
         var codeInput  = card.querySelector('.code-input');
         var unitsInput = card.querySelector('.units-input');
@@ -472,13 +486,27 @@ document.addEventListener('DOMContentLoaded', function () {
     var t = e.target;
     if (!(t instanceof HTMLElement)) return;
 
-    // 縮圖切換
+    // 縮圖切換（含影片縮圖）
     if (t.matches('.thumbs img')){
-      var main = t.closest('.imgbox').querySelector('.main-img img');
-      var all = t.parentElement.querySelectorAll('img');
+      var imgbox  = t.closest('.imgbox');
+      var mainBox = imgbox.querySelector('.main-img');
+      var all     = t.parentElement.querySelectorAll('img');
       for (var i=0;i<all.length;i++) all[i].classList.remove('active');
       t.classList.add('active');
-      main.src = t.dataset.main || t.src;
+
+      var type = t.dataset.type || 'img';
+      var main = t.dataset.main || t.src;
+
+      if (type === 'youtube'){
+        mainBox.innerHTML =
+          '<iframe width="100%" height="315" ' +
+          'src="https://www.youtube.com/embed/' + main + '" ' +
+          'title="試穿影片" frameborder="0" ' +
+          'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+          'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+      } else {
+        mainBox.innerHTML = '<img src="' + main + '">';
+      }
       return;
     }
 
