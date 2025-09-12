@@ -111,7 +111,8 @@ window.PRODUCTS = [
     sizes: ['L'],
     imgs: [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙1.jpg',
-      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙2.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙2.jpg',
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙3.jpg'
     ],
     youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c
     stockMap: { '黑-L': 1 }
