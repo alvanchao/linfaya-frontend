@@ -487,28 +487,30 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!(t instanceof HTMLElement)) return;
 
     // 縮圖切換（含影片縮圖）
-    if (t.matches('.thumbs img')){
-      var imgbox  = t.closest('.imgbox');
-      var mainBox = imgbox.querySelector('.main-img');
-      var all     = t.parentElement.querySelectorAll('img');
-      for (var i=0;i<all.length;i++) all[i].classList.remove('active');
-      t.classList.add('active');
+  if (t.matches('.thumbs img')){
+    var imgbox  = t.closest('.imgbox');
+    var mainBox = imgbox.querySelector('.main-img');
+    var all     = t.parentElement.querySelectorAll('img');
+    for (var i=0;i<all.length;i++) all[i].classList.remove('active');
+    t.classList.add('active');
 
-      var type = t.dataset.type || 'img';
-      var main = t.dataset.main || t.src;
+    var type = t.dataset.type || 'img';
+    var main = t.dataset.main || t.src;
 
-      if (type === 'youtube'){
-        mainBox.innerHTML =
-          '<iframe width="100%" height="315" ' +
-          'src="https://www.youtube.com/embed/' + main + '" ' +
-          'title="試穿影片" frameborder="0" ' +
-          'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
-          'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
-      } else {
-        mainBox.innerHTML = '<img src="' + main + '">';
-      }
-      return;
+    if (type === 'youtube'){
+      // 直接自動播放（為相容自動播放，預設靜音）
+      mainBox.innerHTML =
+        '<iframe width="100%" height="315" ' +
+        'src="https://www.youtube.com/embed/' + main + '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1" ' +
+        'title="試穿影片" frameborder="0" ' +
+        'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+        'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+    } else {
+      mainBox.innerHTML = '<img src="' + main + '">';
     }
+    return;
+  }
+
 
     var card = t.closest('.product'); if (!card) return;
     var id = card.dataset.id;
