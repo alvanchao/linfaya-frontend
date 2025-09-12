@@ -38,7 +38,8 @@ window.PRODUCTS = [
     sizes: ['X'],
     imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/客製修改.jpg'
       
-    ],  
+    ], 
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
     stockMap: {}                     // 不限庫存
   },
 
@@ -56,8 +57,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖3.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/不規則造型長袖4.jpg'
     ],
-    // ✅ 新增這一行：YouTube/Shorts 影片 ID
-    youtubeId: 'gBX_zl42r3c',
+    youtubeId: 'gBX_zl42r3c', // ✅ 新增這一行：YouTube/Shorts 影片 ID
     stockMap: { }
   },
   {
@@ -72,8 +72,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖2.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/男生不規則長袖3.jpg'
     ],
-    // ✅ 新增這一行：YouTube/Shorts 影片 ID
-    youtubeId: 'gBX_zl42r3c',
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
     stockMap: { }
   },
   {
@@ -86,6 +85,7 @@ window.PRODUCTS = [
     imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/一字領長袖連身衣.jpg'
 
     ],
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
     stockMap: { '粉藍-M': 1 }
   },
   {
@@ -99,6 +99,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙1.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/皮革流蘇連身裙2.jpg'
     ],
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
     stockMap: { '黑-L': 1 }
   },
 
@@ -114,6 +115,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙1.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/閃閃亮片綁帶流蘇裙2.jpg'
     ],
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
     stockMap: { }
   },
   {
@@ -129,6 +131,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲3.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲4.jpg'
     ],
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
     stockMap: {  }
   },
   {
@@ -141,6 +144,7 @@ window.PRODUCTS = [
     imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲1.jpg', 
            'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲2.jpg'
     ],
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
     stockMap: {  }
   },
   {
@@ -155,6 +159,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型綁帶紗裙2.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型綁帶紗裙3.jpg'
     ],
+    youtubeId: '', // ✅ 新增這一行：YouTube/Shorts 影片 ID 
     stockMap: { '黑-F': 1 }
   }
 ];
