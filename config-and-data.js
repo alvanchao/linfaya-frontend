@@ -146,8 +146,7 @@ window.PRODUCTS = [
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲1.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲2.jpg',
       'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲3.jpg',
-      //'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲4.jpg'
-      './Photo/造型喇叭褲4.jpg'
+      'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/造型喇叭褲4.jpg'
     ],
     youtubeId: 'E5qANhO8fBk', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c 
     stockMap: {  }
@@ -160,7 +159,8 @@ window.PRODUCTS = [
     colors: ['黑'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     imgs: ['https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲1.jpg', 
-           'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲2.jpg'
+           //'https://cdn.jsdelivr.net/gh/alvanchao/linfaya-frontend/Photo/喇叭褲2.jpg'
+           './Photo/喇叭褲2.jpg'
     ],
     youtubeId: 'LGIytjL8cy8', // ✅ 新增這一行：YouTube/Shorts 影片 ID 舉例: gBX_zl42r3c 
     stockMap: {  }
