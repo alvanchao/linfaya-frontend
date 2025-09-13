@@ -153,8 +153,8 @@ window.PRODUCTS = [
     imgs: [
       window.PHOTO_BASE + '造型喇叭褲1.jpg',
       window.PHOTO_BASE + '造型喇叭褲2.jpg',
-      window.PHOTO_BASE + '造型喇叭褲3.jpg',
-      window.PHOTO_BASE + '造型喇叭褲4.jpg'
+      window.PHOTO_BASE + '造型喇叭褲3R.jpg',
+      window.PHOTO_BASE + '造型喇叭褲4R.jpg'
     ],
     youtubeId: 'E5qANhO8fBk',
     stockMap: { }
@@ -168,7 +168,7 @@ window.PRODUCTS = [
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     imgs: [
       window.PHOTO_BASE + '喇叭褲1.jpg',
-      window.PHOTO_BASE + '喇叭褲2.jpg'
+      window.PHOTO_BASE + '喇叭褲2R.jpg'
     ],
     youtubeId: 'LGIytjL8cy8',
     stockMap: { }
