@@ -61,7 +61,8 @@ window.PRODUCTS = [
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     imgs: [
       window.PHOTO_BASE + '美背短版上衣1.jpg',
-      window.PHOTO_BASE + '美背短版上衣2.jpg'
+      window.PHOTO_BASE + '美背短版上衣2.jpg',
+      window.PHOTO_BASE + '美背短版上衣尺寸表.jpg'
     ],
     youtubeId: 'E5qANhO8fBk', 
     stockMap: { }
@@ -77,7 +78,8 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '不規則造型長袖1.jpg',
       window.PHOTO_BASE + '不規則造型長袖2.jpg',
       window.PHOTO_BASE + '不規則造型長袖3.jpg',
-      window.PHOTO_BASE + '不規則造型長袖4.jpg'
+      window.PHOTO_BASE + '不規則造型長袖4.jpg',
+	  window.PHOTO_BASE + '不規則造型長袖尺寸表.jpg'
     ],
     youtubeId: 'fJjJw1osqsE',
     stockMap: { }
@@ -92,7 +94,8 @@ window.PRODUCTS = [
     imgs: [
       window.PHOTO_BASE + '男生不規則長袖1.jpg',
       window.PHOTO_BASE + '男生不規則長袖2.jpg',
-      window.PHOTO_BASE + '男生不規則長袖3.jpg'
+      window.PHOTO_BASE + '男生不規則長袖3.jpg',
+      window.PHOTO_BASE + '男生不規則長袖尺寸表.jpg'
     ],
     youtubeId: 'MSWPEn5E23A',
     stockMap: { }
@@ -154,7 +157,8 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '造型喇叭褲1.jpg',
       window.PHOTO_BASE + '造型喇叭褲2.jpg',
       window.PHOTO_BASE + '造型喇叭褲3R.jpg',
-      window.PHOTO_BASE + '造型喇叭褲4R.jpg'
+      window.PHOTO_BASE + '造型喇叭褲4R.jpg',
+      window.PHOTO_BASE + '造型喇叭褲尺寸表.jpg'
     ],
     youtubeId: 'E5qANhO8fBk',
     stockMap: { }
@@ -168,7 +172,8 @@ window.PRODUCTS = [
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     imgs: [
       window.PHOTO_BASE + '喇叭褲1.jpg',
-      window.PHOTO_BASE + '喇叭褲2R.jpg'
+      window.PHOTO_BASE + '喇叭褲2R.jpg',
+      window.PHOTO_BASE + '喇叭褲尺寸表.jpg'
     ],
     youtubeId: 'LGIytjL8cy8',
     stockMap: { }
