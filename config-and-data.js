@@ -34,6 +34,10 @@ window.REQUIRE_PREORDER_CHECKBOX = true;
 
 // ---- 商品資料 ----
 // 注意：圖片路徑大小寫要和 /Photo 資料夾完全一致
+// NEW 標記說明：
+// 1) 對任一商品加入 isNew: true ；或
+// 2) 加入 newUntil: 'YYYY-MM-DD'（到期日當天含內會顯示 NEW）
+// 兩者擇一即可。
 window.PRODUCTS = [
 
   // ====== 專屬客製化修改(特別的收費方式) ======
@@ -183,6 +187,7 @@ window.PRODUCTS = [
     cat: 'bottoms',
     name: '造型綁帶紗裙',
     price: 420,
+    newUntil: '2025-10-31', // ← 新增這行（到 10/31 都會顯示 NEW）
     colors: ['黑'],
     sizes: ['F'],
     imgs: [

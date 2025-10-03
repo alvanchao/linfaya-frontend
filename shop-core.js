@@ -49,9 +49,10 @@ document.addEventListener('DOMContentLoaded', function () {
     bottoms: '下著',
     accessories: '飾品',
     shoes: '鞋',
-    customerize: '客製化'
+    customerize: '客製化',
+    new: 'NEW'
   };
-  var CAT_ORDER = ['all','tops','bottoms','accessories','shoes','customerize'];
+  var CAT_ORDER = ['new','all','tops','bottoms','accessories','shoes','customerize'];
 
   // ===== 工具 =====
   function isCustomId(id){ return String(id||'').toLowerCase() === 'custom01'; }
@@ -132,10 +133,23 @@ document.addEventListener('DOMContentLoaded', function () {
   var currentPage = 1;
 
   // ===== 分類分頁 =====
-  function renderCats(){
+  
+  // 判斷新品：isNew=true 或 newUntil(YYYY-MM-DD) 尚未過期
+  function isNew(p){
+    try{
+      if (!p) return false;
+      if (p.isNew === true) return true;
+      if (p.newUntil){
+        var t = new Date(p.newUntil.replace(/\//g,'-') + 'T23:59:59');
+        if (!isNaN(t)) return t >= new Date();
+      }
+      return false;
+    }catch(_){ return false; }
+  }
+function renderCats(){
     if (!cats) return;
     var available = Array.from(new Set(products.map(function(p){return p.cat;})));
-    var arr = CAT_ORDER.filter(function(c){ return c==='all' || available.indexOf(c) >= 0; });
+    var arr = CAT_ORDER.filter(function(c){ return c==='all' || c==='new' || available.indexOf(c) >= 0; });
     cats.innerHTML = '';
     arr.forEach(function(c){
       var b = document.createElement('button');
@@ -241,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderProducts(cat, page){
     grid.innerHTML = '';
 
-    var list = (cat==='all') ? products : products.filter(function(p){ return p.cat === cat; });
+    var list = (cat==='all') ? products : (cat==='new' ? products.filter(isNew) : products.filter(function(p){ return p.cat === cat; }));
     var start = (page-1) * PAGE_SIZE;
     var slice = list.slice(start, start + PAGE_SIZE);
 
@@ -276,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         html =
           '<div class="product" data-id="' + p.id + '">' +
-            '<div class="imgbox">' +
+            '<div class="imgbox">' + (isNew(p) ? '<span class="badge-new">NEW</span>' : '') +
               mainImgHTML +
               thumbsHTML +
             '</div>' +
@@ -327,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var priceText = '每份 ' + fmt(p.price || 10);
         html =
           '<div class="product" data-id="' + p.id + '">' +
-            '<div class="imgbox">' +
+            '<div class="imgbox">' + (isNew(p) ? '<span class="badge-new">NEW</span>' : '') +
               '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '"></div>' +
               '<div class="thumbs">' +
                 (p.imgs||[]).map(function(img,i){

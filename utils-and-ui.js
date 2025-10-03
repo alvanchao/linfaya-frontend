@@ -136,6 +136,10 @@
 
       /* ---- 空車提示對齊 ---- */
       '#cartList p.muted{margin:4px 0 8px}'
+      ,
+      /* ---- NEW 角標 ---- */
+      '.imgbox{position:relative}',
+      '.badge-new{position:absolute;top:8px;left:8px;padding:4px 8px;font-size:12px;font-weight:700;border-radius:999px;background:#5eead4;color:#0b0c10;box-shadow:0 1px 2px rgba(0,0,0,.4)}'
     ].join('');
     var style = d.createElement('style');
     style.textContent = css;
