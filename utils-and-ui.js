@@ -140,7 +140,13 @@
       /* ---- NEW 角標 ---- */
       '.imgbox{position:relative}',
       '.badge-new{position:absolute;top:8px;left:8px;padding:4px 8px;font-size:12px;font-weight:700;border-radius:999px;background:#5eead4;color:#0b0c10;box-shadow:0 1px 2px rgba(0,0,0,.4)}'
-    ].join('');
+    
+      ,
+      /* ---- 縮圖列：可橫向捲動（避免圖片過多選不到） ---- */
+      '.thumbs{display:flex;gap:6px;padding:8px;border-top:1px solid #171b25;overflow-x:auto;scrollbar-width:thin;-webkit-overflow-scrolling:touch}',
+      '.thumbs::-webkit-scrollbar{height:6px}',
+      '.thumbs::-webkit-scrollbar-thumb{background:#283042;border-radius:3px}'
+].join('');
     var style = d.createElement('style');
     style.textContent = css;
     d.head.appendChild(style);
