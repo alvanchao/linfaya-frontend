@@ -161,7 +161,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '長版美背運動內衣18.jpg',
       window.PHOTO_BASE + '長版美背運動內衣19.jpg'
     ],
-    youtubeId: '',
+    youtubeId: 'ygWTcGfvYsA', 
     stockMap: { }
   },
   {
@@ -188,7 +188,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '美背交叉運動內衣13.jpg',
       window.PHOTO_BASE + '美背交叉運動內衣14.jpg'
 	],
-    youtubeId: '',
+    youtubeId: 'D2MeY8EV7Ow',
     stockMap: { }
   },
    {
@@ -209,7 +209,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '美背鏤空運動內衣7.jpg',
       window.PHOTO_BASE + '美背鏤空運動內衣8.jpg'
 	],
-    youtubeId: '',
+    youtubeId: '4_H-OQvKGFY',
     stockMap: { }
   },
    {
@@ -232,7 +232,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '繞頸美背運動內衣9.jpg',
       window.PHOTO_BASE + '繞頸美背運動內衣10.jpg'
 	],
-    youtubeId: '',
+    youtubeId: 'Kw9sU1MV74I', 
     stockMap: { }
   },
    {
@@ -288,7 +288,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '雙線交叉基本款運動內衣40.jpg',
       window.PHOTO_BASE + '雙線交叉基本款運動內衣41.jpg'
 	],
-    youtubeId: '',
+    youtubeId: 'F73Zg2Xyy4Y',
     stockMap: { }
   },
 
@@ -364,7 +364,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '高腰交叉運動健身瑜珈褲12.jpg',
       window.PHOTO_BASE + '高腰交叉運動健身瑜珈褲13.jpg'
     ],
-    youtubeId: '',
+    youtubeId: '4_H-OQvKGFY',
     stockMap: { }
   },
   {
@@ -390,7 +390,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '高腰運動健身瑜珈褲12.jpg',
       window.PHOTO_BASE + '高腰運動健身瑜珈褲13.jpg'
     ],
-    youtubeId: '',
+    youtubeId: 'Kw9sU1MV74I',
     stockMap: { }
   }
 ];
