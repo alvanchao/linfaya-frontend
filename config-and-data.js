@@ -460,6 +460,7 @@ window.PRODUCTS = [
     cat: 'bottoms',
     name: '民族風斜裙',
     price: 700,
+	newUntil: '2025-11-25',
     colors: ['黑', '咖啡'],
     sizes: ['S', 'M', 'L', 'XL'],
     imgs: [
@@ -483,6 +484,7 @@ window.PRODUCTS = [
     cat: 'bottoms',
     name: '紗裙喇叭褲',
     price: 530,
+	newUntil: '2025-11-25',
     colors: ['黑'],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     imgs: [
