@@ -291,6 +291,68 @@ window.PRODUCTS = [
     youtubeId: 'F73Zg2Xyy4Y',
     stockMap: { }
   },
+   {
+    id: 'top11',
+    cat: 'tops',
+    name: '男生小V領練習服',
+    price: 580,
+	newUntil: '2025-11-25',
+    colors: ['黑', '白'],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    imgs: [
+      window.PHOTO_BASE + '男生小V領練習服1.jpg',
+      window.PHOTO_BASE + '男生小V領練習服2.jpg',
+      window.PHOTO_BASE + '男生小V領練習服3.jpg',
+      window.PHOTO_BASE + '男生小V領練習服4.jpg',
+      window.PHOTO_BASE + '男生小V領練習服5.jpg',
+      window.PHOTO_BASE + '男生小V領練習服6.jpg',
+      window.PHOTO_BASE + '男生小V領練習服7.jpg',
+      window.PHOTO_BASE + '男生小V領練習服8.jpg'
+	],
+    youtubeId: '', 
+    stockMap: { }
+  }, 
+  {
+    id: 'top12',
+    cat: 'tops',
+    name: '男生圓領開釦練習服',
+    price: 650,
+	newUntil: '2025-11-25',
+    colors: ['黑'],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    imgs: [
+      window.PHOTO_BASE + '男生圓領開釦練習服1.jpg',
+      window.PHOTO_BASE + '男生圓領開釦練習服2.jpg',
+      window.PHOTO_BASE + '男生圓領開釦練習服3.jpg',
+      window.PHOTO_BASE + '男生圓領開釦練習服4.jpg',
+      window.PHOTO_BASE + '男生圓領開釦練習服5.jpg'
+	],
+    youtubeId: '', 
+    stockMap: { }
+  },
+   {
+    id: 'top13',
+    cat: 'tops',
+    name: '蕾絲拼接長袖練習服',
+    price: 700,
+	newUntil: '2025-11-25',
+    colors: ['黑', '白'],
+    sizes: ['S','L'],
+    imgs: [
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服1.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服2.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服3.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服4.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服5.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服6.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服7.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服8.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服9.jpg',
+      window.PHOTO_BASE + '蕾絲拼接長袖練習服10.jpg'
+	],
+    youtubeId: 'AtuSFHYs-kE',
+    stockMap: { }
+  },
 
   // ====== Bottoms ======
   {
@@ -392,7 +454,48 @@ window.PRODUCTS = [
     ],
     youtubeId: 'Kw9sU1MV74I',
     stockMap: { }
-  }
+  },
+   {
+    id: 'btm06',
+    cat: 'bottoms',
+    name: '民族風斜裙',
+    price: 700,
+    colors: ['黑', '咖啡'],
+    sizes: ['S', 'M', 'L', 'XL'],
+    imgs: [
+      window.PHOTO_BASE + '民族風斜裙1.jpg',
+      window.PHOTO_BASE + '民族風斜裙2.jpg',
+      window.PHOTO_BASE + '民族風斜裙3.jpg',
+      window.PHOTO_BASE + '民族風斜裙4.jpg',
+      window.PHOTO_BASE + '民族風斜裙5.jpg',
+      window.PHOTO_BASE + '民族風斜裙6.jpg',
+      window.PHOTO_BASE + '民族風斜裙7.jpg',
+      window.PHOTO_BASE + '民族風斜裙8.jpg',
+      window.PHOTO_BASE + '民族風斜裙9.jpg',
+      window.PHOTO_BASE + '民族風斜裙10.jpg',
+      window.PHOTO_BASE + '民族風斜裙11.jpg'
+    ],
+    youtubeId: 'FJCp6l6y3eY',
+    stockMap: { }
+  },
+   {
+    id: 'btm07',
+    cat: 'bottoms',
+    name: '紗裙喇叭褲',
+    price: 530,
+    colors: ['黑'],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    imgs: [
+      window.PHOTO_BASE + '紗裙喇叭褲1.jpg',
+      window.PHOTO_BASE + '紗裙喇叭褲2.jpg',
+      window.PHOTO_BASE + '紗裙喇叭褲3.jpg',
+      window.PHOTO_BASE + '紗裙喇叭褲4.jpg',
+      window.PHOTO_BASE + '紗裙喇叭褲5.jpg',
+      window.PHOTO_BASE + '紗裙喇叭褲6.jpg'
+    ],
+    youtubeId: 'am84AdlSdCM',
+    stockMap: { }
+  },
 ];
 
 //remark
