@@ -353,6 +353,42 @@ window.PRODUCTS = [
     youtubeId: 'AtuSFHYs-kE',
     stockMap: { }
   },
+  {
+    id: 'top14',
+    cat: 'tops',
+    name: '不規則長版短袖練習服',
+    price: 450,
+	newUntil: '2025-12-06',
+    colors: ['黑', '白'],
+    sizes: ['F'],
+    imgs: [
+      window.PHOTO_BASE + '不規則長版短袖練習服1.jpg',
+      window.PHOTO_BASE + '不規則長版短袖練習服2.jpg',
+      window.PHOTO_BASE + '不規則長版短袖練習服3.jpg',
+      window.PHOTO_BASE + '不規則長版短袖練習服4.jpg',
+      window.PHOTO_BASE + '不規則長版短袖練習服5.jpg'
+	],
+    youtubeId: '8OijAzcAaDU',
+    stockMap: { }
+  },{
+    id: 'top15',
+    cat: 'tops',
+    name: '短版高領蝙蝠袖露背上衣',
+    price: 550,
+	newUntil: '2025-12-06',
+    colors: ['黑'],
+    sizes: ['XS','S','M','L','XL'],
+    imgs: [
+      window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣1.jpg',
+      window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣2.jpg',
+      window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣3.jpg',
+      window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣4.jpg',
+      window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣5.jpg',
+      window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣6.jpg'
+	],
+    youtubeId: 'BlAnwwIR0mU',
+    stockMap: { }
+  },
 
   // ====== Bottoms ======
   {
@@ -496,6 +532,26 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '紗裙喇叭褲6.jpg'
     ],
     youtubeId: 'am84AdlSdCM',
+    stockMap: { }
+  },
+   {
+    id: 'btm08',
+    cat: 'bottoms',
+    name: '荷葉邊串珠綁帶裙',
+    price: 450,
+	newUntil: '2025-12-06',
+    colors: ['黑','粉'],
+    sizes: ['S', 'M', 'L'],
+    imgs: [
+      window.PHOTO_BASE + '荷葉邊串珠綁帶裙1.jpg',
+      window.PHOTO_BASE + '荷葉邊串珠綁帶裙2.jpg',
+      window.PHOTO_BASE + '荷葉邊串珠綁帶裙3.jpg',
+      window.PHOTO_BASE + '荷葉邊串珠綁帶裙4.jpg',
+      window.PHOTO_BASE + '荷葉邊串珠綁帶裙5.jpg',
+      window.PHOTO_BASE + '荷葉邊串珠綁帶裙6.jpg',
+      window.PHOTO_BASE + '荷葉邊串珠綁帶裙7.jpg'
+    ],
+    youtubeId: 'Q15w25w0tKA',
     stockMap: { }
   },
 ];
