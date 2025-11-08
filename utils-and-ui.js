@@ -198,3 +198,77 @@
   (function(){ var y = $('#year'); if (y) y.textContent = new Date().getFullYear(); })();
 
 })(window, document);
+
+/* =========================
+ * Backend pre-warm / ping on first visit
+ * - Sends a lightweight request to wake the server when a user opens the site.
+ * - Runs once per browser session (via sessionStorage flag).
+ * - Tries HEAD on common health endpoints, falls back to GET if needed.
+ * - Safe: non-blocking and silent on failure.
+ * ========================= */
+(function () {
+  var KEY = 'BACKEND_PINGED_V1'; // Session flag; bump version when changing behavior
+  var PING_PATHS = ['/api/health', '/_health', '/health', '/'];
+  var timeoutMs = 5000;
+  var retry = 0;
+
+  function safeFetch(url) {
+    if (window.fetchJSON && typeof window.fetchJSON === 'function') {
+      return window.fetchJSON(url, { method: 'GET' }, { timeoutMs: timeoutMs, retries: retry });
+    }
+    return new Promise(function (resolve, reject) {
+      var ac = new AbortController();
+      var t = setTimeout(function(){ ac.abort(new Error('timeout')); }, timeoutMs);
+      fetch(url, { method: 'GET', signal: ac.signal, cache: 'no-store' })
+        .then(function (r) { clearTimeout(t); resolve(r); })
+        .catch(function (e) { clearTimeout(t); reject(e); });
+    });
+  }
+
+  async function pingOnce() {
+    try {
+      if (sessionStorage.getItem(KEY)) return;
+      sessionStorage.setItem(KEY, '1');
+
+      if (!window.API_BASE) return;
+      var base = window.API_BASE.replace(/\/$/, '');
+
+      for (var i = 0; i < PING_PATHS.length; i++) {
+        var p = PING_PATHS[i];
+        var url = base + (p[0] === '/' ? p : ('/' + p));
+        try {
+          var ok = false;
+          try {
+            var r = await fetch(url, { method: 'HEAD', cache: 'no-store', mode: 'cors' });
+            if (r && (r.ok || r.status === 405 || r.status === 401 || r.status === 403 || r.status === 404)) {
+              ok = true; // server responded -> considered warmed
+            }
+          } catch (e) { /* HEAD not supported or CORS issue, try GET */ }
+          if (!ok) await safeFetch(url);
+          break; // one success is enough
+        } catch (e) {
+          // try next path
+        }
+      }
+    } catch (e) {
+      try { console.debug('pre-warm ping failed', e); } catch(_) {}
+    }
+  }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    pingOnce();
+  } else {
+    document.addEventListener('DOMContentLoaded', pingOnce);
+  }
+
+  // Optional: keep-alive every 15 minutes while tab is visible
+  (function optionalInterval() {
+    try {
+      var INTERVAL_MIN = 15;
+      var timer = setInterval(function () {
+        if (document.visibilityState === 'visible') pingOnce();
+      }, INTERVAL_MIN * 60 * 1000);
+      window.addEventListener('beforeunload', function () { clearInterval(timer); });
+    } catch (e) {}
+  })();
+})();
