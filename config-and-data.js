@@ -616,8 +616,9 @@ window.PRODUCTS = [
     cat: 'shoes',
     name: '跳色拉丁舞練習鞋',
     price: 600,
+	  newUntil: '2025-12-06',
     colors: ['薄荷綠', '膚', '粉', '黑'],
-	noOnlineOrder: true,     // ⬅⬅ 這行：此商品只展示、不能線上加入購物車
+	  noOnlineOrder: true,     // ⬅⬅ 這行：此商品只展示、不能線上加入購物車
     sizes: ['34', '35', '36', '37', '38', '39', '40', '41', '42'],
     imgs: [
       window.PHOTO_BASE + '跳色練習鞋1.jpg',
