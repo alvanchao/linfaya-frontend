@@ -43,6 +43,15 @@ document.addEventListener('DOMContentLoaded', function () {
   })();
 
   var CAT_ORDER = ['new','all','tops','bottoms','accessories','shoes','customerize'];
+  var CAT_LABELS = {
+    all: '全部',
+    new: 'NEW',
+    tops: 'Tops 上身',
+    bottoms: 'Bottoms 下身',
+    accessories: 'Accessories 配件',
+    shoes: 'Shoes 鞋款',
+    customerize: '客製化'
+  };
 
   // 狀態
   var currentCat = 'all';
@@ -157,16 +166,35 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!p) return false;
     if (p.isNew) return true;
     if (p.newUntil){
-      var today = new Date();
-      var y = today.getFullYear();
-      var m = String(today.getMonth()+1).padStart(2,'0');
-      var d = String(today.getDate()).padStart(2,'0');
-      var todayStr = y + '-' + m + '-' + d;
-      return String(p.newUntil) >= todayStr;
+      try{
+        var t = new Date(p.newUntil + 'T23:59:59+08:00');
+        if (!isNaN(t)) return t >= new Date();
+      }catch(_){}
     }
     return false;
   }
 
+  function renderCats(){
+    if (!cats) return;
+    var available = Array.from(new Set(products.map(function(p){return p.cat;})));
+    var arr = CAT_ORDER.filter(function(c){ return c==='all' || c==='new' || available.indexOf(c) >= 0; });
+    cats.innerHTML = '';
+    arr.forEach(function(c){
+      var b = document.createElement('button');
+      b.className = 'tab' + (c===currentCat?' active':'');
+      b.dataset.cat = c;
+      b.textContent = CAT_LABELS[c] || c;
+      b.addEventListener('click', function(){
+        currentCat = c; currentPage = 1;
+        cats.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('active', x.dataset.cat===c); });
+        renderProducts(currentCat, currentPage);
+        try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){}
+      });
+      cats.appendChild(b);
+    });
+  }
+
+  // ===== 顯示/隱藏客製化 FLOW 卡 =====
   function updateCustomFlowVisibility(show){
     if (!flowBox) return;
     flowBox.style.display = show ? 'block' : 'none';
@@ -277,16 +305,12 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderProducts(cat, page){
     grid.innerHTML = '';
 
-    var list;
-    if (cat === 'all'){
-      list = products;
-    } else if (cat === 'new'){
-      list = products.filter(isNew);
-    } else {
-      list = products.filter(function(p){ return p.cat === cat; });
-    }
-
-    var start = (page - 1) * PAGE_SIZE;
+    var list = (cat==='all')
+      ? products
+      : (cat==='new'
+          ? products.filter(isNew)
+          : products.filter(function(p){ return p.cat === cat; }));
+    var start = (page-1) * PAGE_SIZE;
     var slice = list.slice(start, start + PAGE_SIZE);
 
     // 只在 customerize 分頁顯示 FLOW
@@ -297,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var html = '';
 
       if (!isCustom) {
-        var firstColor = (p.colors && p.colors[0]) || '';
+        var firstColor = (p.colors&&p.colors[0]) || '';
 
         // 1) 主圖：預設第一張圖片（之後會被縮圖點擊覆蓋為 <img> 或 <iframe>）
         var mainImgHTML =
@@ -309,8 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var thumbsHTML =
           '<div class="thumbs">' +
             (p.imgs||[]).map(function(img,i){
-              return '<img src="' + img + '" data-type="img" data-main="' + img + '" ' +
-                       (i===0?'class="active"':'') + ' />';
+              return '<img src="' + img + '" data-type="img" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />';
             }).join('') +
             (p.youtubeId
               ? '<img src="https://img.youtube.com/vi/' + p.youtubeId + '/hqdefault.jpg" ' +
@@ -319,9 +342,9 @@ document.addEventListener('DOMContentLoaded', function () {
             ) +
           '</div>';
 
-        // 3) 決定按鈕（一般購買 vs 僅展示）
+        // 3) 按鈕 HTML（依 noOnlineOrder 決定是否可線上購買）
         var btnHTML;
-        if (p.noOnlineOrder){
+        if (p.noOnlineOrder) {
           btnHTML =
             '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">' +
               '<button class="btn" disabled ' +
@@ -334,7 +357,6 @@ document.addEventListener('DOMContentLoaded', function () {
             '</div>';
         }
 
-        // 4) 主體卡片 HTML
         html =
           '<div class="product" data-id="' + p.id + '">' +
             '<div class="imgbox">' + (isNew(p) ? '<span class="badge-new">NEW</span>' : '') +
@@ -349,8 +371,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '<div class="muted" style="font-size:12px;margin-bottom:6px">顏色</div>' +
                 '<div class="chips color-group">' +
                   (p.colors||[]).map(function(c,i){
-                    return '<button class="chip' + (i===0?' active':'') +
-                           '" data-type="color" data-val="' + c + '">' + c + '</button>';
+                    return '<button class="chip' + (i===0?' active':'') + '" data-type="color" data-val="' + c + '">' + c + '</button>';
                   }).join('') +
                 '</div>' +
               '</div>' +
@@ -373,12 +394,12 @@ document.addEventListener('DOMContentLoaded', function () {
         html = html.replace(
           '<div class="chips size-group"></div>',
           '<div class="chips size-group">' +
-            (p.sizes||[]).map(function(s,i){
-              var cap = capFor(p, firstColor, s);
-              var enabled = cap > 0;
-              var cls = enabled ? ('class="chip' + (i===0?' active':'') + '"') : 'class="chip disabled" disabled';
-              return '<button ' + cls + ' data-type="size" data-val="' + s + '">' + s + '</button>';
-            }).join('') +
+          (p.sizes||[]).map(function(s,i){
+            var cap = capFor(p, firstColor, s);
+            var enabled = cap > 0;
+            var cls = enabled ? ('class="chip' + (i===0?' active':'') + '"') : 'class="chip disabled" disabled';
+            return '<button ' + cls + ' data-type="size" data-val="' + s + '">' + s + '</button>';
+          }).join('') +
           '</div>'
         );
 
@@ -391,8 +412,7 @@ document.addEventListener('DOMContentLoaded', function () {
               '<div class="main-img"><img src="' + p.imgs[0] + '" alt="' + (p.name||'客製化') + '"></div>' +
               '<div class="thumbs">' +
                 (p.imgs||[]).map(function(img,i){
-                  return '<img src="' + img + '" data-type="img" data-main="' + img + '" ' +
-                           (i===0?'class="active"':'') + ' />';
+                  return '<img src="' + img + '" data-type="img" data-main="' + img + '" ' + (i===0?'class="active"':'') + ' />';
                 }).join('') +
               '</div>' +
             '</div>' +
@@ -437,16 +457,15 @@ document.addEventListener('DOMContentLoaded', function () {
       if (thumbs && thumbs[0]){
         var mainBox = card.querySelector('.main-img');
         mainBox.innerHTML = '<img src="' + (thumbs[0].dataset.main || thumbs[0].src) + '">';
+        // 設定 active
         var allThumbs = card.querySelectorAll('.thumbs img');
         for (var j=0;j<allThumbs.length;j++) allThumbs[j].classList.remove('active');
         thumbs[0].classList.add('active');
       }
 
       if (p && !isCustomId(p.id)) {
-        // 一般商品：補上尺寸／數量 chips
         refreshSizeChips(card, p); // 內部會呼叫 refreshQtyChips
       } else {
-        // 客製化：掛上即時驗證
         var codeInput  = card.querySelector('.code-input');
         var unitsInput = card.querySelector('.units-input');
         var handler = function(){ validateCustomCard(card); };
@@ -469,60 +488,61 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', function(){
           currentPage = i0;
           renderProducts(currentCat, currentPage);
-          try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){ }
+          try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){}
         });
       })(i);
       mount.appendChild(btn);
     }
   }
 
-  // ===== 分類 chip 事件 =====
-  if (cats){
-    cats.addEventListener('click', function(e){
-      var t = e.target;
-      if (!(t instanceof HTMLElement)) return;
-      var btn = t.closest('button[data-cat]');
-      if (!btn) return;
-      var c = btn.dataset.cat || 'all';
-      currentCat = c;
-      currentPage = 1;
+  // ===== 購物車更新 =====
+  function updateCart(openDrawer){
+    if (!cartList) return;
+    cartList.innerHTML = '';
+    if (!cart.length){
+      cartList.innerHTML = '<p class="muted">購物車目前是空的</p>';
+      updateSummary();
+      if (openDrawer && drawer) drawer.classList.add('open');
+      return;
+    }
 
-      var all = cats.querySelectorAll('button[data-cat]');
-      for (var i=0;i<all.length;i++){
-        all[i].classList.remove('active');
+    cart.forEach(function(it, index){
+      var attrs = [];
+      if (it.color) attrs.push('顏色：'+it.color);
+      if (it.size)  attrs.push('尺寸：'+it.size);
+      if (isCustomId(it.id) && it.customCode){
+        attrs.push('認證碼：'+it.customCode);
       }
-      btn.classList.add('active');
 
-      renderProducts(currentCat, currentPage);
-      try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(_){ }
+      var warn = '';
+      if (isCustomId(it.id) && it.customMismatch){
+        warn = '<div class="oos-note">⚠ 份數與認證碼金額不一致，請調整數量或重新輸入。</div>';
+      }
+
+      var html =
+        '<div class="cart-card">' +
+          '<div class="thumb"><img src="' + (it.img||'') + '" alt=""></div>' +
+          '<div>' +
+            '<div><b>' + (it.name||'') + '</b></div>' +
+            (attrs.length ? '<div class="cart-attr">' + attrs.join(' | ') + '</div>' : '') +
+            warn +
+            '<div class="cart-actions">' +
+              '<button class="chip small dec" data-idx="'+index+'">-</button>' +
+              '<span>× ' + it.qty + '</span>' +
+              '<button class="chip small inc" data-idx="'+index+'">+</button>' +
+              '<button class="link-danger remove" data-idx="'+index+'">移除</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="cart-right">' +
+            '<div>' + fmt(it.price * it.qty) + '</div>' +
+          '</div>' +
+        '</div>';
+
+      cartList.insertAdjacentHTML('beforeend', html);
     });
 
-    // 預設：new -> all -> 第一個有資料的
-    (function initCatButtons(){
-      var firstCat = 'new';
-      var haveNew = products.some(isNew);
-      if (!haveNew) firstCat = 'all';
-      if (!products.length) firstCat = 'all';
-
-      var btns = cats.querySelectorAll('button[data-cat]');
-      var found = false;
-      for (var i=0;i<btns.length;i++){
-        var b = btns[i];
-        if (b.dataset.cat === firstCat){
-          b.classList.add('active');
-          found = true;
-        }else{
-          b.classList.remove('active');
-        }
-      }
-      if (!found && btns[0]) btns[0].classList.add('active');
-
-      currentCat = firstCat;
-      currentPage = 1;
-      renderProducts(currentCat, currentPage);
-    })();
-  }else{
-    renderProducts(currentCat, currentPage);
+    updateSummary();
+    if (openDrawer && drawer) drawer.classList.add('open');
   }
 
   // ===== 縮圖 / chips / 加入購物車 =====
@@ -610,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (!p) return;
 
-      // 檢查是否 noOnlineOrder（理論上不會進來，因為 button 沒有 .add）
+      // 防呆：即使有 bug 顯示到按鈕，也再檢查一次
       if (p.noOnlineOrder){
         toast('此商品僅展示，請私訊或現場討論後下單');
         return;
@@ -664,11 +684,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
       saveCart();
       toast('已加入購物車');
+      updateCart(true);
       return;
     }
   });
 
-  // 購物車操作（加、減、刪）
+  // 購物車內加減／刪除
   if (cartList){
     cartList.addEventListener('click', function(e){
       var t = e.target;
@@ -692,7 +713,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
         saveCart();
-        renderCart();
+        updateCart(false);
       }
 
       if (t.classList.contains('dec')){
@@ -709,7 +730,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
         saveCart();
-        renderCart();
+        updateCart(false);
       }
 
       if (t.classList.contains('remove')){
@@ -717,94 +738,46 @@ document.addEventListener('DOMContentLoaded', function () {
         if (cart[i3]){
           cart.splice(i3,1);
           saveCart();
-          renderCart();
+          updateCart(false);
         }
       }
     });
   }
 
-  function renderCart(){
-    if (!cartList) return;
-    cartList.innerHTML = '';
-    if (!cart.length){
-      cartList.innerHTML = '<p class="muted">購物車目前是空的</p>';
-      updateSummary();
-      return;
-    }
-
-    cart.forEach(function(it, index){
-      var attrs = [];
-      if (it.color) attrs.push('顏色：'+it.color);
-      if (it.size)  attrs.push('尺寸：'+it.size);
-      if (isCustomId(it.id) && it.customCode){
-        attrs.push('認證碼：'+it.customCode);
-      }
-
-      var warn = '';
-      if (isCustomId(it.id) && it.customMismatch){
-        warn = '<div class="oos-note">⚠ 份數與認證碼金額不一致，請調整數量或重新輸入。</div>';
-      }
-
-      var html =
-        '<div class="cart-card">' +
-          '<div class="thumb"><img src="' + (it.img||'') + '" alt=""></div>' +
-          '<div>' +
-            '<div><b>' + (it.name||'') + '</b></div>' +
-            (attrs.length ? '<div class="cart-attr">' + attrs.join(' | ') + '</div>' : '') +
-            warn +
-            '<div class="cart-actions">' +
-              '<button class="chip small dec" data-idx="'+index+'">-</button>' +
-              '<span>× ' + it.qty + '</span>' +
-              '<button class="chip small inc" data-idx="'+index+'">+</button>' +
-              '<button class="link-danger remove" data-idx="'+index+'">移除</button>' +
-            '</div>' +
-          '</div>' +
-          '<div class="cart-right">' +
-            '<div>' + fmt(it.price * it.qty) + '</div>' +
-          '</div>' +
-        '</div>';
-
-      cartList.insertAdjacentHTML('beforeend', html);
-    });
-
-    updateSummary();
-  }
-
   // ===== 抽屜開關 =====
   (function setupDrawer(){
-    var btnCart = document.getElementById('btnCart');
-    var btnClose = document.getElementById('drawerClose');
+    var btnCart  = document.getElementById('btnCart');
+    var closeBtn = document.getElementById('drawerClose');
     if (!drawer) return;
 
-    function openDrawer(){
-      drawer.classList.add('open');
-    }
-    function closeDrawer(){
+    if (btnCart) btnCart.addEventListener('click', function(){
+      updateCart(true);
+    });
+    if (closeBtn) closeBtn.addEventListener('click', function(){
       drawer.classList.remove('open');
-    }
-
-    if (btnCart){
-      btnCart.addEventListener('click', function(){
-        renderCart();
-        openDrawer();
-      });
-    }
-
-    if (btnClose){
-      btnClose.addEventListener('click', function(){
-        closeDrawer();
-      });
-    }
-
+    });
     drawer.addEventListener('click', function(e){
       if (e.target === drawer){
-        closeDrawer();
+        drawer.classList.remove('open');
       }
     });
   })();
 
-  // 初始載入
-  updateBadge();
-  renderCart();
-  w.updatePayButtonState && w.updatePayButtonState();
+  // 提供給外部（結帳頁會呼叫）
+  w.renderCart  = function(){ updateCart(false); };
+  w.updateBadge = updateBadge;
+
+  // 監聽付款成功後的清空廣播（thankyou.html 會 set EC_CLEAR_CART）
+  window.addEventListener('storage', function(e){
+    if (e && e.key === 'EC_CLEAR_CART'){
+      try{ sessionStorage.removeItem('cart'); }catch(_){}
+      updateBadge();
+      w.renderCart && w.renderCart();
+    }
+  });
+
+  // ===== 初始化 =====
+  renderCats();
+  renderProducts('all', 1);
+  updateCart(false);
 });
