@@ -68,7 +68,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '美背短版上衣2.jpg',
       window.PHOTO_BASE + '美背短版上衣尺寸表.jpg'
     ],
-    youtubeId: 'E5qANhO8fBk', 
+    youtubeId: 'E5qANhO8fBk',
     stockMap: { }
   },
   {
@@ -83,7 +83,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '不規則造型長袖2.jpg',
       window.PHOTO_BASE + '不規則造型長袖3.jpg',
       window.PHOTO_BASE + '不規則造型長袖4.jpg',
-	  window.PHOTO_BASE + '不規則造型長袖尺寸表.jpg'
+      window.PHOTO_BASE + '不規則造型長袖尺寸表.jpg'
     ],
     youtubeId: 'fJjJw1osqsE',
     stockMap: { }
@@ -137,7 +137,7 @@ window.PRODUCTS = [
     cat: 'tops',
     name: '長版美背運動內衣',
     price: 530,
-	newUntil: '2025-10-31',
+    newUntil: '2025-10-31',
     colors: ['玫紅', '淺紫灰', '深卡其', '櫻花粉', '卡布里藍', '樹莓紫', '水泥藍', '翡翠青', '蔣紅', '黑', '白', '苔綠', '青瓷', '復古玫瑰', '暗橙', '蒸餾咖啡', '磨砂綠', '白蛋白', '瀝青', '蔥綠', '薄粉', '波士頓橙', '繭棕', '晴日藍'],
     sizes: ['4', '6', '8', '10', '12'],
     imgs: [
@@ -161,7 +161,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '長版美背運動內衣18.jpg',
       window.PHOTO_BASE + '長版美背運動內衣19.jpg'
     ],
-    youtubeId: 'ygWTcGfvYsA', 
+    youtubeId: 'ygWTcGfvYsA',
     stockMap: { }
   },
   {
@@ -169,7 +169,7 @@ window.PRODUCTS = [
     cat: 'tops',
     name: '美背交叉運動內衣',
     price: 530,
-	newUntil: '2025-10-31',
+    newUntil: '2025-10-31',
     colors: ['櫻花粉', '西納特拉藍', '樹莓紫', '骨白', '水泥藍', '洋紅紫', '板栗', '暗橙', '克萊因藍', '藍綠', '磨砂綠', '苔綠', '土灰', '白', '黑'],
     sizes: ['4', '6', '8', '10', '12'],
     imgs: [
@@ -187,16 +187,16 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '美背交叉運動內衣12.jpg',
       window.PHOTO_BASE + '美背交叉運動內衣13.jpg',
       window.PHOTO_BASE + '美背交叉運動內衣14.jpg'
-	],
+    ],
     youtubeId: 'D2MeY8EV7Ow',
     stockMap: { }
   },
-   {
+  {
     id: 'top08',
     cat: 'tops',
     name: '美背鏤空運動內衣',
     price: 590,
-	newUntil: '2025-10-31',
+    newUntil: '2025-10-31',
     colors: ['黑', '夜海藍', '梅子紫', '白蛋白', '比利時藍'],
     sizes: ['4', '6', '8', '10', '12'],
     imgs: [
@@ -208,16 +208,16 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '美背鏤空運動內衣6.jpg',
       window.PHOTO_BASE + '美背鏤空運動內衣7.jpg',
       window.PHOTO_BASE + '美背鏤空運動內衣8.jpg'
-	],
+    ],
     youtubeId: '4_H-OQvKGFY',
     stockMap: { }
   },
-   {
+  {
     id: 'top09',
     cat: 'tops',
     name: '繞頸美背運動內衣',
     price: 590,
-	newUntil: '2025-10-31',
+    newUntil: '2025-10-31',
     colors: ['樹莓紫', '棕咖', '泛白藍', '陶灰褐', '水泥藍', '白', '藻黃', '黑', '淺杏粉', '紫蒲', '流光灰'],
     sizes: ['4', '6', '8', '10', '12'],
     imgs: [
@@ -231,16 +231,16 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '繞頸美背運動內衣8.jpg',
       window.PHOTO_BASE + '繞頸美背運動內衣9.jpg',
       window.PHOTO_BASE + '繞頸美背運動內衣10.jpg'
-	],
-    youtubeId: 'Kw9sU1MV74I', 
+    ],
+    youtubeId: 'Kw9sU1MV74I',
     stockMap: { }
   },
-   {
+  {
     id: 'top10',
     cat: 'tops',
     name: '雙線交叉基本款運動內衣',
     price: 530,
-	newUntil: '2025-10-31',
+    newUntil: '2025-10-31',
     colors: ['藍綠', '土灰', '磨砂綠', '暗橙', '洋紅紫', '板栗', '冷藍', '波士頓橙', '青稞', '非凡洋紅', '蔥綠', '湛藍', '焦橙', '潮水藍', '雲杉綠', '深碳灰', '銘藍', '紮染黑灰', '黑', '黑迷彩'],
     sizes: ['4', '6', '8', '10', '12'],
     imgs: [
@@ -287,16 +287,16 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '雙線交叉基本款運動內衣39.jpg',
       window.PHOTO_BASE + '雙線交叉基本款運動內衣40.jpg',
       window.PHOTO_BASE + '雙線交叉基本款運動內衣41.jpg'
-	],
+    ],
     youtubeId: 'F73Zg2Xyy4Y',
     stockMap: { }
   },
-   {
+  {
     id: 'top11',
     cat: 'tops',
     name: '男生小V領練習服',
     price: 580,
-	newUntil: '2025-11-25',
+    newUntil: '2025-11-25',
     colors: ['黑', '白'],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     imgs: [
@@ -308,16 +308,16 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '男生小V領練習服6.jpg',
       window.PHOTO_BASE + '男生小V領練習服7.jpg',
       window.PHOTO_BASE + '男生小V領練習服8.jpg'
-	],
-    youtubeId: '', 
+    ],
+    youtubeId: '',
     stockMap: { }
-  }, 
+  },
   {
     id: 'top12',
     cat: 'tops',
     name: '男生圓領開釦練習服',
     price: 650,
-	newUntil: '2025-11-25',
+    newUntil: '2025-11-25',
     colors: ['黑'],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     imgs: [
@@ -326,16 +326,16 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '男生圓領開釦練習服3.jpg',
       window.PHOTO_BASE + '男生圓領開釦練習服4.jpg',
       window.PHOTO_BASE + '男生圓領開釦練習服5.jpg'
-	],
-    youtubeId: '', 
+    ],
+    youtubeId: '',
     stockMap: { }
   },
-   {
+  {
     id: 'top13',
     cat: 'tops',
     name: '蕾絲拼接長袖練習服',
     price: 700,
-	newUntil: '2025-11-25',
+    newUntil: '2025-11-25',
     colors: ['黑', '白'],
     sizes: ['S','L'],
     imgs: [
@@ -349,7 +349,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '蕾絲拼接長袖練習服8.jpg',
       window.PHOTO_BASE + '蕾絲拼接長袖練習服9.jpg',
       window.PHOTO_BASE + '蕾絲拼接長袖練習服10.jpg'
-	],
+    ],
     youtubeId: 'AtuSFHYs-kE',
     stockMap: { }
   },
@@ -358,7 +358,7 @@ window.PRODUCTS = [
     cat: 'tops',
     name: '不規則長版短袖練習服',
     price: 450,
-	newUntil: '2025-12-06',
+    newUntil: '2025-12-06',
     colors: ['黑', '白'],
     sizes: ['F'],
     imgs: [
@@ -367,7 +367,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '不規則長版短袖練習服3.jpg',
       window.PHOTO_BASE + '不規則長版短袖練習服4.jpg',
       window.PHOTO_BASE + '不規則長版短袖練習服5.jpg'
-	],
+    ],
     youtubeId: '8OijAzcAaDU',
     stockMap: { }
   },{
@@ -375,7 +375,7 @@ window.PRODUCTS = [
     cat: 'tops',
     name: '短版高領蝙蝠袖露背上衣',
     price: 550,
-	newUntil: '2025-12-06',
+    newUntil: '2025-12-06',
     colors: ['黑'],
     sizes: ['XS','S','M','L','XL'],
     imgs: [
@@ -385,8 +385,62 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣4.jpg',
       window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣5.jpg',
       window.PHOTO_BASE + '短版高領蝙蝠袖露背上衣6.jpg'
-	],
+    ],
     youtubeId: 'BlAnwwIR0mU',
+    stockMap: { }
+  },
+  {
+    id: 'top16',
+    cat: 'tops',
+    name: '斜肩長袖網紗拼接連身裙',
+    price: 830,
+    newUntil: '2025-12-19',
+    colors: ['黑', '豹紋'],
+    sizes: ['S','M','L','XL'],
+    imgs: [
+      window.PHOTO_BASE + '斜肩長袖網紗拼接連身裙1.jpg',
+      window.PHOTO_BASE + '斜肩長袖網紗拼接連身裙2.jpg',
+      window.PHOTO_BASE + '斜肩長袖網紗拼接連身裙3.jpg',
+      window.PHOTO_BASE + '斜肩長袖網紗拼接連身裙4.jpg',
+      window.PHOTO_BASE + '斜肩長袖網紗拼接連身裙5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'top17',
+    cat: 'tops',
+    name: '蕾絲高領長袖上衣',
+    price: 650,
+    newUntil: '2025-12-19',
+    colors: ['黑'],
+    sizes: ['S','M','L','XL'],
+    imgs: [
+      window.PHOTO_BASE + '蕾絲高領長袖上衣1.jpg',
+      window.PHOTO_BASE + '蕾絲高領長袖上衣2.jpg',
+      window.PHOTO_BASE + '蕾絲高領長袖上衣3.jpg',
+      window.PHOTO_BASE + '蕾絲高領長袖上衣4.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'top18',
+    cat: 'tops',
+    name: '無袖罩衫',
+    price: 435,
+    newUntil: '2025-12-19',
+    colors: ['黑', '豹紋'],
+    sizes: ['S','M','L'],
+    imgs: [
+      window.PHOTO_BASE + '無袖罩衫1.jpg',
+      window.PHOTO_BASE + '無袖罩衫2.jpg',
+      window.PHOTO_BASE + '無袖罩衫3.jpg',
+      window.PHOTO_BASE + '無袖罩衫4.jpg',
+      window.PHOTO_BASE + '無袖罩衫5.jpg',
+      window.PHOTO_BASE + '無袖罩衫6.jpg'
+    ],
+    youtubeId: '',
     stockMap: { }
   },
 
@@ -470,7 +524,7 @@ window.PRODUCTS = [
     cat: 'bottoms',
     name: '高腰運動健身瑜珈褲',
     price: 690,
-    newUntil: '2025-10-31', 
+    newUntil: '2025-10-31',
     colors: ['黑', '石墨灰', '蒸餾咖啡', '鈦灰', '深碳灰', '海軍藍', '卡其棕', '煙灰'],
     sizes: ['4', '6', '8', '10'],
     imgs: [
@@ -491,12 +545,12 @@ window.PRODUCTS = [
     youtubeId: 'Kw9sU1MV74I',
     stockMap: { }
   },
-   {
+  {
     id: 'btm06',
     cat: 'bottoms',
     name: '民族風斜裙',
     price: 700,
-	newUntil: '2025-11-25',
+    newUntil: '2025-11-25',
     colors: ['黑', '咖啡'],
     sizes: ['S', 'M', 'L', 'XL'],
     imgs: [
@@ -515,12 +569,12 @@ window.PRODUCTS = [
     youtubeId: 'FJCp6l6y3eY',
     stockMap: { }
   },
-   {
+  {
     id: 'btm07',
     cat: 'bottoms',
     name: '紗裙喇叭褲',
     price: 530,
-	newUntil: '2025-11-25',
+    newUntil: '2025-11-25',
     colors: ['黑'],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     imgs: [
@@ -534,12 +588,12 @@ window.PRODUCTS = [
     youtubeId: 'am84AdlSdCM',
     stockMap: { }
   },
-   {
+  {
     id: 'btm08',
     cat: 'bottoms',
     name: '荷葉邊串珠綁帶裙',
     price: 450,
-	newUntil: '2025-12-06',
+    newUntil: '2025-12-06',
     colors: ['黑','粉'],
     sizes: ['S', 'M', 'L'],
     imgs: [
@@ -554,6 +608,29 @@ window.PRODUCTS = [
     youtubeId: 'Q15w25w0tKA',
     stockMap: { }
   },
+  
+  
+  // ====== Shoes ======
+  {
+    id: 'sh01',
+    cat: 'shoes',
+    name: '跳色拉丁舞練習鞋',
+    price: 600,
+    colors: ['薄荷綠', '膚', '粉', '黑'],
+	noOnlineOrder: true,     // ⬅⬅ 這行：此商品只展示、不能線上加入購物車
+    sizes: ['34', '35', '36', '37', '38', '39', '40', '41', '42'],
+    imgs: [
+      window.PHOTO_BASE + '跳色練習鞋1.jpg',
+      window.PHOTO_BASE + '跳色練習鞋2.jpg',
+      window.PHOTO_BASE + '跳色練習鞋3.jpg',
+      window.PHOTO_BASE + '跳色練習鞋4.jpg',
+      window.PHOTO_BASE + '跳色練習鞋5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+ 
+
 ];
 
 //remark
@@ -567,3 +644,4 @@ window.PRODUCTS = [
 //圖片建議SIZE: 主圖是 4:3 比例，縮圖是 1:1（52×52 px 顯示）。
 //Youtube 網址 https://www.youtube.com/shorts/gBX_zl42r3c, ID 是 gBX_zl42r3c
 //newUntil: '2025-10-31',  ← 新增這行（到 10/31 都會顯示 NEW）
+//noOnlineOrder: true,     // ⬅⬅ 這行：此商品只展示、不能線上加入購物車
