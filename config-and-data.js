@@ -404,7 +404,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '斜肩長袖網紗拼接連身裙4.jpg',
       window.PHOTO_BASE + '斜肩長袖網紗拼接連身裙5.jpg'
     ],
-    youtubeId: '',
+    youtubeId: 'B9zipo5Zox8',
     stockMap: { }
   },
   {
@@ -421,7 +421,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '蕾絲高領長袖上衣3.jpg',
       window.PHOTO_BASE + '蕾絲高領長袖上衣4.jpg'
     ],
-    youtubeId: '',
+    youtubeId: 'LU10VlZ6vUI',
     stockMap: { }
   },
   {
@@ -440,7 +440,28 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '無袖罩衫5.jpg',
       window.PHOTO_BASE + '無袖罩衫6.jpg'
     ],
-    youtubeId: '',
+    youtubeId: 'tH-Yr6rpvOI',
+    stockMap: { }
+  },
+  {
+    id: 'top19',
+    cat: 'tops',
+    name: '扭結無袖上衣',
+    price: 500,
+    newUntil: '2025-12-26',
+    colors: ['黑', '胡桃色'],
+    sizes: ['S','M','L','XL'],
+    imgs: [
+      window.PHOTO_BASE + '扭結無袖上衣1.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣2.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣3.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣4.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣5.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣6.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣7.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣8.jpg'
+    ],
+    youtubeId: 'otvfy3pNW1c',
     stockMap: { }
   },
 
@@ -606,6 +627,27 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '荷葉邊串珠綁帶裙7.jpg'
     ],
     youtubeId: 'Q15w25w0tKA',
+    stockMap: { }
+  },
+   {
+    id: 'btm09',
+    cat: 'bottoms',
+    name: '抽繩大擺裙',
+    price: 500,
+    newUntil: '2025-12-26',
+    colors: ['黑','胡桃色'],
+    sizes: ['S', 'M', 'L', 'XL'],
+    imgs: [
+      window.PHOTO_BASE + '扭結無袖上衣1.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣2.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣3.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣4.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣5.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣6.jpg',
+      window.PHOTO_BASE + '扭結無袖上衣7.jpg',
+      window.PHOTO_BASE + '抽繩大擺裙8.jpg'
+    ],
+    youtubeId: 'otvfy3pNW1c',
     stockMap: { }
   },
   
