@@ -370,7 +370,8 @@ window.PRODUCTS = [
     ],
     youtubeId: '8OijAzcAaDU',
     stockMap: { }
-  },{
+  },
+  {
     id: 'top15',
     cat: 'tops',
     name: '短版高領蝙蝠袖露背上衣',
@@ -481,7 +482,8 @@ window.PRODUCTS = [
     ],
     youtubeId: '',
     stockMap: { }
-  },{
+  },
+  {
     id: 'top21',
     cat: 'tops',
     name: '長袖透紗旗袍風',
@@ -496,6 +498,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '長袖透紗旗袍風4.jpg',
       window.PHOTO_BASE + '長袖透紗旗袍風5.jpg',
       window.PHOTO_BASE + '長袖透紗旗袍風6.jpg'
+    ],
     youtubeId: '',
     stockMap: { }
   },
@@ -664,7 +667,7 @@ window.PRODUCTS = [
     youtubeId: 'Q15w25w0tKA',
     stockMap: { }
   },
-   {
+  {
     id: 'btm09',
     cat: 'bottoms',
     name: '抽繩大擺裙',
@@ -741,15 +744,16 @@ window.PRODUCTS = [
     youtubeId: '',
     stockMap: { }
   },
+
   // ====== Shoes ======
   {
     id: 'sh01',
     cat: 'shoes',
     name: '跳色拉丁舞練習鞋',
     price: 600,
-	  newUntil: '2025-12-06',
+    newUntil: '2025-12-06',
     colors: ['薄荷綠', '膚', '粉', '黑'],
-	  noOnlineOrder: true,     // ⬅⬅ 這行：此商品只展示、不能線上加入購物車
+    noOnlineOrder: true,     // ⬅⬅ 這行：此商品只展示、不能線上加入購物車
     sizes: ['34', '35', '36', '37', '38', '39', '40', '41', '42'],
     imgs: [
       window.PHOTO_BASE + '跳色練習鞋1.jpg',
@@ -761,7 +765,6 @@ window.PRODUCTS = [
     youtubeId: '',
     stockMap: { }
   },
- 
 
 ];
 
