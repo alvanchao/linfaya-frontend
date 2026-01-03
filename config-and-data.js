@@ -464,6 +464,41 @@ window.PRODUCTS = [
     youtubeId: 'otvfy3pNW1c',
     stockMap: { }
   },
+  {
+    id: 'top20',
+    cat: 'tops',
+    name: '造型綁帶襯衫',
+    price: 300,
+    newUntil: '2026-02-03',
+    colors: ['黑', '白'],
+    sizes: ['S','M','L','XL','XXL'],
+    imgs: [
+      window.PHOTO_BASE + '造型綁帶襯衫1.jpg',
+      window.PHOTO_BASE + '造型綁帶襯衫2.jpg',
+      window.PHOTO_BASE + '造型綁帶襯衫3.jpg',
+      window.PHOTO_BASE + '造型綁帶襯衫4.jpg',
+      window.PHOTO_BASE + '造型綁帶襯衫5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },{
+    id: 'top21',
+    cat: 'tops',
+    name: '長袖透紗旗袍風',
+    price: 300,
+    newUntil: '2026-02-03',
+    colors: ['黑花', '紅花'],
+    sizes: ['S','M','L','XL'],
+    imgs: [
+      window.PHOTO_BASE + '長袖透紗旗袍風1.jpg',
+      window.PHOTO_BASE + '長袖透紗旗袍風2.jpg',
+      window.PHOTO_BASE + '長袖透紗旗袍風3.jpg',
+      window.PHOTO_BASE + '長袖透紗旗袍風4.jpg',
+      window.PHOTO_BASE + '長袖透紗旗袍風5.jpg',
+      window.PHOTO_BASE + '長袖透紗旗袍風6.jpg'
+    youtubeId: '',
+    stockMap: { }
+  },
 
   // ====== Bottoms ======
   {
@@ -650,8 +685,62 @@ window.PRODUCTS = [
     youtubeId: 'otvfy3pNW1c',
     stockMap: { }
   },
-  
-  
+  {
+    id: 'btm10',
+    cat: 'bottoms',
+    name: '亮片滾邊造型綁帶裙',
+    price: 650,
+    newUntil: '2026-02-03',
+    colors: ['黑'],
+    sizes: ['XS','S', 'M', 'L', 'XL'],
+    imgs: [
+      window.PHOTO_BASE + '亮片滾邊造型綁帶裙1.jpg',
+      window.PHOTO_BASE + '亮片滾邊造型綁帶裙2.jpg',
+      window.PHOTO_BASE + '亮片滾邊造型綁帶裙3.jpg',
+      window.PHOTO_BASE + '亮片滾邊造型綁帶裙4.jpg',
+      window.PHOTO_BASE + '亮片滾邊造型綁帶裙5.jpg',
+      window.PHOTO_BASE + '亮片滾邊造型綁帶裙6.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'btm11',
+    cat: 'bottoms',
+    name: '高腰皮帶點綴練習褲',
+    price: 830,
+    newUntil: '2026-02-03',
+    colors: ['黑','軍綠色'],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    imgs: [
+      window.PHOTO_BASE + '高腰皮帶點綴練習褲1.jpg',
+      window.PHOTO_BASE + '高腰皮帶點綴練習褲2.jpg',
+      window.PHOTO_BASE + '高腰皮帶點綴練習褲3.jpg',
+      window.PHOTO_BASE + '高腰皮帶點綴練習褲4.jpg',
+      window.PHOTO_BASE + '高腰皮帶點綴練習褲5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'btm12',
+    cat: 'bottoms',
+    name: '造型腰封寬鬆練習褲',
+    price: 800,
+    newUntil: '2026-02-03',
+    colors: ['黑'],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    imgs: [
+      window.PHOTO_BASE + '造型腰封寬鬆練習褲1.jpg',
+      window.PHOTO_BASE + '造型腰封寬鬆練習褲2.jpg',
+      window.PHOTO_BASE + '造型腰封寬鬆練習褲3.jpg',
+      window.PHOTO_BASE + '造型腰封寬鬆練習褲4.jpg',
+      window.PHOTO_BASE + '造型腰封寬鬆練習褲5.jpg',
+      window.PHOTO_BASE + '造型腰封寬鬆練習褲6.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
   // ====== Shoes ======
   {
     id: 'sh01',
