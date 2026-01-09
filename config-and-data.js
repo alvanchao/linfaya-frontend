@@ -499,7 +499,66 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '長袖透紗旗袍風5.jpg',
       window.PHOTO_BASE + '長袖透紗旗袍風6.jpg'
     ],
-    youtubeId: '',
+    youtubeId: '47W_dMxnLKk',
+    stockMap: { }
+  },
+  {
+    id: 'top22',
+    cat: 'tops',
+    name: '不規則開衩喇叭袖長袖上衣',
+    price: 300,
+    newUntil: '2026-02-09',
+    colors: ['黑', '灰', '咖啡'],
+    sizes: ['S','M','L'],
+    imgs: [
+      window.PHOTO_BASE + '不規則開衩喇叭袖長袖上衣1.jpg',
+      window.PHOTO_BASE + '不規則開衩喇叭袖長袖上衣2.jpg',
+      window.PHOTO_BASE + '不規則開衩喇叭袖長袖上衣3.jpg',
+      window.PHOTO_BASE + '不規則開衩喇叭袖長袖上衣4.jpg',
+      window.PHOTO_BASE + '不規則開衩喇叭袖長袖上衣5.jpg',
+      window.PHOTO_BASE + '不規則開衩喇叭袖長袖上衣6.jpg'
+    ],
+    youtubeId: 'FxmPQF118tA',
+    stockMap: { }
+  },
+  {
+    id: 'top23',
+    cat: 'tops',
+    name: '長袖透紗抽皺',
+    price: 200,
+    newUntil: '2026-02-09',
+    colors: ['白', '淺綠', '淺紫', '黑'],
+    sizes: ['M','L','XL','XXL','3XL','4XL'],
+    imgs: [
+      window.PHOTO_BASE + '長袖透紗抽皺1.jpg',
+      window.PHOTO_BASE + '長袖透紗抽皺2.jpg',
+      window.PHOTO_BASE + '長袖透紗抽皺3.jpg',
+      window.PHOTO_BASE + '長袖透紗抽皺4.jpg',
+      window.PHOTO_BASE + '長袖透紗抽皺5.jpg',
+      window.PHOTO_BASE + '長袖透紗抽皺6.jpg',
+      window.PHOTO_BASE + '長袖透紗抽皺7.jpg',
+      window.PHOTO_BASE + '長袖透紗抽皺8.jpg',
+      window.PHOTO_BASE + '長袖透紗抽皺9.jpg'
+    ],
+    youtubeId: 'g6NJyzA9xIo',
+    stockMap: { }
+  },
+  {
+    id: 'top24',
+    cat: 'tops',
+    name: '不規則收腰無袖上衣',
+    price: 250,
+    newUntil: '2026-02-09',
+    colors: ['白', '灰', '黑'],
+    sizes: ['S','M','L'],
+    imgs: [
+      window.PHOTO_BASE + '不規則收腰無袖上衣1.jpg',
+      window.PHOTO_BASE + '不規則收腰無袖上衣2.jpg',
+      window.PHOTO_BASE + '不規則收腰無袖上衣3.jpg',
+      window.PHOTO_BASE + '不規則收腰無袖上衣4.jpg',
+      window.PHOTO_BASE + '不規則收腰無袖上衣5.jpg'
+    ],
+    youtubeId: '6z8MIaThA7E',
     stockMap: { }
   },
 
@@ -704,7 +763,7 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '亮片滾邊造型綁帶裙5.jpg',
       window.PHOTO_BASE + '亮片滾邊造型綁帶裙6.jpg'
     ],
-    youtubeId: '',
+    youtubeId: 'RQNX7mInzPU',
     stockMap: { }
   },
   {
@@ -742,6 +801,53 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '造型腰封寬鬆練習褲6.jpg'
     ],
     youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'btm13',
+    cat: 'bottoms',
+    name: '抽皺開衩半身裙',
+    price: 580,
+    newUntil: '2026-02-09',
+    colors: ['黑','銀灰色'],
+    sizes: ['S', 'M', 'L', 'XL'],
+    imgs: [
+      window.PHOTO_BASE + '抽皺開衩半身裙1.jpg',
+      window.PHOTO_BASE + '抽皺開衩半身裙2.jpg',
+      window.PHOTO_BASE + '抽皺開衩半身裙3.jpg',
+      window.PHOTO_BASE + '抽皺開衩半身裙4.jpg',
+      window.PHOTO_BASE + '抽皺開衩半身裙5.jpg',
+      window.PHOTO_BASE + '抽皺開衩半身裙6.jpg',
+      window.PHOTO_BASE + '抽皺開衩半身裙7.jpg',
+      window.PHOTO_BASE + '抽皺開衩半身裙8.jpg',
+      window.PHOTO_BASE + '抽皺開衩半身裙9.jpg'
+    ],
+    youtubeId: '63li6vW1mBc',
+    stockMap: { }
+  },
+  {
+    id: 'btm14',
+    cat: 'bottoms',
+    name: '高腰直筒練習褲',
+    price: 650,
+    newUntil: '2026-02-09',
+    colors: ['黑','豹紋','酒紅'],
+    sizes: ['XS','S', 'M', 'L', 'XL'],
+    imgs: [
+      window.PHOTO_BASE + '高腰直筒練習褲1.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲2.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲3.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲4.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲5.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲6.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲7.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲8.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲9.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲10.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲11.jpg',
+      window.PHOTO_BASE + '高腰直筒練習褲12.jpg'
+    ],
+    youtubeId: 'Kt1ePh1m3nU',
     stockMap: { }
   },
 
