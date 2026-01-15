@@ -117,21 +117,21 @@ window.PRODUCTS = [
     youtubeId: 'RicoBN4n0lk',
     stockMap: { '粉藍-M': 1 }
   },
-  {
-    id: 'top05',
-    cat: 'tops',
-    name: '皮革流蘇連身裙',
-    price: 730,
-    colors: ['黑'],
-    sizes: ['L'],
-    imgs: [
-      window.PHOTO_BASE + '皮革流蘇連身裙1.jpg',
-      window.PHOTO_BASE + '皮革流蘇連身裙2.jpg',
-      window.PHOTO_BASE + '皮革流蘇連身裙3.jpg'
-    ],
-    youtubeId: '',
-    stockMap: { '黑-L': 1 }
-  },
+  //{
+  //  id: 'top05',
+  //  cat: 'tops',
+  //  name: '皮革流蘇連身裙',
+  //  price: 730,
+  //  colors: ['黑'],
+  //  sizes: ['L'],
+  //  imgs: [
+  //    window.PHOTO_BASE + '皮革流蘇連身裙1.jpg',
+  //    window.PHOTO_BASE + '皮革流蘇連身裙2.jpg',
+  //    window.PHOTO_BASE + '皮革流蘇連身裙3.jpg'
+  //  ],
+  //  youtubeId: '',
+  //  stockMap: { '黑-L': 1 }
+  //},
   {
     id: 'top06',
     cat: 'tops',
@@ -561,6 +561,153 @@ window.PRODUCTS = [
     youtubeId: '6z8MIaThA7E',
     stockMap: { }
   },
+  {
+    id: 'top25',
+    cat: 'tops',
+    name: '蕾絲拼接細肩帶背心',
+    price: 435,
+    newUntil: '2026-02-15',
+    colors: ['黑'],
+    sizes: ['XS','S','M','L','XL'],
+    imgs: [
+      window.PHOTO_BASE + '蕾絲拼接細肩帶背心1.jpg',
+      window.PHOTO_BASE + '蕾絲拼接細肩帶背心2.jpg',
+      window.PHOTO_BASE + '蕾絲拼接細肩帶背心3.jpg',
+      window.PHOTO_BASE + '蕾絲拼接細肩帶背心4.jpg',
+      window.PHOTO_BASE + '蕾絲拼接細肩帶背心5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'top26',
+    cat: 'tops',
+    name: '細肩帶交叉背心',
+    price: 425,
+    newUntil: '2026-02-15',
+    colors: ['黑', '豹紋'],
+    sizes: ['S','M','L','XL'],
+    imgs: [
+      window.PHOTO_BASE + '細肩帶交叉背心1.jpg',
+      window.PHOTO_BASE + '細肩帶交叉背心2.jpg',
+      window.PHOTO_BASE + '細肩帶交叉背心3.jpg',
+      window.PHOTO_BASE + '細肩帶交叉背心4.jpg',
+      window.PHOTO_BASE + '細肩帶交叉背心5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'top27',
+    cat: 'tops',
+    name: '黑色露背網紗',
+    price: 425,
+    newUntil: '2026-02-15',
+    colors: ['黑'],
+    sizes: ['M','L','XL','XXL','3XL'],
+    imgs: [
+      window.PHOTO_BASE + '黑色露背網紗1.jpg',
+      window.PHOTO_BASE + '黑色露背網紗2.jpg',
+      window.PHOTO_BASE + '黑色露背網紗3.jpg',
+      window.PHOTO_BASE + '黑色露背網紗4.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'top28',
+    cat: 'tops',
+    name: '印花斜肩上衣+開衩長裙',
+    price: 650,
+    newUntil: '2026-02-15',
+    colors: ['黑'],
+    sizes: ['S','M','L'],
+    imgs: [
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙1.jpg',
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙2.jpg',
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙3.jpg',
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙4.jpg',
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙5.jpg',
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙6.jpg',
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙7.jpg',
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙8.jpg',
+      window.PHOTO_BASE + '印花斜肩上衣+開衩長裙9.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'top29',
+    cat: 'tops',
+    name: '高領露肩連身裙',
+    price: 480,
+    newUntil: '2026-02-15',
+    colors: ['黑'],
+    sizes: ['F'],
+    imgs: [
+      window.PHOTO_BASE + '高領露肩連身裙1.jpg',
+      window.PHOTO_BASE + '高領露肩連身裙2.jpg',
+      window.PHOTO_BASE + '高領露肩連身裙3.jpg',
+      window.PHOTO_BASE + '高領露肩連身裙4.jpg',
+      window.PHOTO_BASE + '高領露肩連身裙5.jpg',
+      window.PHOTO_BASE + '高領露肩連身裙6.jpg',
+      window.PHOTO_BASE + '高領露肩連身裙7.jpg',
+      window.PHOTO_BASE + '高領露肩連身裙8.jpg',
+      window.PHOTO_BASE + '高領露肩連身裙9.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'top30',
+    cat: 'tops',
+    name: '大露背無袖Bra背心',
+    price: 530,
+    newUntil: '2026-02-15',
+    colors: ['黑', '白', '淺藍'],
+    sizes: ['4', '6', '8', '10', '12'],
+    imgs: [
+      window.PHOTO_BASE + '大露背無袖Bra背心1.jpg',
+      window.PHOTO_BASE + '大露背無袖Bra背心2.jpg',
+      window.PHOTO_BASE + '大露背無袖Bra背心3.jpg',
+      window.PHOTO_BASE + '大露背無袖Bra背心4.jpg',
+      window.PHOTO_BASE + '大露背無袖Bra背心5.jpg',
+      window.PHOTO_BASE + '大露背無袖Bra背心6.jpg',
+      window.PHOTO_BASE + '大露背無袖Bra背心7.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'top31',
+    cat: 'tops',
+    name: '撞色可調整肩帶運動內衣',
+    price: 590,
+    newUntil: '2026-02-15',
+    colors: ['海軍藍','黑', '本布白', '石墨灰', '可可色'],
+    sizes: ['4', '6', '8', '10', '12'],
+    imgs: [
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣1.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣2.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣3.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣4.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣5.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣6.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣7.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣8.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣9.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣10.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣11.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣12.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣13.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣14.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣15.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣16.jpg',
+      window.PHOTO_BASE + '撞色可調整肩帶運動內衣17.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
 
   // ====== Bottoms ======
   {
@@ -848,6 +995,24 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '高腰直筒練習褲12.jpg'
     ],
     youtubeId: 'Kt1ePh1m3nU',
+    stockMap: { }
+  },
+  {
+    id: 'btm15',
+    cat: 'bottoms',
+    name: '一片式綁帶流蘇裙',
+    price: 320,
+    newUntil: '2026-02-15',
+    colors: ['黑'],
+    sizes: ['F'],
+    imgs: [
+      window.PHOTO_BASE + '一片式綁帶流蘇裙1.jpg',
+      window.PHOTO_BASE + '一片式綁帶流蘇裙2.jpg',
+      window.PHOTO_BASE + '一片式綁帶流蘇裙3.jpg',
+      window.PHOTO_BASE + '一片式綁帶流蘇裙4.jpg',
+      window.PHOTO_BASE + '一片式綁帶流蘇裙5.jpg'
+    ],
+    youtubeId: '',
     stockMap: { }
   },
 
