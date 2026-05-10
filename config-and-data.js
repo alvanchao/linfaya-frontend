@@ -708,6 +708,42 @@ window.PRODUCTS = [
     youtubeId: '',
     stockMap: { }
   },
+  {
+    id: 'top32',
+    cat: 'tops',
+    name: '單肩連體上衣',
+    price: 520,
+    newUntil: '2026-06-10',
+    colors: ['黑'],
+    sizes: ['S','M','L','XL'],
+    imgs: [
+      window.PHOTO_BASE + '單肩連體上衣1.jpg',
+      window.PHOTO_BASE + '單肩連體上衣2.jpg',
+      window.PHOTO_BASE + '單肩連體上衣3.jpg',
+      window.PHOTO_BASE + '單肩連體上衣4.jpg',
+      window.PHOTO_BASE + '單肩連體上衣5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+   {
+    id: 'top33',
+    cat: 'tops',
+    name: '蕾絲髮帶',
+    price: 150,
+    newUntil: '2026-06-10',
+    colors: ['深灰','豹紋','黑','紅','白'],
+    sizes: ['F'],
+    imgs: [
+      window.PHOTO_BASE + '蕾絲髮帶1.jpg',
+      window.PHOTO_BASE + '蕾絲髮帶2.jpg',
+      window.PHOTO_BASE + '蕾絲髮帶3.jpg',
+      window.PHOTO_BASE + '蕾絲髮帶4.jpg',
+      window.PHOTO_BASE + '蕾絲髮帶5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
 
   // ====== Bottoms ======
   {
@@ -1011,6 +1047,26 @@ window.PRODUCTS = [
       window.PHOTO_BASE + '一片式綁帶流蘇裙3.jpg',
       window.PHOTO_BASE + '一片式綁帶流蘇裙4.jpg',
       window.PHOTO_BASE + '一片式綁帶流蘇裙5.jpg'
+    ],
+    youtubeId: '',
+    stockMap: { }
+  },
+  {
+    id: 'btm16',
+    cat: 'bottoms',
+    name: '豹紋流蘇斜裙',
+    price: 770,
+    newUntil: '2026-06-10',
+    colors: ['黑豹紋','紅豹紋'],
+    sizes: ['S', 'M', 'L', 'XL'],
+    imgs: [
+      window.PHOTO_BASE + '豹紋流蘇斜裙1.jpg',
+      window.PHOTO_BASE + '豹紋流蘇斜裙2.jpg',
+      window.PHOTO_BASE + '豹紋流蘇斜裙3.jpg',
+      window.PHOTO_BASE + '豹紋流蘇斜裙4.jpg',
+      window.PHOTO_BASE + '豹紋流蘇斜裙5.jpg',
+      window.PHOTO_BASE + '豹紋流蘇斜裙6.jpg',
+      window.PHOTO_BASE + '豹紋流蘇斜裙7.jpg'
     ],
     youtubeId: '',
     stockMap: { }
